@@ -21,9 +21,9 @@ nixos26/
 │   │   ├── default.nix
 │   │   ├── hardware-configuration.nix
 │   │   └── disk.nix                    # 声明式磁盘分区（格式化用）
-│   ├── k8s-control.nix           # K8s 控制节点（模板）
-│   ├── k8s-worker.nix            # K8s 工作节点（模板）
-│   └── k8s-combo.nix             # K8s 组合节点（控制+工作合一）
+│   ├── k8s-role.nix              # K8s 角色模板（数据驱动，参数化生成）
+├── config/
+│   └── nodes.nix               # K8s 集群节点定义（IP/角色，新增机器改这里）
 └── modules/
     ├── common/                   # 通用模块（所有主机共享）
     │   ├── base.nix              # Nix 配置、locale、SSH、sysctl、核心 CLI 工具
@@ -154,13 +154,13 @@ nixos-install --root /mnt --flake /mnt/etc/nixos#server
 nixos-install --root /mnt --flake /mnt/etc/nixos#vbox
 
 # 安装 K8s 控制节点
-nixos-install --root /mnt --flake /mnt/etc/nixos#k8s-control
+nixos-install --root /mnt --flake /mnt/etc/nixos#k8s-ctrl-01
 
 # 安装 K8s 工作节点
-nixos-install --root /mnt --flake /mnt/etc/nixos#k8s-worker
+nixos-install --root /mnt --flake /mnt/etc/nixos#k8s-worker-01
 
 # 安装 K8s 组合节点（控制+工作合一）
-nixos-install --root /mnt --flake /mnt/etc/nixos#k8s-combo
+nixos-install --root /mnt --flake /mnt/etc/nixos#k8s-combo-01
 
 # 设置 root 密码
 passwd
@@ -230,36 +230,46 @@ home-manager switch --flake .#master
 
 ## 🌐 K8s 集群部署方式
 
-### 单节点集群（开发/测试）
+### 架构：数据驱动（列表映射）
 
-控制节点与工作节点合一：
-```bash
-sudo nixos-rebuild switch --flake .#k8s-combo
+所有 K8s 节点通过 `config/nodes.nix` 定义，共用 `hosts/k8s-role.nix` 模板，由 `flake.nix` 自动映射生成：
+
+```nix
+# config/nodes.nix
+{
+  k8s-ctrl-01   = { ip = "192.168.1.11"; role = "control"; };
+  k8s-worker-01 = { ip = "192.168.1.21"; role = "worker"; };
+  k8s-combo-01  = { ip = "192.168.1.31"; role = "combo"; };
+}
 ```
 
-### 多节点集群（生产环境）
+**新增机器只需在 `config/nodes.nix` 中加一行**，无需新建文件或修改 flake 结构。
 
-| 节点类型 | Flake 配置名 | 推荐数量 | 模块 |
-|----------|-------------|----------|------|
-| 组合节点 | `k8s-combo` | 1~N 台 | `k8s-control.nix` + `k8s-worker.nix` |
-| 控制节点 | `k8s-control` | 3 台（奇数） | `k8s-control.nix` |
-| 工作节点 | `k8s-worker` | N 台 | `k8s-worker.nix` |
+### 节点角色
+
+| 角色 | 说明 | 适用场景 |
+|------|------|----------|
+| `control` | 控制平面（apiserver + etcd + scheduler） | 控制节点 |
+| `worker` | 工作节点（kubelet + kube-proxy） | 工作节点 |
+| `combo` | 控制+工作合一 | 小集群/省资源 |
+
+### 部署命令
 
 ```bash
 # 部署控制节点
-sudo nixos-rebuild switch --flake .#k8s-control
+sudo nixos-rebuild switch --flake .#k8s-ctrl-01
 
 # 部署工作节点
-sudo nixos-rebuild switch --flake .#k8s-worker
+sudo nixos-rebuild switch --flake .#k8s-worker-01
+
+# 部署组合节点（小集群）
+sudo nixos-rebuild switch --flake .#k8s-combo-01
 ```
 
 ### 初始化集群
 
 ```bash
-# 单节点初始化
-sudo kubeadm init --pod-network-cidr=10.244.0.0/16
-
-# 多节点：在第一个控制节点上初始化
+# 在第一个控制节点上初始化
 sudo kubeadm init --pod-network-cidr=10.244.0.0/16
 
 # 配置 kubectl
@@ -276,14 +286,11 @@ kubeadm join <control-plane-ip>:6443 --token <token> --discovery-token-ca-cert-h
 
 ### 实际使用提示
 
-1. **模板文件**：`hosts/k8s-control.nix` 和 `hosts/k8s-worker.nix` 是模板，实际使用时需：
-   - 取消注释 `hardware-configuration.nix`（安装后生成）
-   - 取消注释 `disk.nix` 并修改磁盘设备
-   - 配置静态 IP 地址
+1. **修改 IP/角色**：编辑 `config/nodes.nix`，修改 IP 或调整角色（control/worker/combo）
 
-2. **多机器复用**：每台物理机只需修改 hostname、IP 和硬件配置，角色模块（`k8s-control.nix`/`k8s-worker.nix`）完全复用。
+2. **修改磁盘**：取消注释模板中的 `hardware-configuration.nix` 和 `disk.nix`（安装后生成）
 
-3. **服务器默认**：`server` 主机默认使用 Nomad，如需改用 K8s，在 `hosts/server/default.nix` 中切换导入模块即可。
+3. **服务器默认**：`server` 主机默认使用 Nomad，K8s 使用独立节点配置
 
 ---
 
@@ -364,8 +371,7 @@ patchelf --set-interpreter "$(cat /nix/var/nix/profiles/system/sw/lib/ld-linux-x
 | `hosts/*/hardware-configuration.nix` | UUID 占位符 | 替换为实际磁盘 UUID |
 | `hosts/server/disk.nix` | `/dev/sda` | 确认实际磁盘设备名 |
 | `hosts/vbox/disk.nix` | `/dev/sda` | 确认实际磁盘设备名 |
-| `hosts/k8s-control.nix` | IP/磁盘 | 修改为实际网络与磁盘配置 |
-| `hosts/k8s-worker.nix` | IP/磁盘 | 修改为实际网络与磁盘配置 |
+| `config/nodes.nix` | IP/角色 | 修改为实际网络配置 |
 
 
 ---

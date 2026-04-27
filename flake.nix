@@ -38,8 +38,29 @@
     };
   };
 
-  outputs = { self, nixpkgs, nixpkgs-stable, disko, disko-stable, home-manager, home-manager-stable, nixos-generators, nushell-config, ... }@inputs: {
-    nixosConfigurations = {
+  outputs = { self, nixpkgs, nixpkgs-stable, disko, disko-stable, home-manager, home-manager-stable, nixos-generators, nushell-config, ... }@inputs:
+  let
+    # ── K8s 节点定义（从外部配置文件读取） ─────────────────────
+    k8sNodes = import ./config/nodes.nix;
+
+    # 角色模块映射
+    k8sRoleModules = {
+      control = ./modules/server/k8s-control.nix;
+      worker  = ./modules/server/k8s-worker.nix;
+      combo   = [ ./modules/server/k8s-control.nix ./modules/server/k8s-worker.nix ];
+    };
+
+    # K8s 节点生成函数
+    mkK8sNode = name: attrs: nixpkgs-stable.lib.nixosSystem {
+      system = "x86_64-linux";
+      specialArgs = { inherit inputs; dataDir = _dataDir; hostname = name; ip = attrs.ip; };
+      modules = [
+        ./hosts/k8s-role.nix
+        k8sRoleModules.${attrs.role}
+      ];
+    };
+  in {
+    nixosConfigurations = (nixpkgs.lib.mapAttrs mkK8sNode k8sNodes) // {
 
       workstation = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
@@ -89,30 +110,6 @@
               users.master = import ./modules/home/workstation;
             };
           }
-        ];
-      };
-
-      k8s-control = nixpkgs-stable.lib.nixosSystem {
-        system = "x86_64-linux";
-        specialArgs = { inherit inputs; dataDir = _dataDir; };
-        modules = [
-          ./hosts/k8s-control
-        ];
-      };
-
-      k8s-worker = nixpkgs-stable.lib.nixosSystem {
-        system = "x86_64-linux";
-        specialArgs = { inherit inputs; dataDir = _dataDir; };
-        modules = [
-          ./hosts/k8s-worker
-        ];
-      };
-
-      k8s-combo = nixpkgs-stable.lib.nixosSystem {
-        system = "x86_64-linux";
-        specialArgs = { inherit inputs; dataDir = _dataDir; };
-        modules = [
-          ./hosts/k8s-combo
         ];
       };
 
