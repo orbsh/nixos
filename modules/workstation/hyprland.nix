@@ -54,7 +54,6 @@ in {
       hyprpaper
 
       # 剪贴板管理
-      wl-clipboard
       cliphist
 
       # 登出/锁屏菜单
@@ -68,10 +67,8 @@ in {
       # 系统托盘 & 网络管理
       networkmanagerapplet
       pavucontrol
-    ];
 
-    # ── Python 脚本依赖 ─────────────────────────────────────
-    environment.systemPackages = with pkgs; [
+      # Python 脚本依赖
       (python3.withPackages (ps: [ ps.pyyaml ]))
     ];
 

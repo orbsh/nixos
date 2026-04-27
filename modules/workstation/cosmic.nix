@@ -28,6 +28,4 @@
   #   QT_SCALE_FACTOR = "2";
   # };
 
-  # ── Wayland 剪贴板（仅桌面需要） ──────────────────────────
-  environment.systemPackages = with pkgs; [ wl-clipboard ];
 }

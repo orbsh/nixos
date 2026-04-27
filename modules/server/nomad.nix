@@ -30,8 +30,4 @@
       }
     '';
   };
-
-  environment.systemPackages = with pkgs; [
-    nomad
-  ];
 }

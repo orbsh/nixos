@@ -1,8 +1,7 @@
 { pkgs, ... }: {
   environment.systemPackages = with pkgs; [
     surrealist        # SurrealDB GUI 客户端
-    # 通讯
-    telegram-desktop
+
 
     wps-office
     zathura         # PDF 阅读
