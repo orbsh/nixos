@@ -1,4 +1,11 @@
-{ pkgs, lib, ... }: {
+{ pkgs, lib, config, ... }:
+let
+  # Nix 惰性求值：config 在此处是引用而非快照，
+  # 实际求值时会看到 in { ... } 体内合并后的最终值，保持一致。
+  criSocket = if config.virtualisation.containerd.enable
+    then "/run/containerd/containerd.sock"
+    else "/run/crio/crio.sock";
+in {
   # CRI-O 容器运行时（k8s 推荐运行时）
   virtualisation.cri-o = {
     enable = true;
@@ -11,6 +18,16 @@
             allowed_annotations = [ "io.containerd.runc.v2.runc.options" ];
           };
         };
+      };
+    };
+  };
+
+  # Containerd 容器运行时（可选，默认禁用，用于切换 CRI）
+  virtualisation.containerd = {
+    enable = false;
+    settings = {
+      plugins."io.containerd.grpc.v1.cri" = {
+        sandbox_image = "registry.aliyuncs.com/google_containers/pause:3.9";
       };
     };
   };
@@ -39,9 +56,9 @@
   # Kubernetes 组件配置（参考 Ansible kubeadm/kubecommon/kubecommonpost）
   services.kubernetes.kubelet = {
     enable = true;
-    # 指定 CRI-O socket 路径与超时（参考 0-crio.conf）
+    # 根据启用的运行时自动选择 CRI socket 路径
     extraOptions = [
-      "--container-runtime-endpoint=unix:///run/crio/crio.sock"
+      "--container-runtime-endpoint=unix://${criSocket}"
       "--runtime-request-timeout=10m"
       # 最大 Pod 数量（参考 kubecommonpost: maxPods: 500）
       "--max-pods=500"

@@ -54,4 +54,9 @@
     runroot = "/run/containers/storage"
     graphroot = "/var/lib/containers/storage"
   '';
+  # ── Container Image Tools ───────────────────────────────
+  environment.systemPackages = with pkgs; [
+    buildah
+    skopeo
+  ];
 }
