@@ -6,6 +6,7 @@
     wps-office
     zathura         # PDF 阅读
     zathura-pdf-mupdf
+    foliate         # 电子书阅读
 
     # 以下按需取消注释：
     # lapce
