@@ -23,12 +23,11 @@
     jack.enable = true;
   };
 
-  # ── Power & Security ─────────────────────────────────────
-  services.power-profiles-daemon.enable = true;
+  # ── Security ─────────────────────────────────────────────
   security.polkit.enable = true;
 
   # ── Input Devices ────────────────────────────────────────
-  services.libinput.enable = true;
+  # 触控板/笔记本输入已移至 common/laptop.nix
 
   # ── Keymap (TTY & X11/Wayland) ───────────────────────────
   services.xserver.xkb = {

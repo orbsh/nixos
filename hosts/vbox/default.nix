@@ -13,6 +13,7 @@
 
     # 桌面环境 (COSMIC)
     ../../modules/workstation/desktop.nix
+    ../../modules/workstation/laptop.nix
 
     # 开发工具
     ../../modules/workstation/dev.nix

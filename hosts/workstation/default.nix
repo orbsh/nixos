@@ -11,6 +11,7 @@
     ../../modules/common/extra.nix
 
     ../../modules/workstation/desktop.nix
+    ../../modules/workstation/laptop.nix
     ../../modules/workstation/apps-core.nix
     ../../modules/workstation/apps-im.nix           # 微信单独管理
     ../../modules/workstation/extra.nix

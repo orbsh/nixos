@@ -60,8 +60,7 @@ in {
       wlogout
       swaylock-effects
 
-      # 电源管理
-      brightnessctl
+      # 媒体控制
       playerctl
 
       # 系统托盘 & 网络管理
