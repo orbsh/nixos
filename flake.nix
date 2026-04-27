@@ -92,6 +92,30 @@
         ];
       };
 
+      k8s-control = nixpkgs-stable.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit inputs; dataDir = _dataDir; };
+        modules = [
+          ./hosts/k8s-control
+        ];
+      };
+
+      k8s-worker = nixpkgs-stable.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit inputs; dataDir = _dataDir; };
+        modules = [
+          ./hosts/k8s-worker
+        ];
+      };
+
+      k8s-combo = nixpkgs-stable.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit inputs; dataDir = _dataDir; };
+        modules = [
+          ./hosts/k8s-combo
+        ];
+      };
+
     };
 
     # 自定义 ISO 构建：nix build .#iso

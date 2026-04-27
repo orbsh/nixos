@@ -11,7 +11,7 @@
     ../../modules/common/extra.nix
 
     # 集群调度二选一（取消注释需要的模块，注释另一个）
-    # ../../modules/server/k8s.nix      # Kubernetes
+    # ../../modules/server/k8s-control.nix  # Kubernetes 控制节点
     ../../modules/server/nomad.nix      # HashiCorp Nomad
 
     ./disk.nix

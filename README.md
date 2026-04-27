@@ -1,6 +1,6 @@
 # NixOS 26 Flake Configuration
 
-> 基于 NixOS unstable 的模块化 Flakes 配置，支持 **工作站 (workstation)**、**服务器 (server)** 与 **虚拟机 (vbox)** 三台主机。
+> 基于 NixOS unstable 的模块化 Flakes 配置，支持 **工作站 (workstation)**、**服务器 (server)**、**虚拟机 (vbox)** 与 **K8s 集群 (k8s-control / k8s-worker)** 五台主机。
 
 ---
 
@@ -10,15 +10,20 @@
 nixos26/
 ├── flake.nix                     # Flake 入口，定义三台主机 + ISO 构建
 ├── hosts/
-│   ├── workstation/              # COSMIC 桌面工作站
+│   ├── workstation/              # COSMIC 桌面工作站（通常已有分区）
 │   │   ├── default.nix
-│   │   └── hardware-configuration.nix
-│   ├── server/                   # 无头服务器 (K8s/Nomad 二选一)
+│   │   └── hardware-configuration.nix  # 记录现有分区 UUID、内核模块
+│   ├── server/                   # 无头服务器 (默认 Nomad，全新安装)
 │   │   ├── default.nix
-│   │   └── hardware-configuration.nix
-│   └── vbox/                     # VirtualBox 虚拟机
-│       ├── default.nix
-│       └── hardware-configuration.nix
+│   │   ├── hardware-configuration.nix
+│   │   └── disk.nix                    # 声明式磁盘分区（格式化用）
+│   ├── vbox/                     # VirtualBox 虚拟机（全新安装）
+│   │   ├── default.nix
+│   │   ├── hardware-configuration.nix
+│   │   └── disk.nix                    # 声明式磁盘分区（格式化用）
+│   ├── k8s-control.nix           # K8s 控制节点（模板）
+│   ├── k8s-worker.nix            # K8s 工作节点（模板）
+│   └── k8s-combo.nix             # K8s 组合节点（控制+工作合一）
 └── modules/
     ├── common/                   # 通用模块（所有主机共享）
     │   ├── base.nix              # Nix 配置、locale、SSH、sysctl、核心 CLI 工具
@@ -35,10 +40,12 @@ nixos26/
     │   ├── dev.nix               # 开发工具：Rust/Haskell/Bun/Python/WASM
     │   └── nomad.nix             # Nomad Client（开发调试）
     ├── server/                   # 服务器专用模块
-    │   ├── k8s.nix               # Kubernetes 集群（与 Nomad 二选一）
-    │   ├── nomad.nix             # HashiCorp Nomad（与 K8s 二选一）
+    │   ├── k8s-common.nix        # K8s 通用基础（CRI-O、内核、kubelet）
+    │   ├── k8s-control.nix       # K8s 控制节点（apiserver + etcd）
+    │   ├── k8s-worker.nix        # K8s 工作节点
+    │   └── nomad.nix             # HashiCorp Nomad（server 默认）
     └── home/                     # Home Manager 用户环境配置
-        ├── desktop/              # 桌面 profile 入口
+        ├── workstation/          # 工作站 home 入口
         │   └── default.nix       # 用户名、home 包列表（桌面版）
         ├── server/               # 服务器 profile 入口
         │   └── default.nix       # 用户名、home 包列表（服务器版）
@@ -100,7 +107,8 @@ cp result/iso/my-nixos-live.iso /mnt/ventoy/
 
 ### 2. 分区与挂载
 
-**使用 disko 自动分区（推荐）：**
+**场景 A：全新安装（服务器 / 虚拟机 / K8s）**
+使用 `disk.nix` 进行声明式分区（会清空磁盘）：
 ```bash
 sudo -i
 # 确认磁盘设备名
@@ -111,13 +119,16 @@ nix --experimental-features "nix-command flakes" run github:nix-community/disko 
   --mode disko ./hosts/server/default.nix
 ```
 
+**场景 B：保留现有分区（工作站）**
+如果磁盘已分好区，**不要使用 disko**，直接生成硬件配置即可。
+
 ### 3. 生成硬件配置
 
 ```bash
 nixos-generate-config --root /mnt
 ```
 
-⚠️ **重要：** 该命令会生成 `hardware-configuration.nix`，包含内核模块和文件系统 UUID。
+⚠️ **重要：** 该命令会生成 `hardware-configuration.nix`，记录当前系统的文件系统 UUID 和内核模块。
 请将生成的内容覆盖到对应主机的硬件配置文件中：
 - 工作站 → `hosts/workstation/hardware-configuration.nix`
 - 服务器 → `hosts/server/hardware-configuration.nix`
@@ -136,11 +147,20 @@ cp -r /path/to/this/repo/Configuration/nixos26/* /mnt/etc/nixos/
 # 安装工作站
 nixos-install --root /mnt --flake /mnt/etc/nixos#workstation
 
-# 安装服务器
+# 安装服务器（Nomad）
 nixos-install --root /mnt --flake /mnt/etc/nixos#server
 
 # 安装虚拟机
 nixos-install --root /mnt --flake /mnt/etc/nixos#vbox
+
+# 安装 K8s 控制节点
+nixos-install --root /mnt --flake /mnt/etc/nixos#k8s-control
+
+# 安装 K8s 工作节点
+nixos-install --root /mnt --flake /mnt/etc/nixos#k8s-worker
+
+# 安装 K8s 组合节点（控制+工作合一）
+nixos-install --root /mnt --flake /mnt/etc/nixos#k8s-combo
 
 # 设置 root 密码
 passwd
@@ -208,6 +228,65 @@ home-manager switch --flake .#master
 
 ---
 
+## 🌐 K8s 集群部署方式
+
+### 单节点集群（开发/测试）
+
+控制节点与工作节点合一：
+```bash
+sudo nixos-rebuild switch --flake .#k8s-combo
+```
+
+### 多节点集群（生产环境）
+
+| 节点类型 | Flake 配置名 | 推荐数量 | 模块 |
+|----------|-------------|----------|------|
+| 组合节点 | `k8s-combo` | 1~N 台 | `k8s-control.nix` + `k8s-worker.nix` |
+| 控制节点 | `k8s-control` | 3 台（奇数） | `k8s-control.nix` |
+| 工作节点 | `k8s-worker` | N 台 | `k8s-worker.nix` |
+
+```bash
+# 部署控制节点
+sudo nixos-rebuild switch --flake .#k8s-control
+
+# 部署工作节点
+sudo nixos-rebuild switch --flake .#k8s-worker
+```
+
+### 初始化集群
+
+```bash
+# 单节点初始化
+sudo kubeadm init --pod-network-cidr=10.244.0.0/16
+
+# 多节点：在第一个控制节点上初始化
+sudo kubeadm init --pod-network-cidr=10.244.0.0/16
+
+# 配置 kubectl
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+# 加入其他控制节点（控制平面）
+kubeadm join <control-plane-ip>:6443 --control-plane --token <token> --discovery-token-ca-cert-hash <hash>
+
+# 加入工作节点
+kubeadm join <control-plane-ip>:6443 --token <token> --discovery-token-ca-cert-hash <hash>
+```
+
+### 实际使用提示
+
+1. **模板文件**：`hosts/k8s-control.nix` 和 `hosts/k8s-worker.nix` 是模板，实际使用时需：
+   - 取消注释 `hardware-configuration.nix`（安装后生成）
+   - 取消注释 `disk.nix` 并修改磁盘设备
+   - 配置静态 IP 地址
+
+2. **多机器复用**：每台物理机只需修改 hostname、IP 和硬件配置，角色模块（`k8s-control.nix`/`k8s-worker.nix`）完全复用。
+
+3. **服务器默认**：`server` 主机默认使用 Nomad，如需改用 K8s，在 `hosts/server/default.nix` 中切换导入模块即可。
+
+---
+
 ## 💻 预装开发环境
 
 以下工具已随系统安装，开箱即用，标准命令即可使用：
@@ -263,10 +342,16 @@ patchelf --set-interpreter "$(cat /nix/var/nix/profiles/system/sw/lib/ld-linux-x
 
 ## ⚠️ 注意事项
 
-### 硬件配置
+### 硬件配置与分区
 
-`hardware-configuration.nix` 由 `nixos-generate-config` 自动生成，**不应手动编辑**。
-安装新机器或更换硬件后，重新生成并覆盖对应文件。
+| 文件 | 用途 | 适用场景 |
+|------|------|----------|
+| `disk.nix` | 声明式磁盘分区（执行时会格式化） | 服务器 / 虚拟机 / 全新安装 |
+| `hardware-configuration.nix` | 记录当前分区 UUID、挂载点、内核模块 | 所有主机（工作站通常仅依赖此项） |
+
+- `hardware-configuration.nix` 由 `nixos-generate-config` 自动生成，**不应手动编辑**。
+- 安装新机器或更换硬件后，重新生成并覆盖对应文件。
+- **工作站**通常已有分区，直接使用 `hardware-configuration.nix`，**不要**导入 `disk.nix`。
 
 ### 占位符替换
 
@@ -279,6 +364,8 @@ patchelf --set-interpreter "$(cat /nix/var/nix/profiles/system/sw/lib/ld-linux-x
 | `hosts/*/hardware-configuration.nix` | UUID 占位符 | 替换为实际磁盘 UUID |
 | `hosts/server/disk.nix` | `/dev/sda` | 确认实际磁盘设备名 |
 | `hosts/vbox/disk.nix` | `/dev/sda` | 确认实际磁盘设备名 |
+| `hosts/k8s-control.nix` | IP/磁盘 | 修改为实际网络与磁盘配置 |
+| `hosts/k8s-worker.nix` | IP/磁盘 | 修改为实际网络与磁盘配置 |
 
 
 ---
