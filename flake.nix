@@ -6,26 +6,39 @@
   _dataDir = "/path/to/data";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";       # 工作站 / vbox / ISO
+    nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.05";   # 服务器
+
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    disko-stable = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs-stable";
+    };
+
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    home-manager-stable = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs-stable";
+    };
+
     nixos-generators = {
       url = "github:nix-community/nixos-generators";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
     nushell-config = {
       url = "github:fj0r/nushell";
       flake = false;
     };
   };
 
-  outputs = { self, nixpkgs, disko, home-manager, nixos-generators, nushell-config, ... }@inputs: {
+  outputs = { self, nixpkgs, nixpkgs-stable, disko, disko-stable, home-manager, home-manager-stable, nixos-generators, nushell-config, ... }@inputs: {
     nixosConfigurations = {
 
       workstation = nixpkgs.lib.nixosSystem {
@@ -39,18 +52,18 @@
               useGlobalPkgs = true;    # 用系统的 nixpkgs，避免二次求值
               useUserPackages = true;  # home 包装进系统 profile
               extraSpecialArgs = { inherit inputs; dataDir = _dataDir; };
-              users.master = import ./modules/home/desktop;
+              users.master = import ./modules/home/workstation;
             };
           }
         ];
       };
 
-      server = nixpkgs.lib.nixosSystem {
+      server = nixpkgs-stable.lib.nixosSystem {
         system = "x86_64-linux";
         specialArgs = { inherit inputs; dataDir = _dataDir; };
         modules = [
           ./hosts/server
-          home-manager.nixosModules.home-manager
+          home-manager-stable.nixosModules.home-manager
           {
             home-manager = {
               useGlobalPkgs = true;
@@ -73,7 +86,7 @@
               useGlobalPkgs = true;
               useUserPackages = true;
               extraSpecialArgs = { inherit inputs; dataDir = _dataDir; };
-              users.master = import ./modules/home/desktop;
+              users.master = import ./modules/home/workstation;
             };
           }
         ];
