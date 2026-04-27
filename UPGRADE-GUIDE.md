@@ -142,6 +142,46 @@ EOF'
 
 ---
 
-## 🔗 参考资料
-*   [NixOS Manual: NIXOS_LUSTRATE](https://nixos.org/manual/nixos/stable/#sec-upgrading-notes)
-*   [Arch Wiki: Nix](https://wiki.archlinux.org/title/Nix)
+## 🌍 NixOS Anywhere 远程部署指南
+
+NixOS Anywhere 允许你通过 SSH 将运行中的 Linux 系统（无论是否为 NixOS）替换为 NixOS。
+
+### 场景一：服务器全新安装（推荐，全量格式化）
+适用于新服务器或可以清空数据的机器。此方案最彻底、最自动化。
+
+1.  **准备 disko 配置**：在 flake 中定义磁盘分区，使用 `disko` 工具自动格式化。
+2.  **执行部署**：
+    ```bash
+    nix run github:nix-community/nixos-anywhere -- --flake .#your-host root@<IP>
+    ```
+
+### 场景二：现有系统迁移（保留数据分区）
+适用于已有数据（如 `/home`, `/var`）且**有独立分区**的服务器。
+
+⚠️ **风险警告**：默认情况下 NixOS Anywhere 会清空磁盘。要保留数据，必须在 `disko` 配置中**排除**数据分区，或仅对系统分区进行操作。
+
+1.  **配置策略**：
+    *   在 `disko` 中**仅定义系统分区**（如 `/` 和 `/boot`）。
+    *   在 `configuration.nix` 中通过 `fileSystems` 挂载现有的数据分区（不要通过 disko 格式化它们）。
+    *   **务必确认** `disko` 配置中没有包含数据分区的 `format` 操作。
+2.  **执行部署**：
+    *   同场景一。
+
+---
+
+## ⚠️ 关键注意事项
+
+1.  **密码设置风险 (`--no-root-passwd`)**：
+    *   使用 `nixos-install` 或 `nixos-anywhere` 时，如果添加了 `--no-root-passwd` 参数，Root 密码将为空。
+    *   如果你没有配置 SSH 公钥登录，重启后将**无法登录系统**。请务必确保配置中包含你的 SSH 公钥，或者在配置中设置了初始密码。
+2.  **用户配置写法**：
+    *   推荐使用 `users.users.<name> = { ... };`。
+    *   在某些覆盖配置（Overlays）或 Home-Manager 集成场景下，可能会看到 `users.extraUsers.<name>` 的写法，两者在逻辑上等效，但 `extraUsers` 常用于模块化合并。请确保你的用户定义语法正确且 UID 保持一致。
+
+---
+
+## 📚 官方文档与参考资料
+
+*   **NIXOS_LUSTRATE 说明**: [NixOS Manual - Upgrading Notes](https://nixos.org/manual/nixos/stable/#sec-upgrading-notes)
+*   **nixos-install 说明**: [NixOS Manual - Installation](https://nixos.org/manual/nixos/stable/#sec-installation)
+*   **Arch Wiki**: [Nix](https://wiki.archlinux.org/title/Nix)
