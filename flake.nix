@@ -131,6 +131,9 @@
         ../../modules/common/container.nix
         ../../modules/common/extra.nix
 
+        # ISO 包缓存（所有项目依赖包，安装时无需联网下载）
+        ../../modules/iso/cache.nix
+
         {
           # ISO 镜像配置
           isoImage.volumeID = "my-nixos-live";
