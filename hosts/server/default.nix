@@ -8,6 +8,7 @@
     ../../modules/common/users.nix
     ../../modules/common/network.nix
     ../../modules/common/container.nix
+    ../../modules/common/extra.nix
 
     # 集群调度二选一（取消注释需要的模块，注释另一个）
     # ../../modules/server/k8s.nix      # Kubernetes

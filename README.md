@@ -21,7 +21,8 @@ nixos26/
 │       └── hardware-configuration.nix
 └── modules/
     ├── common/                   # 通用模块（所有主机共享）
-    │   ├── base.nix              # Nix 配置、locale、SSH、sysctl、CLI 工具
+    │   ├── base.nix              # Nix 配置、locale、SSH、sysctl、核心 CLI 工具
+    │   ├── extra.nix             # 额外工具：glow、fzf、duckdb、termshark
     │   ├── sys.nix               # systemd-boot、NetworkManager、pipewire、polkit、keymap
     │   ├── network.nix           # 防火墙 + WireGuard 接口
     │   ├── users.nix             # 用户 master、SSH 密钥、wheel 组
@@ -37,7 +38,10 @@ nixos26/
     │   ├── k8s.nix               # Kubernetes 集群（与 Nomad 二选一）
     │   ├── nomad.nix             # HashiCorp Nomad（与 K8s 二选一）
     └── home/                     # Home Manager 用户环境配置
-        ├── default.nix           # 入口：用户名、home 包列表
+        ├── desktop/              # 桌面 profile 入口
+        │   └── default.nix       # 用户名、home 包列表（桌面版）
+        ├── server/               # 服务器 profile 入口
+        │   └── default.nix       # 用户名、home 包列表（服务器版）
         ├── shell.nix             # Nushell 启用 + 配置库链接
         ├── editors.nix           # Helix + Neovim + Zed 配置
         ├── terminals.nix         # Ghostty + Zellij 配置

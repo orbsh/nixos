@@ -5,13 +5,12 @@
     ./terminals.nix
     ./git.nix
     ./xdg.nix
-    ./extra.nix
   ];
 
   home = {
     username = "master";
     homeDirectory = "/home/master";
-    stateVersion = "25.05";
+    stateVersion = "26.05";
   };
 
 

@@ -3,13 +3,10 @@
 
   environment.systemPackages = with pkgs; [
     # Shell & 终端
-    nushell
     ghostty
     alacritty       # 备用终端
-    zellij          # 终端复用
 
     # 编辑器
-    helix
     neovim
     neovide         # neovim GUI 前端
     zed-editor

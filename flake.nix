@@ -35,7 +35,7 @@
               useGlobalPkgs = true;    # 用系统的 nixpkgs，避免二次求值
               useUserPackages = true;  # home 包装进系统 profile
               extraSpecialArgs = { inherit inputs; dataDir = _dataDir; };
-              users.master = import ./modules/home;
+              users.master = import ./modules/home/desktop;
             };
           }
         ];
@@ -69,7 +69,7 @@
               useGlobalPkgs = true;
               useUserPackages = true;
               extraSpecialArgs = { inherit inputs; dataDir = _dataDir; };
-              users.master = import ./modules/home;
+              users.master = import ./modules/home/desktop;
             };
           }
         ];

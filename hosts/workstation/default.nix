@@ -8,6 +8,7 @@
     ../../modules/common/users.nix
     ../../modules/common/network.nix
     ../../modules/common/container.nix
+    ../../modules/common/extra.nix
 
     ../../modules/workstation/desktop.nix
     ../../modules/workstation/apps-core.nix
