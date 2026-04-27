@@ -1,0 +1,17 @@
+(defpoll swap_usage :interval "2s" :initial 0
+  "free | grep Swap | awk '{if ($2 > 0) print int($3/$2*100); else print 0}'")
+
+(defpoll net_down :interval "2s" :initial 0
+  "bash scripts/get_net.sh down wlan0")
+
+(defpoll net_up :interval "2s" :initial 0
+  "bash scripts/get_net.sh up wlan0")
+
+(defpoll gpu_val :interval "2s" :initial 0
+  "cat /sys/class/drm/card1/device/gpu_busy_percent | tr -d '[:space:]'")
+
+(defpoll battery_val :interval "15s" :initial 0
+  "cat /sys/class/power_supply/BAT1/capacity | tr -d '[:space:]'")
+
+(defpoll is_plugged :interval "5s" :initial 0
+  "cat /sys/class/power_supply/ACAD/online")

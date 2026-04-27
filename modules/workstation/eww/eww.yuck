@@ -1,0 +1,113 @@
+(include "./widgets/sys.yuck")
+
+(defvar opac 0.5)
+
+(defwindow omni-tray
+  :monitor 0
+  :geometry (geometry :x "8px"
+                      :y "20%"
+                      :width "50px"
+                      :anchor "top right")
+  :stacking "fg"
+  :exclusive false  ;; 不挤压其他窗口空间
+  :focusable false      ; 核心：不获取焦点
+  :wm-ignore true       ; 核心：让 WM 忽略这个窗口的交互
+  (monitor-widget)
+)
+
+(defwidget monitor-widget []
+  (eventbox :onhover "eww update opac=1.0"
+            :onhoverlost "eww update opac=0.5"
+    (box :orientation "v"
+         :space-evenly false
+         :class "floating"
+         :style "opacity: ${opac};"
+
+      (box :orientation "v" :class "chart-box"
+        :tooltip "CPU:${round(EWW_CPU.avg, 0)}% GPU:${gpu_val}%"
+        (overlay
+          (graph :class "gpu-graph"
+                 :value gpu_val
+                 :thickness 1
+                 :time-range "30s"
+                 :dynamic false)
+          (graph :class "cpu-graph"
+                 :value {round(EWW_CPU.avg, 0)}
+                 :thickness 1
+                 :time-range "30s"
+                 :dynamic false)
+        )
+      )
+
+      ; (image :path '/home/master/Downloads/640.jpeg' :image-width 100 )
+      (box :orientation "v" :class "chart-box"
+        :tooltip "RAM:${round(EWW_RAM.used_mem_perc, 0)}% SWAP:${swap_usage}%"
+        (overlay
+          (graph :class "swap-graph"
+                 :value swap_usage
+                 :thickness 1
+                 :time-range "30s")
+          (graph :class "mem-graph"
+                 :value {round(EWW_RAM.used_mem_perc, 0)}
+                 :thickness 1
+                 :time-range "30s"
+                 :dynamic false)
+        )
+      )
+
+      (box :orientation "v" :class "chart-box"
+        :tooltip "DOWN:${net_down}MB UP:${net_up}MB"
+        (overlay
+          (graph :class "net-up"
+                 :value {net_up}
+                 :thickness 1
+                 :time-range "30s"
+                 :max 10
+                 :dynamic false)
+          (graph :class "net-down"
+                 :value {net_down}
+                 :thickness 1
+                 :time-range "30s"
+                 :max 10
+                 :dynamic false)
+        )
+      )
+
+      (box :orientation "v" :class "batt-box"
+        :tooltip "BAT:${battery_val}% ${EWW_BATTERY.BAT1.status}"
+        (circular-progress
+          :class { battery_val < 20
+                 ? "batt-critical"
+                 : battery_val < 50
+                 ? "batt-warning"
+                 : "batt-normal"
+                 }
+          :value {battery_val}
+          :thickness 2
+          :start-at 0
+          :clockwise true
+          (label
+             :class { is_plugged == 1
+                    ? "batt-icon"
+                    : "batt-text"
+                    }
+             ; 󰠠  󱐋 󱐌
+             :text { is_plugged == 1 ? "󱐋" : "${battery_val}" }
+          )
+        )
+      )
+
+      ; (box :class "divider")
+
+      (box :class "time-box" :orientation "v" :space-evenly false
+        (label :text "${formattime(EWW_TIME, '%m')}" :class "time-y")
+        (label :text "${formattime(EWW_TIME, '%d')}" :class "time-y")
+        (label :text "${formattime(EWW_TIME, '%w')}" :class "time-w")
+        (label :text "${formattime(EWW_TIME, '%H')}" :class "time-d")
+        (label :text "${formattime(EWW_TIME, '%M')}" :class "time-d")
+        ; (label :text "${formattime(EWW_TIME, '%S')}" :class "time-sec")
+      )
+
+    )
+  )
+)
