@@ -26,7 +26,7 @@ in
 
     # 服务器/只读模式：通过 flake input 部署
     (lib.mkIf (!cfg.developMode) {
-      xdg.configFile."nushell".source = "${inputs.nushell-config}";
+      home.file.".config/nushell".source = inputs.nushell-config;
     })
   ];
 }

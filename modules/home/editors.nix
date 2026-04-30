@@ -106,10 +106,7 @@
     ];
   };
 
-  # lazy.nvim 配置目录直接 link 仓库里的 nvim/
-  home.file.".config/nvim".source =
-    config.lib.file.mkOutOfStoreSymlink
-      "${config.home.homeDirectory}/nixos/nvim";
+
 
 
 }

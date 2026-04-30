@@ -30,6 +30,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+
     nushell-config = {
       url = "github:fj0r/nushell";
       flake = false;

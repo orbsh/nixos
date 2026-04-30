@@ -33,7 +33,7 @@ lsblk
 
 # 应用磁盘配置
 nix --experimental-features "nix-command flakes" run github:nix-community/disko -- \
-  --mode disko .#server
+  --mode disko ./hosts/vbox/disk.nix #.#server
 ```
 
 ### 3. 生成硬件配置
