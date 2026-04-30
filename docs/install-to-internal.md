@@ -128,6 +128,18 @@ reboot
 
 ## 常见问题
 
+### Q: 安装前 `/mnt` 空间不足，如何清理之前安装的残留？
+如果目标分区之前安装过其他 NixOS 主机配置，Nix Store 中可能残留大量未使用的包。可执行以下命令清理：
+```bash
+nix --extra-experimental-features "nix-command flakes" --store /mnt store gc
+```
+
+若想彻底清理所有旧 generations 并释放更多空间：
+```bash
+rm -rf /mnt/nix/var/nix/profiles/system-*-link
+nix --extra-experimental-features "nix-command flakes" --store /mnt store gc
+```
+
 ### Q: 安装后无法从内置硬盘启动？
 - 检查 BIOS/UEFI 启动顺序，确保内置硬盘在首位
 - 确认 ESP 分区已正确挂载到 `/boot`
