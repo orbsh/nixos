@@ -85,7 +85,7 @@
     extraPackages = with pkgs; [
       rust-analyzer
       typescript-language-server
-      nodePackages.vscode-langservers-extracted  # html/css/json/eslint
+      vscode-langservers-extracted  # html/css/json/eslint
       taplo                                       # TOML
       nil                                         # Nix LSP
       marksman                                    # Markdown

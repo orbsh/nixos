@@ -5,10 +5,9 @@
     packages = with pkgs; [
       noto-fonts
       noto-fonts-cjk-sans
-      noto-fonts-emoji
+      noto-fonts-color-emoji
       lilex
-      (nerdfonts.override { fonts = [ "Lilex" "JetBrainsMono" ]; })
-      wqy-zenhei
+      nerd-fonts.jetbrains-mono
     ];
     fontconfig.defaultFonts = {
       monospace = [ "Lilex" "Noto Sans Mono CJK SC" ];

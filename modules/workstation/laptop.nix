@@ -5,10 +5,10 @@
   services.power-profiles-daemon.enable = true;
 
   # ── 合盖/睡眠行为（systemd-logind） ─────────────────────
-  services.logind = {
-    lidSwitch = "suspend";          # 合盖挂起
-    lidSwitchExternalPower = "lock"; # 插电时合盖仅锁屏
-    lidSwitchDocked = "ignore";     # 在底座/扩展坞时忽略合盖
+  services.logind.settings.Login = {
+    HandleLidSwitch = "suspend";            # 合盖挂起
+    HandleLidSwitchExternalPower = "lock";  # 插电时合盖仅锁屏
+    HandleLidSwitchDocked = "ignore";       # 在底座/扩展坞时忽略合盖
   };
 
   # ── 屏幕亮度控制 ────────────────────────────────────────

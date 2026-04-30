@@ -61,7 +61,6 @@
 
     # K8s & Containers
     kubectl
-    kubeadm
     kubernetes-helm
 
     # Data & Debugging

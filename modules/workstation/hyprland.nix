@@ -1,4 +1,4 @@
-{ pkgs, lib, dataDir, ... }:
+{ config, pkgs, lib, dataDir, ... }:
 
 let
   cfg = config.wayland.windowManager.hyprland;
@@ -10,7 +10,7 @@ in {
     programs.hyprland.enable = true;
 
     # ── 显示管理器 (SDDM) ─────────────────────────────────
-    services.displayManager.sddm = {
+    services.displayManager.sddm = lib.mkIf (!config.services.displayManager.cosmic-greeter.enable) {
       enable = true;
       wayland.enable = true;
     };
@@ -78,22 +78,20 @@ in {
     };
 
     # ── 快捷键：Focus Window (F1-F12) ───────────────────────
-    wayland.windowManager.hyprland.settings = {
-      bind = [
-        ", F1, exec, python3 /etc/hypr/scripts/hypr_toggle.py 1"
-        ", F2, exec, python3 /etc/hypr/scripts/hypr_toggle.py 2"
-        ", F3, exec, python3 /etc/hypr/scripts/hypr_toggle.py 3"
-        ", F4, exec, python3 /etc/hypr/scripts/hypr_toggle.py 4"
-        ", F5, exec, python3 /etc/hypr/scripts/hypr_toggle.py 5"
-        ", F6, exec, python3 /etc/hypr/scripts/hypr_toggle.py 6"
-        ", F7, exec, python3 /etc/hypr/scripts/hypr_toggle.py 7"
-        ", F8, exec, python3 /etc/hypr/scripts/hypr_toggle.py 8"
-        ", F9, exec, python3 /etc/hypr/scripts/hypr_toggle.py 9"
-        ", F10, exec, python3 /etc/hypr/scripts/hypr_toggle.py 10"
-        ", F11, exec, python3 /etc/hypr/scripts/hypr_toggle.py 11"
-        ", F12, exec, python3 /etc/hypr/scripts/hypr_toggle.py 12"
-      ];
-    };
+    environment.etc."hypr/keybinds.conf".text = ''
+      bind =, F1, exec, python3 /etc/hypr/scripts/hypr_toggle.py 1
+      bind =, F2, exec, python3 /etc/hypr/scripts/hypr_toggle.py 2
+      bind =, F3, exec, python3 /etc/hypr/scripts/hypr_toggle.py 3
+      bind =, F4, exec, python3 /etc/hypr/scripts/hypr_toggle.py 4
+      bind =, F5, exec, python3 /etc/hypr/scripts/hypr_toggle.py 5
+      bind =, F6, exec, python3 /etc/hypr/scripts/hypr_toggle.py 6
+      bind =, F7, exec, python3 /etc/hypr/scripts/hypr_toggle.py 7
+      bind =, F8, exec, python3 /etc/hypr/scripts/hypr_toggle.py 8
+      bind =, F9, exec, python3 /etc/hypr/scripts/hypr_toggle.py 9
+      bind =, F10, exec, python3 /etc/hypr/scripts/hypr_toggle.py 10
+      bind =, F11, exec, python3 /etc/hypr/scripts/hypr_toggle.py 11
+      bind =, F12, exec, python3 /etc/hypr/scripts/hypr_toggle.py 12
+    '';
 
     # 剪贴板历史由用户级 home-manager 配置管理
   };

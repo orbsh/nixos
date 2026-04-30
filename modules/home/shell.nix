@@ -17,7 +17,7 @@ in
       home.file.".config/nushell".source =
         config.lib.file.mkOutOfStoreSymlink nushellDir;
 
-      home.activation.cloneNushellConfig = lib.dag.entryAfter [ "writeBoundary" ] ''
+      home.activation.cloneNushellConfig = ''
         if [ ! -d "${nushellDir}/.git" ]; then
           $DRY_RUN_CMD git clone https://github.com/fj0r/nushell.git "${nushellDir}"
         fi

@@ -1,8 +1,8 @@
 { ... }: {
   programs.git = {
     enable      = true;
-    userName    = "master";
-    userEmail   = "you@example.com";   # 改成你的邮箱
+    settings.user.name  = "master";
+    settings.user.email = "you@example.com";   # 改成你的邮箱
 
     signing = {
       # 用 SSH key 签名（比 GPG 简单）
@@ -11,7 +11,7 @@
       format = "ssh";
     };
 
-    extraConfig = {
+    settings = {
       init.defaultBranch   = "main";
       push.autoSetupRemote = true;
       pull.rebase          = true;
@@ -36,16 +36,17 @@
       "result"
       "result-*"
     ];
+  };
 
-    # delta —— 更好看的 diff
-    delta = {
-      enable = true;
-      options = {
-        navigate         = true;
-        side-by-side     = true;
-        line-numbers     = true;
-        syntax-theme     = "Catppuccin Mocha";
-      };
+  # delta —— 更好看的 diff
+  programs.delta = {
+    enable = true;
+    enableGitIntegration = true;
+    options = {
+      navigate         = true;
+      side-by-side     = true;
+      line-numbers     = true;
+      syntax-theme     = "Catppuccin Mocha";
     };
   };
 

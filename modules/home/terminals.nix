@@ -47,8 +47,7 @@
   # ── Zellij ────────────────────────────────────────────────────
   programs.zellij = {
     enable = true;
-    # 不自动在 shell 启动，手动 zj
-    enableNushellAutostart = false;
+
     settings = {
       theme             = "gruvbox-dark";
       default_shell     = "nu";
