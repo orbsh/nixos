@@ -3,9 +3,9 @@
     surrealist        # SurrealDB GUI 客户端
 
 
-    wps-office
+    # wps-office        # 已从 nixpkgs 移除，可替换为 libreoffice 或 onlyoffice-bin
     zathura         # PDF 阅读
-    zathura-pdf-mupdf
+
     foliate         # 电子书阅读
 
     # 以下按需取消注释：
@@ -16,6 +16,6 @@
 
   nixpkgs.config.allowUnfreePredicate = pkg:
     builtins.elem (pkg.pname or "") [
-      "wps-office"
+      # "wps-office"        # 已移除
     ];
 }

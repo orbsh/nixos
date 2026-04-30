@@ -138,7 +138,16 @@
         # 内置 disko 及分区工具，live 环境可离线使用
         inputs.disko.nixosModules.disko
 
-
+        # Home Manager 支持（提供 nushell 等用户级配置）
+        home-manager.nixosModules.home-manager
+        {
+          home-manager = {
+            useGlobalPkgs = true;
+            useUserPackages = true;
+            extraSpecialArgs = { inherit inputs dataDir; };
+            users.master = import ./modules/home/shell.nix;
+          };
+        }
 
         {
           # ISO 镜像配置

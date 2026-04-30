@@ -1,5 +1,4 @@
 { pkgs, ... }: {
-  programs.nushell.enable = true;
 
   environment.systemPackages = with pkgs; [
     # Shell & 终端
