@@ -154,6 +154,9 @@ nixos-install --flake .#workstation --recreate-lock-file
 # 方案 3：确保所有更改已提交（dirty tree 会导致 hash 不一致）
 git add -A && git commit -m "fix: ..."
 nixos-install --flake .#workstation
+
+# 方案 4：临时跳过 lock file 写入（dirty tree 时的权宜之计）
+nixos-install --flake .#workstation --no-write-lock-file
 ```
 
 ### Q: 安装后无法从内置硬盘启动？
