@@ -13,10 +13,10 @@
 
     # 桌面环境 (COSMIC)
     ../../modules/workstation/desktop.nix
-    ../../modules/workstation/laptop.nix
+    #../../modules/workstation/laptop.nix
 
     # 开发工具
-    ../../modules/workstation/dev.nix
+    #../../modules/workstation/dev.nix
   ];
 
   # VirtualBox 客户机增强功能 (共享剪贴板、自动分辨率等)
