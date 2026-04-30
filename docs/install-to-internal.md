@@ -140,6 +140,22 @@ rm -rf /mnt/nix/var/nix/profiles/system-*-link
 nix --extra-experimental-features "nix-command flakes" --store /mnt store gc
 ```
 
+### Q: 安装时报错 `flake.cc:37: Assertion ... failed`？
+这是 Nix flake 的 hash 断言错误，通常由 `flake.lock` 中的 narHash 与实际内容不匹配引起。常见于从 Live USB 安装或 Git 树有未提交更改时。
+
+**解决方案：**
+```bash
+# 方案 1：更新 flake.lock 后重试
+nix flake update
+
+# 方案 2：重建 lock file
+nixos-install --flake .#workstation --recreate-lock-file
+
+# 方案 3：确保所有更改已提交（dirty tree 会导致 hash 不一致）
+git add -A && git commit -m "fix: ..."
+nixos-install --flake .#workstation
+```
+
 ### Q: 安装后无法从内置硬盘启动？
 - 检查 BIOS/UEFI 启动顺序，确保内置硬盘在首位
 - 确认 ESP 分区已正确挂载到 `/boot`
