@@ -1,4 +1,4 @@
-{ pkgs, ... }: {
+{ pkgs, inputs, ... }: {
   # ── ISO 本地包缓存 ──────────────────────────────────────
   # 仅包含项目各模块中实际引用的包，不添加任何额外内容。
   # 安装时可直接从本地 Nix store 复制，无需联网下载。
@@ -18,6 +18,10 @@
 
     # ── common/network.nix ───────────────────────────────
     openbsd-netcat resolvconf
+
+    # ── 隐式包：common/sys.nix ──────────────────────────
+    # networking.networkmanager.enable, services.pipewire.enable
+    networkmanager pipewire wireplumber
 
     # ── common/container.nix ─────────────────────────────
     buildah skopeo
@@ -60,6 +64,8 @@
     # ── 隐式包：common/users.nix ────────────────────────
     # programs.wireshark.package = pkgs.wireshark
     wireshark
+    # services.printing.enable
+    cups
 
     # ── 隐式包：server/k8s-common.nix ───────────────────
     # virtualisation.cri-o.enable = true, pkgs.crun
@@ -71,6 +77,8 @@
 
     # ── 隐式包：workstation/fonts.nix ───────────────────
     noto-fonts noto-fonts-cjk-sans noto-fonts-emoji lilex wqy-zenhei
+    # fonts.packages (nerdfonts override)
+    (nerdfonts.override { fonts = [ "Lilex" "JetBrainsMono" ]; })
 
     # ── 隐式包：workstation/laptop.nix ──────────────────
     # services.power-profiles-daemon.enable, services.blueman.enable
@@ -81,5 +89,9 @@
 
     # ── 隐式包：workstation/hyprland.nix（条件启用） ─────
     waybar wofi mako grim slurp swappy hyprpaper cliphist wlogout swaylock-effects playerctl networkmanagerapplet pavucontrol xdg-desktop-portal-gtk
+
+    # ── disko 离线支持 ───────────────────────────────
+    inputs.disko.packages.${pkgs.system}.disko
+    gptfdisk dosfstools xfsprogs e2fsprogs
   ];
 }

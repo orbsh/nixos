@@ -3,8 +3,6 @@
 
   # 统一数据目录前缀（podman/quadlet 服务、rime 词库等）
   # 按需修改为实际路径，如 "/home/master/data"
-  _dataDir = "/data";
-
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";       # 工作站 / vbox / ISO
     nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.11";   # 服务器
@@ -40,6 +38,9 @@
 
   outputs = { self, nixpkgs, nixpkgs-stable, disko, disko-stable, home-manager, home-manager-stable, nixos-generators, nushell-config, ... }@inputs:
   let
+    # ── 数据目录前缀 ─────────────────────────────────────
+    dataDir = "/data";
+
     # ── K8s 节点定义（从外部配置文件读取） ─────────────────────
     k8sNodes = import ./config/nodes.nix;
 
@@ -53,7 +54,7 @@
     # K8s 节点生成函数
     mkK8sNode = name: attrs: nixpkgs-stable.lib.nixosSystem {
       system = "x86_64-linux";
-      specialArgs = { inherit inputs; dataDir = _dataDir; hostname = name; ip = attrs.ip; };
+      specialArgs = { inherit inputs dataDir; hostname = name; ip = attrs.ip; };
       modules = [
         ./hosts/k8s-role.nix
         k8sRoleModules.${attrs.role}
@@ -64,7 +65,7 @@
 
       workstation = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        specialArgs = { inherit inputs; dataDir = _dataDir; };
+        specialArgs = { inherit inputs dataDir; };
         modules = [
           ./hosts/workstation
           home-manager.nixosModules.home-manager
@@ -72,7 +73,7 @@
             home-manager = {
               useGlobalPkgs = true;    # 用系统的 nixpkgs，避免二次求值
               useUserPackages = true;  # home 包装进系统 profile
-              extraSpecialArgs = { inherit inputs; dataDir = _dataDir; };
+              extraSpecialArgs = { inherit inputs dataDir; };
               users.master = import ./modules/home/workstation;
             };
           }
@@ -81,7 +82,7 @@
 
       server = nixpkgs-stable.lib.nixosSystem {
         system = "x86_64-linux";
-        specialArgs = { inherit inputs; dataDir = _dataDir; };
+        specialArgs = { inherit inputs dataDir; };
         modules = [
           ./hosts/server
           home-manager-stable.nixosModules.home-manager
@@ -89,7 +90,7 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
-              extraSpecialArgs = { inherit inputs; dataDir = _dataDir; };
+              extraSpecialArgs = { inherit inputs dataDir; };
               users.master = import ./modules/home/server;
             };
           }
@@ -98,7 +99,7 @@
 
       vbox = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        specialArgs = { inherit inputs; dataDir = _dataDir; };
+        specialArgs = { inherit inputs dataDir; };
         modules = [
           ./hosts/vbox
           home-manager.nixosModules.home-manager
@@ -106,7 +107,7 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
-              extraSpecialArgs = { inherit inputs; dataDir = _dataDir; };
+              extraSpecialArgs = { inherit inputs dataDir; };
               users.master = import ./modules/home/workstation;
             };
           }
@@ -119,7 +120,7 @@
     packages.x86_64-linux.iso = nixos-generators.nixosGenerate {
       system = "x86_64-linux";
       format = "install-iso";
-      specialArgs = { inherit inputs; dataDir = _dataDir; };
+      specialArgs = { inherit inputs dataDir; };
       modules = [
         "${inputs.nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
 
@@ -133,6 +134,11 @@
 
         # ISO 包缓存（所有项目依赖包，安装时无需联网下载）
         ../../modules/iso/cache.nix
+
+        # 内置 disko 及分区工具，live 环境可离线使用
+        inputs.disko.nixosModules.disko
+
+
 
         {
           # ISO 镜像配置
