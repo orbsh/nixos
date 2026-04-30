@@ -14,6 +14,9 @@
     # penpot-desktop
   ];
 
+  # 移除工作站默认包集（含 nano 等），仅安装显式声明的包
+  environment.defaultPackages = [];
+
   nixpkgs.config.allowUnfreePredicate = pkg:
     builtins.elem (pkg.pname or "") [
       # "wps-office"        # 已移除
