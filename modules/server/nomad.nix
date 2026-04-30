@@ -5,7 +5,7 @@
 
     # 服务器作为 Nomad Server + Client 运行，管理集群并执行任务
     server.enable = true;
-    client.enable = true;
+
 
     extraConfig = ''
       data_dir = "/opt/nomad/data"
