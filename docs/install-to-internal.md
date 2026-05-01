@@ -1,74 +1,95 @@
-# 从外置硬盘 / U 盘安装 NixOS 到内置硬盘
+# 从便携系统盘 (Portable) 安装 NixOS 到内置硬盘
 
-本文档说明如何从已配置好的外置硬盘或 Live USB 环境，将 NixOS 安装到机器的内置硬盘上。
+本文档说明如何从 `portable` 系统盘（或任何已配置的 NixOS 环境），将 NixOS 安装到目标机器的内置硬盘上。
 
 ## 前置条件
 
-- 已启动 NixOS Live 环境或从外置硬盘启动
-- 已联网（或 ISO 已包含完整包缓存）
-- 内置硬盘无重要数据（**分区将清空整块磁盘**）
+- 已使用 `portable` 配置启动 USB 系统盘（包含完整图形界面和工具链）
+- 已联网（通过 NetworkManager 或 `nmcli`）
+- 目标硬盘无重要数据（**分区将清空整块磁盘**）
 
 > **💡 提示：sudo 路径**
-> NixOS 中 `sudo` 的实际路径为 `/run/wrappers/bin/sudo`。若 LiveCD 环境中直接输入 `sudo` 提示 `command not found`，请使用完整路径或执行 `export PATH="/run/wrappers/bin:$PATH"`。
+> 在 `portable` 系统中 `sudo` 通常已加入 PATH。若遇到 `command not found`，请使用 `/run/wrappers/bin/sudo` 或执行 `export PATH="/run/wrappers/bin:$PATH"`。
 
-## 步骤一：确认硬盘设备名
+## 步骤一：准备工作区
+
+由于 `portable` 系统是持久化的，且不像 ISO 那样自动挂载配置源码，你需要先将配置仓库克隆到本地：
+
+```bash
+# 克隆你的配置仓库
+git clone <你的仓库地址> ~/nixos-config
+cd ~/nixos-config
+```
+
+## 步骤二：确认硬盘设备名
 
 ```bash
 lsblk -f
 ```
 
 - `/dev/nvme0n1` — 内置 NVMe 固态硬盘
-- `/dev/sda`     — SATA 硬盘或 U 盘
-- `/dev/mmcblk0` — eMMC 存储
+- `/dev/sda`     — SATA 硬盘
+- `/dev/sdb`     — 你的 USB 系统盘（**请勿选错！**）
 
-请根据容量和类型确认哪块是目标内置硬盘，下文以 `/dev/nvme0n1` 为例。
+请根据容量确认目标硬盘，下文以 `/dev/nvme0n1` 为例。
 
-## 步骤二：使用 disko 分区（推荐）
+## 步骤三：使用 disko 分区
 
 本项目已集成 [disko](https://github.com/nix-community/disko)，可一键完成分区、格式化和挂载。
 
-### 2.1 使用预置配置
+### 3.1 检查/编写 disko 配置
 
-```bash
-cd /mnt/etc/nixos  # 或你的 flake 所在路径
+确保你的 `disko` 配置文件中的设备名与实际一致。
+如果还没有独立的 disko 文件，可以创建一个临时的 `disk-config.nix`：
 
-# 确认 disk-internal.nix 中的设备名与实际一致
-cat hosts/workstation/disk-internal.nix
-
-# 执行分区（--mode disko 会清空目标磁盘！）
-sudo nix --experimental-features "nix-command flakes" run github:nix-community/disko -- \
-  --mode disko ./hosts/workstation/disk-internal.nix
+```nix
+# disk-config.nix
+{ device ? "/dev/nvme0n1", ... }: {
+  disk = {
+    main = {
+      type = "disk";
+      device = device;
+      content = {
+        type = "gpt";
+        partitions = {
+          boot = {
+            size = "512M";
+            type = "EF00";
+            content = { type = "filesystem"; format = "vfat"; mountpoint = "/boot"; };
+          };
+          root = {
+            size = "100%";
+            content = { type = "filesystem"; format = "xfs"; mountpoint = "/"; };
+          };
+        };
+      };
+    };
+  };
+}
 ```
 
-disko 会自动将分区挂载到 `/mnt`。
-
-### 2.2 分区结构
-
-| 分区 | 大小  | 格式 | 挂载点 |
-|------|-------|------|--------|
-| ESP  | 512M  | vfat | `/boot` |
-| root | 100%  | xfs  | `/`     |
-
-## 步骤三：安装 NixOS
+### 3.2 执行分区
 
 ```bash
-# 使用 flake 安装（#workstation 替换为你的配置名）
-sudo nixos-install --flake .#workstation --root /mnt
+# 格式化并自动挂载到 /mnt
+sudo nix run github:nix-community/disko -- --mode disko ./disk-config.nix
+```
+
+disko 会自动完成分区并将根文件系统挂载到 `/mnt`。
+
+## 步骤四：安装 NixOS
+
+```bash
+# 安装指定配置（如 workstation）到 /mnt
+sudo nixos-install --flake ~/nixos-config#workstation --root /mnt
 
 # 设置用户密码（在 chroot 环境中执行）
-sudo nixos-enter --root /mnt
-passwd master
-exit
+sudo nixos-enter --root /mnt --command "passwd master"
 ```
 
-> **提示**：如果 flake 中尚未启用 `disk-internal.nix`，可临时通过命令行传入：
-> ```bash
-> sudo nixos-install --flake .#workstation \
->   --extra-experimental-features "nix-command flakes" \
->   --option extra-substituters "https://cache.nixos.org"
-> ```
+> **提示**：如果要安装服务器版，将 `#workstation` 替换为 `#server`。
 
-## 步骤四：安装完成
+## 步骤五：完成安装
 
 ```bash
 # 卸载并重启
@@ -98,87 +119,30 @@ sudo mount /dev/nvme0n1p2 /mnt
 sudo mkdir -p /mnt/boot
 sudo mount /dev/nvme0n1p1 /mnt/boot
 
-# 4. 生成硬件配置
-sudo nixos-generate-config --root /mnt
-# 将生成的 hardware-configuration.nix 合并到你的 flake 中
-
-# 5. 安装
-sudo nixos-install --flake .#workstation
-```
-
-## 附录 B：完整克隆（外置系统 → 内置硬盘）
-
-如果外置硬盘上的系统已经完全配置好，可以直接克隆：
-
-```bash
-# 1. 分区并格式化内置硬盘（同附录 A）
-
-# 2. 使用 rsync 克隆根文件系统
-sudo rsync -aAXv \
-  --exclude={"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"} \
-  / /mnt/
-
-# 3. 重新生成 hardware-configuration.nix（UUID 已变更）
-sudo nixos-generate-config --root /mnt
-
-# 4. 更新 flake 中的硬件配置，然后重新安装 bootloader
-sudo nixos-enter --root /mnt --command "nixos-rebuild boot"
-
-# 5. 卸载并重启
-sudo umount -R /mnt
-reboot
+# 4. 安装
+sudo nixos-install --flake ~/nixos-config#workstation --root /mnt
 ```
 
 ## 常见问题
 
-### Q: 安装前 `/mnt` 空间不足，如何清理之前安装的残留？
-如果目标分区之前安装过其他 NixOS 主机配置，Nix Store 中可能残留大量未使用的包。可执行以下命令清理：
-```bash
-nix --extra-experimental-features "nix-command flakes" --store /mnt store gc
-```
-
-若想彻底清理所有旧 generations 并释放更多空间：
-```bash
-rm -rf /mnt/nix/var/nix/profiles/system-*-link
-nix --extra-experimental-features "nix-command flakes" --store /mnt store gc
-```
-
 ### Q: 安装时报错 `flake.cc:37: Assertion ... failed`？
-这是 Nix flake 的 hash 断言错误，通常由 `flake.lock` 中的 narHash 与实际内容不匹配引起。常见于从 Live USB 安装或 Git 树有未提交更改时。
+这是 Nix flake 的 hash 断言错误，通常由 `flake.lock` 中的 narHash 与实际内容不匹配引起。常见于 Git 树有未提交更改时。
 
 **解决方案：**
 ```bash
-# 方案 1：更新 flake.lock 后重试
-nix flake update
-
-# 方案 2：重建 lock file
-nixos-install --flake .#workstation --recreate-lock-file
-
-# 方案 3：确保所有更改已提交（dirty tree 会导致 hash 不一致）
+# 方案 1：确保所有更改已提交
 git add -A && git commit -m "fix: ..."
-nixos-install --flake .#workstation
+nixos-install --flake ~/nixos-config#workstation --root /mnt
 
-# 方案 4：临时跳过 lock file 写入（dirty tree 时的权宜之计）
-nixos-install --flake .#workstation --no-write-lock-file
+# 方案 2：临时跳过 lock file 写入（dirty tree 时的权宜之计）
+nixos-install --flake ~/nixos-config#workstation --root /mnt --no-write-lock-file
 ```
 
 ### Q: 安装后无法从内置硬盘启动？
 - 检查 BIOS/UEFI 启动顺序，确保内置硬盘在首位
 - 确认 ESP 分区已正确挂载到 `/boot`
-- 重新运行 `nixos-rebuild boot` 或 `bootctl install`
+- 使用 portable U 盘启动后，重新运行 `nixos-install`（它会修复 bootloader）
 
 ### Q: disko 报错 "device is busy"？
 - 确认目标硬盘没有被挂载：`umount /dev/nvme0n1*`
 - 如果有 swap 或 LVM，先停用：`swapoff -a`、`vgchange -an`
-
-### Q: 如何验证安装是否成功？
-```bash
-# 检查分区挂载
-findmnt -t xfs,vfat
-
-# 检查 bootloader
-bootctl status
-
-# 检查 flake 配置
-nixos-rebuild build --flake .#workstation
-```

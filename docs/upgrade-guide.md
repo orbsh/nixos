@@ -61,18 +61,18 @@ nixos-generate-config --root /
 
   # 引导配置（根据你的实际情况选择）
   # 如果是 UEFI:
-  boot.loader.systemd-boot.enable = true; 
+  boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiBoot = true;
-  
+
   # 如果是 BIOS (GRUB):
   # boot.loader.grub.enable = true;
-  # boot.loader.grub.device = "/dev/sda"; 
+  # boot.loader.grub.device = "/dev/sda";
 
   # 必须包含你现在的用户，确保 UID 一致！
   users.users."你的用户名" = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];
-    uid = 1000; 
+    uid = 1000;
   };
 
   # 显卡驱动（如果是 NVIDIA，务必在此配置，否则重启可能无法进入桌面）

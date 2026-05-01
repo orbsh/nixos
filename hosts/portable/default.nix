@@ -9,6 +9,14 @@
     ../../modules/common/network.nix
     ../../modules/common/container.nix
     ../../modules/common/extra.nix
+
+    # ── 工作站桌面与应用模块 (使 portable 具备完整 GUI 和工具链) ──
+    ../../modules/workstation/desktop.nix
+    ../../modules/workstation/apps-core.nix
+    ../../modules/workstation/apps-im.nix
+    ../../modules/workstation/extra.nix
+    ../../modules/workstation/dev.nix
+    # 注意：不包含 laptop.nix，避免在非笔记本硬件上报错
   ];
 
   # ── 通用硬件支持 ──────────────────────────────────
@@ -40,5 +48,9 @@
   # 自动登录 master 用户，启动即用
   services.getty.autologinUser = "master";
 
+  # ── 图形界面配置 ──────────────────────────────────
+  # 启用 Hyprland 并禁用 cosmic-greeter 以使用 SDDM
+  wayland.windowManager.hyprland.enable = true;
+  services.displayManager.cosmic-greeter.enable = false;
 
 }
