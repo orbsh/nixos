@@ -33,10 +33,11 @@
     # ── workstation/apps-core.nix ────────────────────────
     ghostty alacritty neovim neovide zed-editor
     vivaldi qutebrowser
-    freefilesync smplayer krita blender flameshot calibre
+    freefilesync smplayer krita blender flameshot
+    # calibre
 
     # ── workstation/apps-im.nix ──────────────────────────
-    wechat-uos telegram-desktop
+    # wechat-uos telegram-desktop
 
     # ── workstation/extra.nix ────────────────────────────
     surrealist zathura foliate
