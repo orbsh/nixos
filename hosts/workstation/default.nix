@@ -16,7 +16,7 @@
     ../../modules/workstation/apps-core.nix
     ../../modules/workstation/apps-im.nix           # 微信单独管理
     ../../modules/workstation/extra.nix
-    # ../../modules/workstation/nomad.nix             # Nomad Client（已废弃，services.nomad 在 nixpkgs 25.11 中被上游移除）
+
     ../../modules/workstation/dev.nix
     # ../../modules/workstation/disk.nix  # 使用 hardware-configuration.nix 方案
 

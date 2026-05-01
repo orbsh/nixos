@@ -64,9 +64,6 @@
     # ── workstation/laptop.nix ───────────────────────────
     brightnessctl auto-cpufreq
 
-    # ── workstation/nomad.nix / server/nomad.nix ─────────
-    nomad
-
     # ── workstation/wireguard.nix / server/wireguard.nix ─
     wireguard-tools
 
