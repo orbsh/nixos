@@ -12,11 +12,11 @@ in
   config = lib.mkMerge [
     # 始终启用 nushell + 插件 (polars / query web)
     # 注：插件放入 home.packages 而非 programs.nushell.plugins，避免与整目录 symlink 冲突
-    {
-      xdg.enable = true;
-      programs.nushell.enable = true;
-      programs.nushell.plugins = [ pkgs.nushellPlugins.polars pkgs.nushellPlugins.query ];
-    }
+    # {
+    #   xdg.enable = true;
+    #   programs.nushell.enable = true;
+    #   programs.nushell.plugins = [ pkgs.nushellPlugins.polars pkgs.nushellPlugins.query ];
+    # }
 
     # 工作站开发模式：符号链接 + 自动克隆
     (lib.mkIf cfg.developMode {

@@ -24,5 +24,9 @@
     # ../../modules/podman/mihomo.nix
   ];
 
+  # 启用 Hyprland 并禁用 COSMIC Greeter 以使用 SDDM
+  wayland.windowManager.hyprland.enable = true;
+  services.displayManager.cosmic-greeter.enable = false;
+
   networking.hostName = "workstation";
 }

@@ -9,6 +9,7 @@
     ../../modules/common/base.nix
     ../../modules/common/users.nix
     ../../modules/common/network.nix
+    ../../modules/common/extra.nix
     ../../modules/common/container.nix
 
     # 桌面环境 (COSMIC)

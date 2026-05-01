@@ -47,11 +47,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1777518431,
-        "narHash": "sha256-SwgiG2T5pbyo33Vz7/vUCAhEMgwCK8Pa2nDSx5a6/WE=",
+        "lastModified": 1777594677,
+        "narHash": "sha256-h90sHwoRJLRvaTpZroTvU2JRHDFj0czUafM8eqLe1RI=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "2e54a938cdd4c8e414b2518edc3d82308027c670",
+        "rev": "899c08a15beae5da51a5cecd6b2b994777a948da",
         "type": "github"
       },
       "original": {
@@ -67,16 +67,33 @@
         ]
       },
       "locked": {
-        "lastModified": 1777518431,
-        "narHash": "sha256-SwgiG2T5pbyo33Vz7/vUCAhEMgwCK8Pa2nDSx5a6/WE=",
+        "lastModified": 1775425411,
+        "narHash": "sha256-KY6HsebJHEe5nHOWP7ur09mb0drGxYSzE3rQxy62rJo=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "2e54a938cdd4c8e414b2518edc3d82308027c670",
+        "rev": "0d02ec1d0a05f88ef9e74b516842900c41f0f2fe",
         "type": "github"
       },
       "original": {
         "owner": "nix-community",
+        "ref": "release-25.11",
         "repo": "home-manager",
+        "type": "github"
+      }
+    },
+    "my-nushell-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1777562467,
+        "narHash": "sha256-lbsIsh/CVlC9WDuJHd0yplcbeaTpfzohC0dRv+B6OTc=",
+        "owner": "fj0r",
+        "repo": "nushell",
+        "rev": "0e869b74ae2d80e83965f3d5ae252aace94c3289",
+        "type": "github"
+      },
+      "original": {
+        "owner": "fj0r",
+        "repo": "nushell",
         "type": "github"
       }
     },
@@ -134,11 +151,11 @@
     },
     "nixpkgs-stable": {
       "locked": {
-        "lastModified": 1777077449,
-        "narHash": "sha256-AIiMJiqvGrN4HyLEbKAoCSRRYn0rnlW5VbKNIMIYqm4=",
+        "lastModified": 1777428379,
+        "narHash": "sha256-ypxFOeDz+CqADEQNL72haqGjvZQdBR5Vc7pyx2JDttI=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "a4bf06618f0b5ee50f14ed8f0da77d34ecc19160",
+        "rev": "755f5aa91337890c432639c60b6064bb7fe67769",
         "type": "github"
       },
       "original": {
@@ -148,32 +165,16 @@
         "type": "github"
       }
     },
-    "nushell-config": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1777344603,
-        "narHash": "sha256-tF5UudrAyfCK1KdmVFyTfqA2ZCnZAnIDi9uCiJAbpCw=",
-        "owner": "fj0r",
-        "repo": "nushell",
-        "rev": "ab6b14f030fe69b33f20c9f20b95328dae53efc6",
-        "type": "github"
-      },
-      "original": {
-        "owner": "fj0r",
-        "repo": "nushell",
-        "type": "github"
-      }
-    },
     "root": {
       "inputs": {
         "disko": "disko",
         "disko-stable": "disko-stable",
         "home-manager": "home-manager",
         "home-manager-stable": "home-manager-stable",
+        "my-nushell-src": "my-nushell-src",
         "nixos-generators": "nixos-generators",
         "nixpkgs": "nixpkgs",
-        "nixpkgs-stable": "nixpkgs-stable",
-        "nushell-config": "nushell-config"
+        "nixpkgs-stable": "nixpkgs-stable"
       }
     }
   },
