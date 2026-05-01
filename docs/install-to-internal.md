@@ -8,6 +8,9 @@
 - 已联网（或 ISO 已包含完整包缓存）
 - 内置硬盘无重要数据（**分区将清空整块磁盘**）
 
+> **💡 提示：sudo 路径**
+> NixOS 中 `sudo` 的实际路径为 `/run/wrappers/bin/sudo`。若 LiveCD 环境中直接输入 `sudo` 提示 `command not found`，请使用完整路径或执行 `export PATH="/run/wrappers/bin:$PATH"`。
+
 ## 步骤一：确认硬盘设备名
 
 ```bash

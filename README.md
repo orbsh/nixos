@@ -39,7 +39,9 @@ nixos/
 ## 🔧 其他文档
 
 - [docs/daily-ops.md](docs/daily-ops.md) — 日常操作（更新、回滚、垃圾回收）
-- [docs/temp-envs.md](docs/temp-envs.md) — 临时环境与 devShells
+- [docs/temp-envs.md](docs/temp-envs.md) — 临时程序（nix run / nix shell）
+- [docs/dev-shells.md](docs/dev-shells.md) — 项目级环境配置（类似 Python venv）
+- [docs/iso.md](docs/iso.md) — 构建与使用 Live ISO
 - [docs/running-binaries.md](docs/running-binaries.md) — 运行外部二进制文件
 - [docs/upgrade-guide.md](docs/upgrade-guide.md) — 升级与迁移总览（含 Arch 原地转换与 NixOS Anywhere）
 

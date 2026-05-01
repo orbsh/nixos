@@ -24,6 +24,9 @@ cp result/iso/my-nixos-live.iso /mnt/ventoy/
 
 ### 2. 分区与挂载（全新安装）
 
+> **💡 提示：sudo 路径**
+> NixOS 中 `sudo` 的实际路径为 `/run/wrappers/bin/sudo`。若 LiveCD 环境中直接输入 `sudo` 提示 `command not found`，请使用完整路径或执行 `export PATH="/run/wrappers/bin:$PATH"`。
+
 服务器采用 `disk.nix` 进行声明式分区（**会清空磁盘**）：
 
 ```bash
