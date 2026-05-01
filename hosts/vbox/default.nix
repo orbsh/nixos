@@ -1,4 +1,4 @@
-{ inputs, ... }: {
+{ inputs, pkgs, lib, ... }: {
   imports = [
     inputs.disko.nixosModules.disko
 
@@ -21,6 +21,9 @@
 
   # VirtualBox 客户机增强功能 (共享剪贴板、自动分辨率等)
   virtualisation.virtualbox.guest.enable = true;
+
+  # 使用稳定内核，避免 linuxPackages_latest 与 VBox GuestAdditions 不兼容
+  boot.kernelPackages = lib.mkForce pkgs.linuxPackages;
 
   networking.hostName = "vbox";
 }

@@ -31,13 +31,13 @@
     };
 
 
-    nushell-config = {
+    my-nushell-src = {
       url = "github:fj0r/nushell";
       flake = false;
     };
   };
 
-  outputs = { self, nixpkgs, nixpkgs-stable, disko, disko-stable, home-manager, home-manager-stable, nixos-generators, nushell-config, ... }@inputs:
+  outputs = { self, nixpkgs, nixpkgs-stable, disko, disko-stable, home-manager, home-manager-stable, nixos-generators, my-nushell-src, ... }@inputs:
   let
     # ── 数据目录前缀 ─────────────────────────────────────
     dataDir = "/data";
