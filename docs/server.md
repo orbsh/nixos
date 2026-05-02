@@ -62,7 +62,10 @@ cp -r /path/to/this/repo/Configuration/nixos/* /mnt/etc/nixos/
 # 安装服务器
 nixos-install --root /mnt --flake /mnt/etc/nixos#server
 
-nixos-install --root /mnt --flake /mnt/etc/nixos#vbox --option substituters "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store https://mirrors.ustc.edu.cn/nix-channels/store https://cache.nixos.org" --option trusted-public-keys "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+# 本地优先（U 盘缓存优先 + 镜像兜底）
+nixos-install --root /mnt --flake /mnt/etc/nixos#vbox \
+  --option substituters "file:///nix/store https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store https://mirrors.ustc.edu.cn/nix-channels/store https://cache.nixos.org" \
+  --option trusted-public-keys "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
 
 
 # 设置 root 密码

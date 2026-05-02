@@ -77,6 +77,43 @@ nix search nixpkgs#<keyword>
 # 或在线搜索：https://search.nixos.org/packages
 ```
 
+## 安装常用工具（非 NixOS 环境）
+
+在非 NixOS 系统上使用 Nix 时，可用 `nix profile` 永久安装工具到用户环境。
+
+### 前置配置
+
+确保已开启实验性功能（推荐永久配置，避免每次加 flag）：
+
+```bash
+mkdir -p ~/.config/nix
+echo "experimental-features = nix-command flakes" >> ~/.config/nix/nix.conf
+```
+
+### 安装命令
+
+```bash
+# 安装 disko（磁盘分区管理）
+nix profile add nixpkgs#disko
+
+# 安装 nixos-install-tools（包含 nixos-install 等）
+nix profile add nixpkgs#nixos-install-tools
+
+# 查看已安装的工具
+nix profile list
+
+# 更新工具
+nix profile upgrade nixpkgs#disko
+
+# 卸载工具
+nix profile remove nixpkgs#disko
+```
+
+> **注意：**
+> - `nix profile add` 会将工具安装到 `~/.nix-profile`，永久可用。
+> - 旧版命令 `install` 已被废弃，请使用 `add`。
+> - 这与 `nix shell` 不同，后者仅创建临时环境，退出后工具不可用。
+
 ## Home Manager 更新
 
 Home Manager 随 `nixos-rebuild` 自动更新。如需单独应用：

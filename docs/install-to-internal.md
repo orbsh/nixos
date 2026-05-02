@@ -75,15 +75,42 @@ lsblk -f
 sudo nix run github:nix-community/disko -- --mode disko ./disk-config.nix
 ```
 
+> **💡 提示：安装中断后恢复**
+> 若已分好区但安装中途暂停，下次继续时无需重新格式化，改用 `mount` 模式仅挂载：
+> ```bash
+> sudo nix run github:nix-community/disko -- --mode mount ./disk-config.nix
+> ```
+
 disko 会自动完成分区并将根文件系统挂载到 `/mnt`。
 
-## 步骤四：安装 NixOS
+## 步骤四：安装 NixOS（含离线缓存选项）
+
+### 4.1 选择安装模式
+
+Portable ISO 通过 `cache.nix` 预置了大量包，安装时可优先使用 U 盘本地缓存，避免重复下载。
+
+| 模式 | 命令参数 | 说明 |
+|---|---|---|
+| **纯离线** | `--option substitute false` | 仅使用 U 盘 `/nix/store` 中的包，缺失则报错 |
+| **本地优先** | `--option substituters "file:///nix/store https://cache.nixos.org"` | 本地缺失时自动回退下载 |
+| **默认** | 无额外参数 | 直接联网下载（可能重复拉取已有包） |
+
+> **⚠️ 注意**：`--no-substitute` 参数在较新版本中已废弃，请使用 `--option substitute false` 替代。
+
+### 4.2 执行安装
 
 ```bash
-# 安装指定配置（如 workstation）到 /mnt
-sudo nixos-install --flake ~/nixos-config#workstation --root /mnt
+# 离线安装（推荐：当 cache.nix 已覆盖目标配置全部依赖时）
+sudo nixos-install --flake ~/nixos-config#workstation --root /mnt --option substitute false
 
-# 设置用户密码（在 chroot 环境中执行）
+# 或本地优先 + 网络兜底（安全选项）
+sudo nixos-install --flake ~/nixos-config#workstation --root /mnt \
+  --option substituters "file:///nix/store https://cache.nixos.org"
+```
+
+### 4.3 设置用户密码
+
+```bash
 sudo nixos-enter --root /mnt --command "passwd master"
 ```
 
@@ -137,6 +164,23 @@ nixos-install --flake ~/nixos-config#workstation --root /mnt
 # 方案 2：临时跳过 lock file 写入（dirty tree 时的权宜之计）
 nixos-install --flake ~/nixos-config#workstation --root /mnt --no-write-lock-file
 ```
+
+### Q: 使用 `--option substitute false` 时报错 `path ... is not valid`？
+说明 U 盘 ISO 的 `cache.nix` 中没有包含目标配置所需的某个包。
+
+**解决方案：**
+1. 改用本地优先模式，让缺失的包走网络下载：
+   ```bash
+   sudo nixos-install --flake ~/nixos-config#workstation --root /mnt \
+     --option substituters "file:///nix/store https://cache.nixos.org"
+   ```
+2. 或在构建 ISO 前，将缺失的包添加到 `modules/iso/cache.nix` 中，重新构建 ISO。
+
+### Q: 如何验证安装是否在使用本地缓存？
+观察安装输出：
+- 看到 `copying path '/nix/store/...'` → 从 U 盘本地复制
+- 看到 `downloading from 'https://cache.nixos.org'` → 正在网络下载
+- 使用 `--option substitute false` 时，若全程无 downloading 提示，即为纯离线安装。
 
 ### Q: 安装后无法从内置硬盘启动？
 - 检查 BIOS/UEFI 启动顺序，确保内置硬盘在首位

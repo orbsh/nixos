@@ -51,6 +51,12 @@ nix --experimental-features "nix-command flakes" shell nixpkgs#nixos-install-too
      sudo nix run github:nix-community/disko -- --mode disko ./hosts/<目标主机>/disk.nix
      ```
 
+     > **💡 提示：安装中断后恢复**
+     > 若已分好区但安装中途暂停，下次继续时无需重新格式化，改用 `mount` 模式仅挂载：
+     > ```bash
+     > sudo nix run github:nix-community/disko -- --mode mount ./hosts/<目标主机>/disk.nix
+     > ```
+
 3. **执行安装**：
    ```bash
    # 将配置安装到 /mnt
