@@ -14,9 +14,9 @@
     # ── 工作站桌面与应用模块 (使 portable 具备完整 GUI 和工具链) ──
     ../../modules/workstation/desktop.nix
     ../../modules/workstation/apps-core.nix
-    # ../../modules/workstation/apps-im.nix
-    ../../modules/workstation/extra.nix
-    ../../modules/workstation/dev.nix
+    # # ../../modules/workstation/apps-im.nix
+    # ../../modules/workstation/apps-extra.nix
+    # ../../modules/workstation/dev.nix
     # 注意：不包含 laptop.nix，避免在非笔记本硬件上报错
   ];
 
@@ -51,8 +51,8 @@
 
   # ── 图形界面配置 ──────────────────────────────────
   # 启用 Hyprland 并禁用 cosmic-greeter 以使用 SDDM
-  wayland.windowManager.hyprland.enable = true;
-  services.displayManager.cosmic-greeter.enable = lib.mkForce false;
+  # wayland.windowManager.hyprland.enable = true;
+  # services.displayManager.cosmic-greeter.enable = lib.mkForce false;
 
   system.stateVersion = "26.05";
 }

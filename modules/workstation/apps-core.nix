@@ -17,21 +17,17 @@
     # 文件 & 办公
     freefilesync
 
-    # 媒体
-    smplayer
-    krita
-    blender
-
-
     # 截图
     flameshot
 
-    # 阅读
-    calibre
   ];
+
+  # 移除工作站默认包集（含 nano 等），仅安装显式声明的包
+  environment.defaultPackages = [];
 
   nixpkgs.config.allowUnfreePredicate = pkg:
     builtins.elem (pkg.pname or "") [
+
       "vivaldi"
     ];
 

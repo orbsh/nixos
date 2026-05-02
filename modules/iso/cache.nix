@@ -40,7 +40,7 @@
     # ── workstation/apps-im.nix ──────────────────────────
     # wechat-uos telegram-desktop
 
-    # ── workstation/extra.nix ────────────────────────────
+    # ── workstation/apps-extra.nix ───────────────────────
     surrealist zathura foliate
 
     # ── workstation/dev.nix ──────────────────────────────

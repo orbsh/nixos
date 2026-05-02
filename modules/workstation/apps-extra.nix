@@ -1,5 +1,14 @@
 { pkgs, ... }: {
   environment.systemPackages = with pkgs; [
+
+    # 媒体
+    smplayer
+    krita
+    blender
+
+    # 阅读
+    calibre
+
     surrealist        # SurrealDB GUI 客户端
 
 
