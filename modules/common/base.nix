@@ -4,9 +4,13 @@
     experimental-features = [ "nix-command" "flakes" ];
     auto-optimise-store = true;
     substituters = [
+      "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
       "https://mirrors.ustc.edu.cn/nix-channels/store"
       # "https://mirror.sjtu.edu.cn/nix-channels/store"
       "https://cache.nixos.org"
+    ];
+    trusted-public-keys = [
+      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkb16ZPMQFGspcDShjY="
     ];
     builders-use-substitutes = true;
   };
