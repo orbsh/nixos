@@ -1,6 +1,7 @@
-{ inputs, ... }: {
+{ inputs, pkgs, lib, ... }: {
   imports = [
     inputs.disko.nixosModules.disko
+    ./disk.nix
 
     # ── 通用基础模块 (与 ISO 保持一致，确保工具链完整) ──
     ../../modules/common/sys.nix
@@ -25,7 +26,7 @@
   hardware.enableAllFirmware = true;
 
   # 使用最新内核以获得更好的硬件驱动支持
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelPackages = lib.mkForce pkgs.linuxPackages_latest;
 
   # ── 文件系统支持 ──────────────────────────────────
   # 安装盘需能读写目标机器的各类分区
@@ -51,6 +52,7 @@
   # ── 图形界面配置 ──────────────────────────────────
   # 启用 Hyprland 并禁用 cosmic-greeter 以使用 SDDM
   wayland.windowManager.hyprland.enable = true;
-  services.displayManager.cosmic-greeter.enable = false;
+  services.displayManager.cosmic-greeter.enable = lib.mkForce false;
 
+  system.stateVersion = "26.05";
 }

@@ -8,6 +8,7 @@
   home = {
     username = "master";
     homeDirectory = "/home/master";
+    stateVersion = "26.05";
   };
 
   # 让 home-manager 自己管理自己

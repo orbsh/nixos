@@ -122,6 +122,7 @@
               extraSpecialArgs = { inherit inputs dataDir; };
               users.master = {
                 imports = [ ./modules/home/shell.nix ];
+                home.stateVersion = "26.05";
               };
             };
           }
