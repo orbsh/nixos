@@ -17,7 +17,7 @@
     ../../modules/workstation/apps-im.nix           # 微信单独管理
     ../../modules/workstation/apps-extra.nix
 
-    ../../modules/workstation/dev.nix
+    ../../modules/dev
     # ../../modules/workstation/disk.nix  # 使用 hardware-configuration.nix 方案
 
     # Podman 容器服务（Quadlet 替代方案，按需启用）
@@ -27,6 +27,9 @@
   # 启用 Hyprland 并禁用 COSMIC Greeter 以使用 SDDM
   wayland.windowManager.hyprland.enable = true;
   services.displayManager.cosmic-greeter.enable = false;
+
+  # 启用完整开发工具链
+  dev.enable = true;
 
   networking.hostName = "workstation";
 }

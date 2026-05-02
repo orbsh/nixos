@@ -16,7 +16,7 @@
     ../../modules/workstation/apps-core.nix
     # # ../../modules/workstation/apps-im.nix
     # ../../modules/workstation/apps-extra.nix
-    # ../../modules/workstation/dev.nix
+    ../../modules/dev
     # 注意：不包含 laptop.nix，避免在非笔记本硬件上报错
   ];
 

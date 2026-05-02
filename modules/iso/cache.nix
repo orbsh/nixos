@@ -43,7 +43,7 @@
     # ── workstation/apps-extra.nix ───────────────────────
     surrealist zathura foliate
 
-    # ── workstation/dev.nix ──────────────────────────────
+    # ── dev/ ─────────────────────────────────────────────
     bun uv python3
     python3Packages.virtualenv
     python3Packages.httpx python3Packages.fastapi python3Packages.uvicorn python3Packages.websockets
