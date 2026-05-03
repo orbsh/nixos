@@ -13,19 +13,7 @@
   boot.kernelModules = [ "kvm-intel" ];
   boot.extraModulePackages = [ ];
 
-  # 以下 UUID 需替换为实际磁盘的 UUID（使用 `lsblk -f` 查看）
-    fileSystems."/" =
-      { device = "/dev/disk/by-uuid/dfd51d2d-db10-4a63-82d7-10c4f59418e0";
-        fsType = "xfs";
-      };
-
-    fileSystems."/boot" =
-      { device = "/dev/disk/by-uuid/8C1A-FBE8";
-        fsType = "vfat";
-        options = [ "fmask=0022" "dmask=0022" ];
-      };
-
-  swapDevices = [ ];
+  # fileSystems 和 swapDevices 由 disk.nix 或 existing-disk.nix 管理，此处不重复定义
 
   # 使用 nixos-generate-config 时自动生成，此处设为默认
   networking.useDHCP = lib.mkDefault true;

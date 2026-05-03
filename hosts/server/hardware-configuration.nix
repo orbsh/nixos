@@ -13,10 +13,7 @@
   boot.kernelModules = [ ];
   boot.extraModulePackages = [ ];
 
-  # fileSystems 由 disko (disk.nix) 管理，此处不重复定义
-
-
-  swapDevices = [ ];
+  # fileSystems 和 swapDevices 由 disk.nix 或 existing-disk.nix 管理，此处不重复定义
 
   # 服务器通常使用静态 IP，此处保留 DHCP 默认值
   networking.useDHCP = lib.mkDefault true;
