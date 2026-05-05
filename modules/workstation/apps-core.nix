@@ -11,7 +11,7 @@
     zed-editor
 
     # 浏览器
-    vivaldi
+    # vivaldi
     qutebrowser
 
     # 文件 & 办公

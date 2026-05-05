@@ -1,10 +1,9 @@
-{ inputs, pkgs, lib, ... }:
-let
-  # 设为 true 使用 disko 重新分区格式化，设为 false 使用现有磁盘挂载（不格式化）
-  useDisko = false;
-in
-{
-  imports = ([
+{ inputs, pkgs, lib, ... }: {
+  imports = [
+    #./existing-disk.nix
+    ./existing-btrfs.nix  # 现有磁盘挂载配置（不格式化）
+    # ./disk.nix  # disko 重新分区格式化配置（按需启用）
+
     inputs.disko.nixosModules.disko
 
     ./hardware-configuration.nix  # 始终导入：内核模块等非磁盘硬件配置
@@ -24,10 +23,7 @@ in
     # ../../modules/workstation/apps-extra.nix
     ../../modules/dev
     # 注意：不包含 laptop.nix，避免在非笔记本硬件上报错
-  ]
-  ++ lib.optionals useDisko [ ./disk.nix ]
-  # ++ lib.optionals (!useDisko) [ ./existing-disk.nix ]);
-  ++ lib.optionals (!useDisko) [ ./existing-btrfs.nix ]);
+  ];
 
   # ── 通用硬件支持 ──────────────────────────────────
   # 启用非自由固件与所有可能的固件，最大化对不同主板、WiFi、GPU 的兼容性
