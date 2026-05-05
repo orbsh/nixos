@@ -26,7 +26,8 @@ in
     # 注意：不包含 laptop.nix，避免在非笔记本硬件上报错
   ]
   ++ lib.optionals useDisko [ ./disk.nix ]
-  ++ lib.optionals (!useDisko) [ ./existing-disk.nix ]);
+  # ++ lib.optionals (!useDisko) [ ./existing-disk.nix ]);
+  ++ lib.optionals (!useDisko) [ ./existing-btrfs.nix ]);
 
   # ── 通用硬件支持 ──────────────────────────────────
   # 启用非自由固件与所有可能的固件，最大化对不同主板、WiFi、GPU 的兼容性

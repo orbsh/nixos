@@ -16,6 +16,9 @@
     "virtio_pci"  # 虚拟机 VirtIO 支持
     "virtio_blk"  # 虚拟机 VirtIO 磁盘
     "xhci_pci"    # USB 3.0 控制器
+    "thunderbolt"  # Thunderbolt 接口支持（扩展坞、外置设备等）
+    "usbhid"       # USB 输入设备（键盘、鼠标等）
+    "sdhci_pci"    # 内置 SD 卡读卡器控制器
   ];
 
   # 初始 RAM 磁盘所需的内核模块
@@ -26,4 +29,7 @@
 
   # 额外内核模块包
   boot.extraModulePackages = [ ];
+
+  hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+
 }
