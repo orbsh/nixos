@@ -19,6 +19,7 @@
     ../../modules/workstation/apps-core.nix
     ../../modules/workstation/apps-im.nix           # 微信单独管理
     ../../modules/workstation/apps-extra.nix
+    ../../modules/workstation/vm.nix              # libvirtd/virt-manager 虚拟机支持
 
     ../../modules/dev
   ];
