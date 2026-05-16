@@ -16,8 +16,8 @@
 
   # ── System State Version ─────────────────────────────────
   # Set once on initial install, never change unless doing a major version upgrade.
-  # Portable overrides this with lib.mkForce as an example.
-  system.stateVersion = "26.05";
+  # All hosts inherit this value from base.nix.
+  system.stateVersion = "25.11";
 
   # 每周自动清理未使用的包
   nix.gc = {
