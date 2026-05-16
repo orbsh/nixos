@@ -22,6 +22,20 @@ in {
   virtualisation.cri-o.enable = isCrio;
   virtualisation.containerd.enable = !isCrio;
 
+  # ── API Server SANs（通用地址） ────────────────────────
+  # 节点特有 IP/域名由 nodes.nix 注入
+  services.kubernetes.apiserver.extraSANs = [
+    "127.0.0.1"
+    "localhost"
+    "kubernetes"
+    "kubernetes.default"
+    "kubernetes.default.svc"
+    "kubernetes.default.svc.cluster.local"
+  ];
+
+  # NodePort 范围扩展
+  services.kubernetes.apiserver.extraOpts = "--service-node-port-range=1-32767";
+
   # ── CRI-O 容器运行时配置 ─────────────────────────────
   virtualisation.cri-o = {
     runtime = "crun";  # 设置默认运行时
@@ -102,10 +116,26 @@ in {
   systemd.services.kubelet.preStart = lib.mkIf isCrio (lib.mkForce ''
     mkdir -p /var/lib/kubelet
     # 使用 crictl 加载 pause 镜像
-    if ! ${pkgs.cri-tools}/bin/crictl pull registry.aliyuncs.com/google_containers/pause:3.9 2>/dev/null; then
+    if ! ${pkgs.cri-tools}/bin/crictl pull registry.aliyuncs.com/google_containers/pause:3.10.1 2>/dev/null; then
       echo "Warning: failed to pull pause image, kubelet may retry"
     fi
   '');
+
+  # ── CRI-O 模式下加载 Kubernetes 镜像 ———————————————————
+  # nixpkgs 默认将 coredns 等镜像加载到 containerd，CRI-O 需额外加载
+  systemd.services.load-k8s-images-crio = lib.mkIf isCrio {
+    description = "Load Kubernetes images into CRI-O";
+    before = [ "kubelet.service" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig.Type = "oneshot";
+    script = ''
+      # 从 nixpkgs kubernetes 包中加载所有镜像到 podman/CRI-O
+      for img in ${config.services.kubernetes.package}/images/*.tar.gz; do
+        echo "Loading image: $img"
+        ${pkgs.podman}/bin/podman load -i "$img" 2>/dev/null || echo "Failed to load $img"
+      done
+    '';
+  };
 
   # ── 防火墙：通用端口 ───────────────────────────────────
   networking.firewall.allowedTCPPorts = [

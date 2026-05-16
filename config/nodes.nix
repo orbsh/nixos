@@ -34,5 +34,8 @@
     users.users.master.openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAzNo0nUZQcEZBIubufcp0cC2x56Giul8iif1iWDRySb master@dx"
     ];
+
+    # ── 节点特有 API Server SANs ─────────────────────────
+    services.kubernetes.apiserver.extraSANs = [ "172.178.5.123" ];
   };
 }

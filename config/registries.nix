@@ -6,9 +6,6 @@
 
     [[registry]]
     prefix = "registry.k8s.io"
-    location = "registry.k8s.io"
-
-    [[registry.mirror]]
     location = "registry.aliyuncs.com/google_containers"
 
     [[registry]]
