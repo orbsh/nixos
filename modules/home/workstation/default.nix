@@ -1,5 +1,6 @@
 { config, pkgs, lib, inputs, ... }: {
   imports = [
+    ../common.nix
     ../shell.nix
     ../editors.nix
     ../terminals.nix
@@ -10,7 +11,6 @@
   home = {
     username = "master";
     homeDirectory = "/home/master";
-    stateVersion = "26.05";
   };
 
   # 工作站开发模式：符号链接 + git clone

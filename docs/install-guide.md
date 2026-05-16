@@ -480,6 +480,29 @@ nixos-install --flake ~/nixos-config#workstation --root /mnt --no-write-lock-fil
 - 确认目标硬盘没有被挂载：`umount /dev/nvme0n1*`
 - 如果有 swap 或 LVM，先停用：`swapoff -a`、`vgchange -an`
 
+### Q: `nix flake update` 或 `nixos-rebuild` 报 public key 错误？
+当在 portable 系统内部执行 `nix flake update` 时，如果出现 `public key is not valid` 错误，这是因为：
+
+- **`nix flake update` 使用当前运行系统的 nix 配置**（`/etc/nix/nix.conf`），而非 flake 里声明的配置
+- 如果 `/etc/nix/nix.conf` 中的公钥有误（如 `cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkb16ZPMQFGspcDShjY=` 缺少字母 `J`），就会报签名验证失败
+- 这是"鸡生蛋"问题：错误的配置导致无法 update，而 update 后才能重建正确的配置
+
+**解决方案（任选其一）：**
+
+1. **命令行覆盖公钥（推荐）**：
+   ```bash
+   nix flake update --option trusted-public-keys 'cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY='
+   ```
+
+2. **临时禁用签名校验（更简单）**：
+   ```bash
+   nix flake update --option require-sigs false
+   ```
+
+修复后，执行 `sudo nixos-rebuild switch` 重建系统，将正确的配置永久写入 `/etc/nix/nix.conf`。
+
+> **注意**：宿主机（如 Arch Linux）的 nix 配置通常没问题，所以在本机执行 `nix flake update` 不会报错。问题只出现在 portable 系统内部。
+
 ---
 
 ## 📚 官方文档与参考资料

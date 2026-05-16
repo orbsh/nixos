@@ -23,8 +23,7 @@
     useUserPackages = true;
     extraSpecialArgs = { inherit inputs dataDir; };
     users.master = {
-      imports = [ ../home/shell.nix ];
-      home.stateVersion = "26.05";
+      imports = [ ../home/shell.nix ../home/common.nix ];
     };
   };
 

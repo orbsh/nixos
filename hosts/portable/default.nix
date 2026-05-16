@@ -23,6 +23,7 @@
     # ../../modules/workstation/apps-extra.nix
     ../../modules/dev
     # 注意：不包含 laptop.nix，避免在非笔记本硬件上报错
+    ../../modules/common/vm.nix
   ];
 
   # ── 通用硬件支持 ──────────────────────────────────
@@ -56,12 +57,10 @@
   boot.loader.timeout = 5;
 
   # 自动登录 master 用户，启动即用
+  networking.hostName = "portable";
   services.getty.autologinUser = "master";
 
   # ── 图形界面配置 ──────────────────────────────────
-  # 启用 Hyprland 并禁用 cosmic-greeter 以使用 SDDM
   # wayland.windowManager.hyprland.enable = true;
   # services.displayManager.cosmic-greeter.enable = lib.mkForce false;
-
-  system.stateVersion = "26.05";
 }

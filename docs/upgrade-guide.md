@@ -82,7 +82,7 @@ nixos-generate-config --root /
   # 磁盘加密 (LUKS) - 如有需要
   # boot.initrd.luks.devices.root = { ... };
 
-  system.stateVersion = "23.11";
+  system.stateVersion = "26.05";
 }
 ```
 

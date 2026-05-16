@@ -55,9 +55,7 @@
     qemu = {
       package = pkgs.qemu_kvm;
       runAsRoot = true;
-      swtpm.enable = true;   # Win11 必须
-      ovmf.enable = true;    # 开启 UEFI
-      ovmf.packages = [ pkgs.OVMFFull.fd ];
+      swtpm.enable = true;   # Win11 must
     };
   };
 
@@ -73,7 +71,6 @@
   # 4. 安装必要的命令行工具
   environment.systemPackages = with pkgs; [
     virt-manager        # 图形化管理工具
-    virt-install        # 用于创建虚拟机
     libvirt             # 提供 virsh 命令
     virt-viewer         # 用于连接 GUI 画面 (SPICE)
     virtio-win          # Windows 驱动 ISO

@@ -24,6 +24,4 @@
     address = ip;
     prefixLength = 24;
   }];
-
-  system.stateVersion = "25.11";
 }
