@@ -255,20 +255,29 @@ sudo nixos-rebuild switch --flake .#workstation
 
 ### 2.3 K8s 集群部署
 
-#### 架构：数据驱动（列表映射）
+#### 架构：集群级配置 + 数据驱动
 
-所有 K8s 节点通过 `config/nodes.nix` 定义，共用 `hosts/k8s-role.nix` 模板，由 `flake.nix` 自动映射生成：
+所有 K8s 节点通过 `config/nodes/` 下的集群文件定义，每个集群文件返回 `{ runtime; nodes; }` 结构：
+- `runtime` - 集群级容器运行时（`crio` 或 `containerd`），该集群所有节点共享
+- `nodes` - 节点定义 attrset，每个节点包含 `hostname`、`ip`、`role`、`imports`
 
 ```nix
-# config/nodes.nix
+# config/nodes/large-cluster.nix
 {
-  k8s-ctrl-01   = { ip = "192.168.1.11"; role = "control"; };
-  k8s-worker-01 = { ip = "192.168.1.21"; role = "worker"; };
-  k8s-combo-01  = { ip = "192.168.1.31"; role = "combo"; };
+  runtime = "containerd";
+  nodes = {
+    k8s-ctrl-01 = { hostname = "k8s-ctrl-01"; ip = "192.168.1.11"; role = "control"; imports = []; };
+    k8s-ctrl-02 = { hostname = "k8s-ctrl-02"; ip = "192.168.1.12"; role = "control"; imports = []; };
+    k8s-worker-01 = { hostname = "k8s-worker-01"; ip = "192.168.1.21"; role = "worker"; imports = []; };
+  };
 }
 ```
 
-**新增机器只需在 `config/nodes.nix` 中加一行**，无需新建文件或修改 flake 结构。
+> `masterIP` 由 `flake.nix` **自动注入**：首个 control 节点作为 master，其余节点自动指向它。
+
+`flake.nix` 自动展平所有集群并添加集群前缀，生成 `集群__节点` 格式的节点名，避免跨集群同名冲突。
+
+**新增机器只需在对应集群文件中加一行**，无需修改 flake 结构。
 
 #### 节点角色
 
@@ -281,38 +290,52 @@ sudo nixos-rebuild switch --flake .#workstation
 #### 部署命令
 
 ```bash
-# 部署控制节点
-sudo nixos-rebuild switch --flake .#k8s-ctrl-01
-
-# 部署工作节点
-sudo nixos-rebuild switch --flake .#k8s-worker-01
-
 # 部署组合节点（小集群）
-sudo nixos-rebuild switch --flake .#k8s-combo-01
+sudo nixos-rebuild switch --flake .#smallCluster__k8s-combo-01 --target-host root@192.168.1.31
+
+# 部署控制节点（大集群）
+sudo nixos-rebuild switch --flake .#largeCluster__k8s-ctrl-01 --target-host root@192.168.1.11
+
+# 部署开发服务器
+sudo nixos-rebuild switch --flake .#dev__dxserver --target-host root@172.178.5.123
 ```
+
+> 节点名格式：`集群__节点`（双下划线分隔），例如 `smallCluster__k8s-combo-01`、`dev__dxserver`。
+
+#### 运行时选择
+
+运行时是**集群级配置**，同一集群的所有节点必须使用相同的容器运行时：
+- `crio` — CRI-O + podman（支持 `podman load` 导入镜像）
+- `containerd` — Containerd + nerdctl（podman 被禁用）
+
+在集群文件中修改 `runtime` 字段即可切换。
 
 #### 初始化集群
 
+NixOS 的 `services.kubernetes.roles` 模块**自动处理** kubeadm init 和 join：
+- 首个控制节点部署时，自动执行 `kubeadm init`
+- 其他控制节点/工作节点部署时，自动执行 `kubeadm join`
+
+#### 获取 kubeconfig
+
+部署完成后，使用 `scripts/inline-kubeconfig.nu` 生成 kubeconfig（自动读取系统证书，生成内联 base64 配置）：
+
 ```bash
-# 在第一个控制节点上初始化
-sudo kubeadm init --pod-network-cidr=10.244.0.0/16
+# 在控制节点上生成 kubeconfig
+nu scripts/inline-kubeconfig.nu "https://<控制节点IP>:6443" | save ~/.kube/config
 
-# 配置 kubectl
-mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
+# 或本地访问（默认 127.0.0.1:6443）
+nu scripts/inline-kubeconfig.nu | save ~/.kube/config
 
-# 加入其他控制节点（控制平面）
-kubeadm join <control-plane-ip>:6443 --control-plane --token <token> --discovery-token-ca-cert-hash <hash>
-
-# 加入工作节点
-kubeadm join <control-plane-ip>:6443 --token <token> --discovery-token-ca-cert-hash <hash>
+# 验证
+kubectl get nodes
 ```
 
 #### 实际使用提示
 
-1. **修改 IP/角色**：编辑 `config/nodes.nix`，修改 IP 或调整角色
+1. **修改 IP/角色**：编辑 `config/nodes/<集群>.nix`，修改 IP 或调整角色
 2. **修改磁盘**：取消注释模板中的 `hardware-configuration.nix` 和 `disk.nix`（安装后生成）
+3. **新增集群**：在 `config/nodes/` 下新建文件，并在 `config/nodes.nix` 的 `clusters` 中添加引用
 
 ---
 

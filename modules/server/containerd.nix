@@ -1,5 +1,5 @@
 # Containerd 容器运行时配置
-{ lib, ... }:
+{ lib, pkgs, ... }:
 let
   registriesData = import ../../config/registries.nix;
 in {
@@ -10,7 +10,7 @@ in {
   virtualisation.podman.enable = lib.mkForce false;
 
   # ── CLI 工具（nerdctl 兼容 Docker 命令）─────────────────
-  environment.systemPackages = [ config.virtualisation.containerd.package nerdctl ];
+  environment.systemPackages = [ pkgs.containerd pkgs.nerdctl ];
 
   # ── Containerd 运行时设置 ───────────────────────────────
   virtualisation.containerd.settings = {

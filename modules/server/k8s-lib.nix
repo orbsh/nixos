@@ -34,6 +34,27 @@ let
   };
 in
 {
+  # 展平 clusters 结构，自动注入 runtime 和 masterIP
+  # 输入：{ clusterName = { runtime; nodes; }; }
+  # 输出：{ "cluster__node" = { runtime; masterIP?; ... }; }
+  flattenClusters = clusters:
+    builtins.foldl' (acc: clusterName:
+      let
+        cluster = clusters.${clusterName};
+        controlNodes = builtins.filter (n: cluster.nodes.${n}.role == "control") (builtins.attrNames cluster.nodes);
+        masterIP = if controlNodes != [] then cluster.nodes.${builtins.head controlNodes}.ip else null;
+        injectMasterIP = nodeName: nodeAttrs:
+          if nodeAttrs.role == "worker" || (nodeAttrs.role == "control" && nodeName != builtins.head controlNodes)
+          then nodeAttrs // { inherit masterIP; }
+          else nodeAttrs;
+      in
+      acc // (builtins.foldl' (nodeAcc: nodeName:
+        nodeAcc // {
+          "${clusterName}__${nodeName}" = (injectMasterIP nodeName cluster.nodes.${nodeName}) // { runtime = cluster.runtime; };
+        }
+      ) {} (builtins.attrNames cluster.nodes))
+    ) {} (builtins.attrNames clusters);
+
   # K8s 节点生成函数
   mkK8sNode = name: attrs: let
     # 提取已处理的属性，其余作为 NixOS 模块注入
@@ -67,8 +88,8 @@ in
           address = attrs.ip or (throw "k8s node '${name}' is missing required 'ip' field");
           prefixLength = 24;
         }];
-        # kubernetes 必需：master 节点的地址
-        services.kubernetes.masterAddress = attrs.ip;
+        # kubernetes 必需：控制平面地址（worker 节点通过 masterIP 指向 master，master 节点指向自己）
+        services.kubernetes.masterAddress = attrs.masterIP or attrs.ip;
       }
       # 注入节点的额外配置（如 fileSystems、services 等）
       nodeModule

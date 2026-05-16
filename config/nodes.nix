@@ -10,6 +10,7 @@
 # 【节点字段说明】
 #   hostname  - 系统主机名（networking.hostName）
 #   ip        - 节点 IP 地址（eth0 接口 + kubernetes.masterAddress）
+#   masterIP  - 控制平面地址（worker 和后续 control 节点必须指向首个 master；首个 master 节点可省略）
 #   role      - 节点角色：control / worker / combo
 #   imports   - 额外的 NixOS 模块列表
 #

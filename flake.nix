@@ -37,17 +37,9 @@
     user = "master";
     dataDir = "/home/${user}/data";
 
-    # ── K8s 节点定义（从 clusters 结构生成，使用 cluster_node 格式避免命名冲突） ──
+    # ── K8s 节点定义（展平 clusters，自动注入 runtime 和 masterIP） ──
     k8sConfig = import ./config/nodes.nix { inherit user dataDir; };
-    k8sNodes = builtins.foldl' (acc: clusterName:
-      let cluster = k8sConfig.clusters.${clusterName}; in
-      # 为每个节点添加 runtime 并添加集群前缀
-      acc // (builtins.foldl' (nodeAcc: nodeName:
-        nodeAcc // {
-          "${clusterName}__${nodeName}" = cluster.nodes.${nodeName} // { runtime = cluster.runtime; };
-        }
-      ) {} (builtins.attrNames cluster.nodes))
-    ) {} (builtins.attrNames k8sConfig.clusters);
+    k8sNodes = k8sLib.flattenClusters k8sConfig.clusters;
 
     # ── K8s 节点构建工具 ─────────────────────────────────────
     k8sLib = import ./modules/server/k8s-lib.nix { inherit nixpkgs inputs dataDir; };
