@@ -7,6 +7,7 @@
   virtualisation.podman = {
     enable = true;
     dockerCompat = true;   # `docker` -> `podman` alias
+    dockerSocket.enable = true;  # 开发工具（如 Devcontainers）需要读取此套接字
     defaultNetwork.settings.dns_enabled = true;
   };
 
