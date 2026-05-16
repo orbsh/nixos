@@ -32,4 +32,8 @@
   dev.enable = true;
 
   networking.hostName = "workstation";
+
+  # WiFi: iwd backend is more reliable than wpa_supplicant; disable power saving
+  networking.networkmanager.wifi.backend = "iwd";
+  networking.networkmanager.wifi.powersave = false;
 }

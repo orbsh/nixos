@@ -40,6 +40,10 @@
   # ── 网络与存储管理 ────────────────────────────────
   # NetworkManager 提供通用的网络配置能力
   networking.networkmanager.enable = true;
+  # Use iwd as WiFi backend — more reliable than wpa_supplicant
+  networking.networkmanager.wifi.backend = "iwd";
+  # Disable WiFi power management to prevent connection drops
+  networking.networkmanager.wifi.powersave = false;
 
   # udisks2 用于自动挂载可移动设备（方便访问目标硬盘或 U 盘数据）
   services.udisks2.enable = true;

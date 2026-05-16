@@ -33,6 +33,7 @@ nixos/
 | **服务器 (server)** | [docs/server.md](docs/server.md) | [docs/upgrade-guide.md](docs/upgrade-guide.md) |
 | **工作站 (workstation)** | [docs/workstation.md](docs/workstation.md) | [docs/upgrade-guide.md](docs/upgrade-guide.md) |
 | **虚拟机 (vbox)** | [docs/server.md](docs/server.md)（参考服务器流程） | — |
+| **便携系统 (portable)** | [x.nu](x.nu) `portable install` | 本 README → 💾 便携式系统 |
 | **K8s 集群** | [docs/server.md](docs/server.md) → K8s 章节 | — |
 
 ---
@@ -60,6 +61,30 @@ nixos/
 | **Python** | uv + fastapi, uvicorn, pytest, pydantic, polars, ipython 等 |
 | **WASM** | wasmtime |
 | **C/C++** | gcc, cmake, gnumake, pkg-config |
+
+---
+
+## 💾 便携式系统（portable）
+
+portable 是安装在移动硬盘上的 NixOS，可插到不同机器启动。在本机系统上更新它时，使用 `x.nu` 中的工具：
+
+```nu
+# 1. 挂载移动硬盘（自动挂载 btrfs 子卷 + EFI）
+use x.nu portable
+portable mount-btrfs
+
+# 2. 更新 portable 系统
+portable switch
+
+# 可选：指定不同 host 或配置路径
+portable switch -h workstation
+portable switch -c /path/to/config -h portable
+
+# 可选：进入 chroot 调试
+portable enter
+```
+
+`switch` 在宿主机上直接调用 `nixos-rebuild --root /mnt`，无需 chroot 即可更新。`enter` 保留用于手动排查场景。
 
 ---
 

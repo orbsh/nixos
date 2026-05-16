@@ -25,4 +25,12 @@ export module portable {
     export def enter [] {
         sudo (which nixos-enter).path.0 --root /mnt
     }
+
+    const ROOT = path self
+    export def switch [
+        host: string = 'portable'
+        config: path = $ROOT
+    ] {
+        sudo nixos-rebuild switch --root /mnt --flake $"($config)#($host)"
+    }
 }
