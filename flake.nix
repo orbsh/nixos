@@ -38,36 +38,11 @@
     dataDir = "/home/${user}/data";
 
     # ── K8s 节点定义（从外部配置文件读取） ─────────────────────
-    k8sNodes = import ./config/nodes.nix;
+    k8sNodes = import ./config/nodes.nix { inherit user dataDir; };
 
-    # 角色模块映射
-    k8sRoleModules = {
-      control = [ ./modules/server/k8s-control.nix ];
-      worker  = [ ./modules/server/k8s-worker.nix ];
-      combo   = [ ./modules/server/k8s-control.nix ./modules/server/k8s-worker.nix ];
-    };
-
-    # K8s 节点生成函数
-    mkK8sNode = name: attrs: nixpkgs.lib.nixosSystem {
-      specialArgs = { inherit inputs dataDir; };
-      modules = [
-        { nixpkgs.hostPlatform = "x86_64-linux"; }
-        ./hosts/k8s-role.nix
-      ] ++ k8sRoleModules.${attrs.role} ++ [
-        # 注入节点特定的 Hostname 和 IP 配置
-        {
-          networking.hostName = attrs.hostname or name;
-        }
-        {
-          networking.interfaces.eth0.ipv4.addresses = [{
-            address = attrs.ip or (throw "k8s node '${name}' is missing required 'ip' field");
-            prefixLength = 24;
-          }];
-          # kubernetes 必需：master 节点的地址
-          services.kubernetes.masterAddress = attrs.ip;
-        }
-      ] ++ attrs.imports;
-    };
+    # ── K8s 节点构建工具 ─────────────────────────────────────
+    k8sLib = import ./modules/server/k8s-lib.nix { inherit nixpkgs inputs dataDir; };
+    mkK8sNode = k8sLib.mkK8sNode;
   in {
     nixosConfigurations = (nixpkgs.lib.mapAttrs mkK8sNode k8sNodes) // {
 

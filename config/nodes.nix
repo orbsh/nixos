@@ -1,5 +1,6 @@
 # K8s 集群节点定义
 # 格式: { 主机名 = { hostname = "名称"; ip = "IP"; role = "角色"; imports = [ ... ]; }; }
+{ user, dataDir }:
 {
   # ── 控制节点（3 台，奇数保证 etcd 高可用） ─────────────
   k8s-ctrl-01 = { hostname = "k8s-ctrl-01"; ip = "192.168.1.11"; role = "control"; imports = []; };
@@ -21,5 +22,12 @@
     imports = [
       ../hosts/server   # 包含磁盘、硬件、网络、以及 modules/common/vm.nix (虚拟化支持)
     ];
+
+    # ── 数据盘挂载 ──────────────────────────────────────
+    # 挂载点自动跟随 flake.nix 中的 user 变量
+    fileSystems."${dataDir}" = {
+      device = "/dev/disk/by-uuid/79967e21-e2d6-4fc4-a8a4-e45dedf211ef";
+      fsType = "btrfs";
+    };
   };
 }

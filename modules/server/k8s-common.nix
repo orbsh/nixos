@@ -1,4 +1,4 @@
-{ pkgs, lib, ... }:
+{ pkgs, lib, config, ... }:
 let
   # ── 容器运行时选择（二选一："crio" 或 "containerd"） ────
   runtime = "crio";
@@ -10,6 +10,13 @@ let
   }.${runtime};
 
   isCrio = runtime == "crio";
+
+  # ── Kubelet 基础参数（可被子模块通过 config 模块扩展） ──
+  baseKubeletOpts = [
+    "--container-runtime-endpoint=unix://${criSocket}"
+    "--runtime-request-timeout=10m"
+    "--max-pods=500"
+  ];
 in {
   # ── 容器运行时启用 ────────────────────────────────────
   virtualisation.cri-o.enable = isCrio;
@@ -53,11 +60,7 @@ in {
   # ── Kubelet（所有节点） ────────────────────────────────
   services.kubernetes.kubelet = {
     enable = true;
-    extraOpts = lib.concatStringsSep " " [
-      "--container-runtime-endpoint=unix://${criSocket}"
-      "--runtime-request-timeout=10m"
-      "--max-pods=500"
-    ];
+    extraOpts = lib.concatStringsSep " " baseKubeletOpts;
     # CRI-O 模式下由 kubelet 统一管理 CNI 配置，避免与 CRI-O 模块的 etc 条目冲突
     cni.config = lib.mkIf isCrio [
       {
