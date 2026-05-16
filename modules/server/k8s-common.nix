@@ -1,8 +1,13 @@
 # Kubernetes 通用配置（CRI-O / Containerd 公共部分）
-{ pkgs, lib, config, ... }:
-let
-  # ── 容器运行时选择（二选一："crio" 或 "containerd"） ────
-  runtime = config.services.kubernetes.runtime or "crio";
+{ pkgs, lib, config, ... }: {
+  # ── 声明容器运行时选项（必须由 k8s-lib.nix 显式设置） ──
+  options.services.kubernetes.runtime = lib.mkOption {
+    type = lib.types.enum [ "crio" "containerd" ];
+    description = "Container runtime for Kubernetes nodes";
+  };
+
+  config = let
+    runtime = config.services.kubernetes.runtime;
 
   # 根据运行时选择 socket 路径
   criSocket = {
@@ -17,11 +22,6 @@ let
     "--max-pods=500"
   ];
 in {
-  # ── 按需导入运行时模块 ─────────────────────────────────
-  imports = [
-    (if runtime == "crio" then ./crio.nix else ./containerd.nix)
-  ];
-
   # ── API Server SANs（通用地址） ────────────────────────
   # 节点特有 IP/域名由 nodes.nix 注入
   services.kubernetes.apiserver.extraSANs = [
@@ -84,4 +84,5 @@ in {
 
   # ── 关闭 swap（k8s 要求） ──────────────────────────────
   swapDevices = lib.mkForce [];
+  };  # config
 }
