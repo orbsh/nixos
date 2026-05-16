@@ -1,4 +1,14 @@
-{ pkgs, ... }: {
+{ pkgs, lib, config, ... }: {
+
+  # wireshark 组 + dumpcap capability
+  # 自动将所有 normal users 加入 wireshark 组
+  programs.wireshark = {
+    enable = true;
+    package = pkgs.wireshark;
+  };
+  users.groups.wireshark.members = lib.attrNames (
+    lib.filterAttrs (name: user: user.isNormalUser or false) config.users.users
+  );
 
   environment.systemPackages = with pkgs; [
     # Shell & 终端

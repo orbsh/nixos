@@ -82,11 +82,13 @@ in {
     after = [ "kubelet.service" ];
     wantedBy = [ "multi-user.target" ];
     serviceConfig.Type = "oneshot";
-    script = ''
+    script = let
+      kubectl = "${pkgs.kubectl}/bin/kubectl --server https://127.0.0.1:6443 --certificate-authority /var/lib/kubernetes/secrets/ca.pem --client-certificate /var/lib/kubernetes/secrets/cluster-admin.pem --client-key /var/lib/kubernetes/secrets/cluster-admin-key.pem";
+    in ''
       # 检查 flannel 是否已部署
-      if ! ${pkgs.kubectl}/bin/kubectl get namespace kube-flannel &>/dev/null; then
+      if ! ${kubectl} get namespace kube-flannel &>/dev/null; then
         echo "Deploying Flannel CNI..."
-        ${pkgs.kubectl}/bin/kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
+        ${kubectl} apply --validate=false -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
       else
         echo "Flannel already deployed"
       fi

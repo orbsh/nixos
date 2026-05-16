@@ -7,19 +7,12 @@
     extraGroups = [
       "wheel"
       "lp"
-      "wireshark"
       "podman"
     ];
     # 把你的 SSH 公钥放这里
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK2Q46WeaBZ9aBkS3TF2n9laj1spUkpux/zObmliHUOI"
     ];
-  };
-
-  # wireshark 组 + dumpcap capability
-  programs.wireshark = {
-    enable = true;
-    package = pkgs.wireshark;
   };
 
   # lp 组（打印机）
