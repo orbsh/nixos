@@ -31,10 +31,10 @@
 
   outputs = { self, nixpkgs, nixpkgs-stable, disko, disko-stable, home-manager, home-manager-stable, my-nushell-src, ... }@inputs:
   let
-    # ── 数据目录前缀 ─────────────────────────────────────
-    # 统一数据目录前缀（podman/quadlet 服务、rime 词库等）
-    # 按需修改为实际路径，如 "/home/master/data"
-    dataDir = "/home/master/data";
+    # ── 统一变量定义 ─────────────────────────────────────
+    # 集中管理用户名，dataDir 和 home-manager 自动跟随
+    user = "master";
+    dataDir = "/home/${user}/data";
 
     # ── K8s 节点定义（从外部配置文件读取） ─────────────────────
     k8sNodes = import ./config/nodes.nix;
@@ -69,7 +69,7 @@
               useGlobalPkgs = true;    # 用系统的 nixpkgs，避免二次求值
               useUserPackages = true;  # home 包装进系统 profile
               extraSpecialArgs = { inherit inputs dataDir; };
-              users.master = import ./modules/home/workstation;
+              users.${user} = import ./modules/home/workstation;
             };
           }
         ];
@@ -86,7 +86,7 @@
               useGlobalPkgs = true;
               useUserPackages = true;
               extraSpecialArgs = { inherit inputs dataDir; };
-              users.master = import ./modules/home/server;
+              users.${user} = import ./modules/home/server;
             };
           }
         ];
@@ -103,7 +103,7 @@
               useGlobalPkgs = true;
               useUserPackages = true;
               extraSpecialArgs = { inherit inputs dataDir; };
-              users.master = import ./modules/home/workstation;
+              users.${user} = import ./modules/home/workstation;
             };
           }
         ];
@@ -120,7 +120,7 @@
               useGlobalPkgs = true;
               useUserPackages = true;
               extraSpecialArgs = { inherit inputs dataDir; };
-              users.master = {
+              users.${user} = {
                 imports = [ ./modules/home/shell.nix ./modules/home/common.nix ];
               };
             };
