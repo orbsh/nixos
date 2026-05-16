@@ -2,7 +2,7 @@
 { pkgs, lib, config, ... }:
 let
   # ── 容器运行时选择（二选一："crio" 或 "containerd"） ────
-  runtime = "crio";
+  runtime = config.services.kubernetes.runtime or "crio";
 
   # 根据运行时选择 socket 路径
   criSocket = {

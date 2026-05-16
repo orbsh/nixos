@@ -17,8 +17,12 @@ let
       # Combo 节点：移除 control-plane taint，允许调度普通 Pod
       # 注意：必须在 k8s-common.nix 的 baseKubeletOpts 基础上追加
       {
-        services.kubernetes.kubelet.extraOpts = lib.mkForce
-          "--container-runtime-endpoint=unix:///run/crio/crio.sock --runtime-request-timeout=10m --max-pods=500 --register-with-taints=\"\"";
+        # runtime 由节点配置注入，此处根据运行时选择 socket 路径
+        services.kubernetes.kubelet.extraOpts = lib.mkForce ''
+          --container-runtime-endpoint=unix://${
+            { crio = "/run/crio/crio.sock"; containerd = "/run/containerd/containerd.sock"; }.${config.services.kubernetes.runtime or "crio"}
+          } --runtime-request-timeout=10m --max-pods=500 --register-with-taints=""
+        '';
       }
     ];
   };
@@ -27,16 +31,18 @@ in
   # K8s 节点生成函数
   mkK8sNode = name: attrs: let
     # 提取已处理的属性，其余作为 NixOS 模块注入
-    nodeModule = lib.removeAttrs attrs [ "hostname" "ip" "role" "imports" ];
+    nodeModule = lib.removeAttrs attrs [ "hostname" "ip" "role" "runtime" "imports" ];
   in lib.nixosSystem {
     specialArgs = { inherit inputs dataDir; };
     modules = [
       { nixpkgs.hostPlatform = "x86_64-linux"; }
       ../../hosts/k8s-role.nix
     ] ++ k8sRoleModules.${attrs.role} ++ [
-      # 注入节点特定的 Hostname 和 IP 配置
+      # 注入节点特定的配置
       {
         networking.hostName = attrs.hostname or name;
+        # 容器运行时选择（默认 crio）
+        services.kubernetes.runtime = attrs.runtime or "crio";
       }
       {
         networking.interfaces.eth0.ipv4.addresses = [{

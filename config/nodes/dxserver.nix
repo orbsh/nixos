@@ -9,6 +9,7 @@
     hostname = "dxserver";
     ip = "172.178.5.123";
     role = "combo";
+    runtime = "crio";  # 容器运行时：crio / containerd
     imports = [
       ../../hosts/server
     ];
