@@ -33,6 +33,9 @@ in {
     "kubernetes.default.svc.cluster.local"
   ];
 
+  # 监听所有网络接口，允许远程访问
+  services.kubernetes.apiserver.address = "0.0.0.0";
+
   # NodePort 范围扩展
   services.kubernetes.apiserver.extraOpts = "--service-node-port-range=1-32767";
 
