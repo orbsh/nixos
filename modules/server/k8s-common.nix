@@ -16,15 +16,10 @@ in {
   virtualisation.containerd.enable = !isCrio;
 
   # ── CRI-O 容器运行时配置 ─────────────────────────────
-  virtualisation.cri-o.settings = {
-    crio = {
+  virtualisation.cri-o = {
+    runtime = "crun";  # 设置默认运行时
+    settings.crio = {
       image.default_transport = "docker://";
-      runtime.runtimes = {
-        crun = {
-          path = "${pkgs.crun}/bin/crun";
-          allowed_annotations = [ "io.containerd.runc.v2.runc.options" ];
-        };
-      };
     };
   };
 
