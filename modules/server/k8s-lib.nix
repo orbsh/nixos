@@ -25,7 +25,10 @@ let
 in
 {
   # K8s 节点生成函数
-  mkK8sNode = name: attrs: lib.nixosSystem {
+  mkK8sNode = name: attrs: let
+    # 提取已处理的属性，其余作为 NixOS 模块注入
+    nodeModule = lib.removeAttrs attrs [ "hostname" "ip" "role" "imports" ];
+  in lib.nixosSystem {
     specialArgs = { inherit inputs dataDir; };
     modules = [
       { nixpkgs.hostPlatform = "x86_64-linux"; }
@@ -43,6 +46,8 @@ in
         # kubernetes 必需：master 节点的地址
         services.kubernetes.masterAddress = attrs.ip;
       }
+      # 注入节点的额外配置（如 fileSystems、services 等）
+      nodeModule
     ] ++ attrs.imports;
   };
 }

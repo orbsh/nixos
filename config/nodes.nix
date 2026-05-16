@@ -28,6 +28,7 @@
     fileSystems."${dataDir}" = {
       device = "/dev/disk/by-uuid/79967e21-e2d6-4fc4-a8a4-e45dedf211ef";
       fsType = "btrfs";
+      options = [ "subvol=@" "compress=zstd" ];
     };
   };
 }

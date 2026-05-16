@@ -94,7 +94,18 @@ in {
   environment.systemPackages = with pkgs; [
     kubectl
     kubernetes-helm
+    cri-tools  # CRI-O 模式下提供 crictl 命令
   ];
+
+  # ── CRI-O 模式下覆盖 kubelet pre-start 脚本 ────────────
+  # nixpkgs 默认使用 containerd 的 ctr 加载 pause 镜像，CRI-O 需改用 crictl
+  systemd.services.kubelet.preStart = lib.mkIf isCrio (lib.mkForce ''
+    mkdir -p /var/lib/kubelet
+    # 使用 crictl 加载 pause 镜像
+    if ! ${pkgs.cri-tools}/bin/crictl pull registry.aliyuncs.com/google_containers/pause:3.9 2>/dev/null; then
+      echo "Warning: failed to pull pause image, kubelet may retry"
+    fi
+  '');
 
   # ── 防火墙：通用端口 ───────────────────────────────────
   networking.firewall.allowedTCPPorts = [
