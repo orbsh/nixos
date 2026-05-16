@@ -16,7 +16,7 @@
 
   # ── 特殊节点：复用现有 Server 配置 ─────────────
   k8s-dx-01 = {
-    hostname = "k8s-dx-01";
+    hostname = "dxserver";
     ip = "172.178.5.123";
     role = "combo";
     imports = [

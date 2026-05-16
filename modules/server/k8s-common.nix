@@ -1,3 +1,4 @@
+# Kubernetes 通用配置（CRI-O / Containerd 公共部分）
 { pkgs, lib, config, ... }:
 let
   # ── 容器运行时选择（二选一："crio" 或 "containerd"） ────
@@ -9,8 +10,6 @@ let
     containerd = "/run/containerd/containerd.sock";
   }.${runtime};
 
-  isCrio = runtime == "crio";
-
   # ── Kubelet 基础参数（可被子模块通过 config 模块扩展） ──
   baseKubeletOpts = [
     "--container-runtime-endpoint=unix://${criSocket}"
@@ -18,9 +17,10 @@ let
     "--max-pods=500"
   ];
 in {
-  # ── 容器运行时启用 ────────────────────────────────────
-  virtualisation.cri-o.enable = isCrio;
-  virtualisation.containerd.enable = !isCrio;
+  # ── 按需导入运行时模块 ─────────────────────────────────
+  imports = [
+    (if runtime == "crio" then ./crio.nix else ./containerd.nix)
+  ];
 
   # ── API Server SANs（通用地址） ────────────────────────
   # 节点特有 IP/域名由 nodes.nix 注入
@@ -38,21 +38,6 @@ in {
 
   # NodePort 范围扩展
   services.kubernetes.apiserver.extraOpts = "--service-node-port-range=1-32767";
-
-  # ── CRI-O 容器运行时配置 ─────────────────────────────
-  virtualisation.cri-o = {
-    runtime = "crun";  # 设置默认运行时
-    settings.crio = {
-      image.default_transport = "docker://";
-    };
-  };
-
-  # ── Containerd 容器运行时配置 ─────────────────────────
-  virtualisation.containerd.settings = {
-    plugins."io.containerd.grpc.v1.cri" = {
-      sandbox_image = "registry.aliyuncs.com/google_containers/pause:3.9";
-    };
-  };
 
   # ── k8s 所需内核模块 ────────────────────────────────────
   boot.kernelModules = [ "overlay" "br_netfilter" ];
@@ -78,67 +63,13 @@ in {
   services.kubernetes.kubelet = {
     enable = true;
     extraOpts = lib.concatStringsSep " " baseKubeletOpts;
-    # CRI-O 模式下由 kubelet 统一管理 CNI 配置，避免与 CRI-O 模块的 etc 条目冲突
-    cni.config = lib.mkIf isCrio [
-      {
-        cniVersion = "0.4.0";
-        name = "crio-bridge";
-        type = "bridge";
-        bridge = "cni0";
-        isGateway = true;
-        ipMasq = true;
-        hairpinMode = true;
-        ipam = {
-          type = "host-local";
-          subnet = "10.85.0.0/16";
-          routes = [ { dst = "0.0.0.0/0"; } ];
-        };
-      }
-      {
-        cniVersion = "0.4.0";
-        name = "loopback";
-        type = "loopback";
-      }
-    ];
   };
-
-  # CRI-O 模式下禁用 CRI-O 模块自动创建的 CNI 文件条目
-  # 使用 enable = false 让 etc 模块跳过这些条目，避免与 kubelet 的目录符号链接冲突
-  environment.etc."cni/net.d/10-crio-bridge.conflist".enable = lib.mkIf isCrio (lib.mkForce false);
-  environment.etc."cni/net.d/99-loopback.conflist".enable = lib.mkIf isCrio (lib.mkForce false);
 
   # ── CLI 工具 ───────────────────────────────────────────
   environment.systemPackages = with pkgs; [
     kubectl
     kubernetes-helm
-    cri-tools  # CRI-O 模式下提供 crictl 命令
   ];
-
-  # ── CRI-O 模式下覆盖 kubelet pre-start 脚本 ────────────
-  # nixpkgs 默认使用 containerd 的 ctr 加载 pause 镜像，CRI-O 需改用 crictl
-  systemd.services.kubelet.preStart = lib.mkIf isCrio (lib.mkForce ''
-    mkdir -p /var/lib/kubelet
-    # 使用 crictl 加载 pause 镜像
-    if ! ${pkgs.cri-tools}/bin/crictl pull registry.aliyuncs.com/google_containers/pause:3.10.1 2>/dev/null; then
-      echo "Warning: failed to pull pause image, kubelet may retry"
-    fi
-  '');
-
-  # ── CRI-O 模式下加载 Kubernetes 镜像 ———————————————————
-  # nixpkgs 默认将 coredns 等镜像加载到 containerd，CRI-O 需额外加载
-  systemd.services.load-k8s-images-crio = lib.mkIf isCrio {
-    description = "Load Kubernetes images into CRI-O";
-    before = [ "kubelet.service" ];
-    wantedBy = [ "multi-user.target" ];
-    serviceConfig.Type = "oneshot";
-    script = ''
-      # 从 nixpkgs kubernetes 包中加载所有镜像到 podman/CRI-O
-      for img in ${config.services.kubernetes.package}/images/*.tar.gz; do
-        echo "Loading image: $img"
-        ${pkgs.podman}/bin/podman load -i "$img" 2>/dev/null || echo "Failed to load $img"
-      done
-    '';
-  };
 
   # ── 防火墙：通用端口 ───────────────────────────────────
   networking.firewall.allowedTCPPorts = [
