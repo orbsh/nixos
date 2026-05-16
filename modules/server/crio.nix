@@ -1,22 +1,12 @@
 # CRI-O 容器运行时配置
 { pkgs, lib, config, ... }:
 let
-  cfg = config.containersCfg;
+  registriesData = import ../../config/registries.nix;
 
-  generateRegistriesConf = ''
-    unqualified-search-registries = ["docker.io"]
-
-    # 代理镜像配置
-  '' + lib.concatStringsSep "\n" (lib.mapAttrsToList (prefix: location: ''
-    [[registry]]
-    prefix = "${prefix}"
-    location = "${location}"
-  '') cfg.proxyRegistries) + "\n\n" +
-  lib.concatStringsSep "\n" (map (loc: ''
-    [[registry]]
-    insecure = true
-    location = "${loc}"
-  '') cfg.insecureRegistries) + "\n";
+  generateRegistriesConf = import ../../lib/registries-gen.nix {
+    inherit lib;
+    cfg = registriesData;
+  };
 in {
   # ── 启用 CRI-O ──────────────────────────────────────────
   virtualisation.cri-o.enable = true;
