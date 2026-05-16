@@ -21,8 +21,10 @@ in
     # 工作站开发模式：符号链接 + 自动克隆
     (lib.mkIf cfg.developMode {
       # 整目录符号链接
-      home.file.".config/nushell".source =
-        config.lib.file.mkOutOfStoreSymlink nushellDir;
+      home.file.".config/nushell" = {
+        source = config.lib.file.mkOutOfStoreSymlink nushellDir;
+        force = true;  # Overwrite if existing file/directory conflicts
+      };
 
       # 自动克隆仓库（如果尚未存在）
       home.activation.cloneNushellConfig = ''
@@ -35,8 +37,10 @@ in
     # 服务器/只读模式：通过 flake input 部署
     (lib.mkIf (!cfg.developMode) {
       # 整目录符号链接（避免逐个展开文件触发路径检查）
-      home.file.".config/nushell".source =
-        config.lib.file.mkOutOfStoreSymlink nushellInput;
+      home.file.".config/nushell" = {
+        source = config.lib.file.mkOutOfStoreSymlink nushellInput;
+        force = true;  # Overwrite if existing file/directory conflicts
+      };
     })
   ];
 }
