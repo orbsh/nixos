@@ -71,6 +71,7 @@
   # 4. 安装必要的命令行工具
   environment.systemPackages = with pkgs; [
     virt-manager        # 图形化管理工具
+    libguestfs          # 提供 virt-install, virt-resize 等工具
     libvirt             # 提供 virsh 命令
     virt-viewer         # 用于连接 GUI 画面 (SPICE)
     virtio-win          # Windows 驱动 ISO

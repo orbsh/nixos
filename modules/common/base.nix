@@ -83,5 +83,6 @@
     delta zellij  # git diff 美化 / 终端复用
     helix  # 编辑器：系统级提供二进制，用户配置由 home-manager 管理
     nushell  # shell
+    util-linux  # 提供 mount, fdisk, lsblk 等基础工具
   ];
 }
