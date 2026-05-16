@@ -1,4 +1,4 @@
-{ pkgs, dataDir, ... }: {
+{ pkgs, dataDir, user, ... }: {
   virtualisation.oci-containers.containers = {
     mihomo = {
       image = "ghcr.io/fj0r/xy:mihomo";
@@ -8,11 +8,25 @@
         "7891:7891"
         "9090:9090"
       ];
-      extraOptions = [ "--restart=always" ];
       autoStart = true;
     };
   };
 
-  # 等效于 Quadlet 的 WantedBy=multi-user.target default.target
-  systemd.services.podman-mihomo.wantedBy = [ "multi-user.target" "default.target" ];
+  systemd.services.podman-mihomo = {
+    # 确保挂载目录存在
+    preStart = ''
+      mkdir -p ${dataDir}/ladder/mihomo
+    '';
+
+    # 镜像拉取失败时不阻塞系统启动（portable 可能需要先连网才能拉取）
+    unitConfig = {
+      StartLimitBurst = 3;
+      StartLimitIntervalSec = 60;
+    };
+    serviceConfig = {
+      RestartSec = "10s";
+      Restart = "on-failure";
+    };
+    wantedBy = [ "multi-user.target" "default.target" ];
+  };
 }

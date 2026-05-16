@@ -40,6 +40,9 @@
   security.sudo = {
     enable = true;
     wheelNeedsPassword = false;
+    extraConfig = ''
+      Defaults secure_path="/run/wrappers/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/bin"
+    '';
   };
 
   # root 账号锁定
