@@ -68,8 +68,9 @@
     "vm.dirty_background_ratio"        = 10;
     "fs.file-max"                      = 1000000;
     "fs.inotify.max_user_watches"      = 524288;
-    "net.ipv4.ip_forward"              = 1;
-    "net.ipv6.conf.all.forwarding"     = 1;
+    # 以下参数常与 kubernetes/kubelet 等模块重复，使用 mkDefault 避免冲突
+    "net.ipv4.ip_forward"              = lib.mkDefault 1;
+    "net.ipv6.conf.all.forwarding"     = lib.mkDefault 1;
     "net.ipv4.tcp_congestion_control"  = "bbr";
     "net.core.default_qdisc"           = "fq";
     "net.core.rmem_max"                = 16777216;

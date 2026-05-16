@@ -2,26 +2,26 @@
   description = "My NixOS configuration";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";       # 工作站 / qemu / ISO
-    nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.11";   # 服务器
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";       # 全局默认（工作站 / 服务器 / 所有 K8s 节点）
+    # nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.11";   # [备用] 稳定分支 (当前未使用，保留以备特定主机降级需求)
 
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    disko-stable = {
-      url = "github:nix-community/disko";
-      inputs.nixpkgs.follows = "nixpkgs-stable";
-    };
+    # disko-stable = {
+    #   url = "github:nix-community/disko";
+    #   inputs.nixpkgs.follows = "nixpkgs-stable";  # [备用] 稳定版 disko，配合 nixpkgs-stable 使用
+    # };
 
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    home-manager-stable = {
-      url = "github:nix-community/home-manager/release-25.11";
-      inputs.nixpkgs.follows = "nixpkgs-stable";
-    };
+    # home-manager-stable = {
+    #   url = "github:nix-community/home-manager/release-25.11";
+    #   inputs.nixpkgs.follows = "nixpkgs-stable";  # [备用] 稳定版 home-manager，配合 nixpkgs-stable 使用
+    # };
 
     my-nushell-src = {
       url = "github:fj0r/nushell";
@@ -29,7 +29,8 @@
     };
   };
 
-  outputs = { self, nixpkgs, nixpkgs-stable, disko, disko-stable, home-manager, home-manager-stable, my-nushell-src, ... }@inputs:
+  # outputs 函数参数包含所有输入源（stable 系列已注释，目前仅使用 unstable）
+  outputs = { self, nixpkgs, disko, home-manager, my-nushell-src, ... }@inputs:
   let
     # ── 统一变量定义 ─────────────────────────────────────
     # 集中管理用户名，dataDir 和 home-manager 自动跟随
@@ -41,28 +42,30 @@
 
     # 角色模块映射
     k8sRoleModules = {
-      control = ./modules/server/k8s-control.nix;
-      worker  = ./modules/server/k8s-worker.nix;
+      control = [ ./modules/server/k8s-control.nix ];
+      worker  = [ ./modules/server/k8s-worker.nix ];
       combo   = [ ./modules/server/k8s-control.nix ./modules/server/k8s-worker.nix ];
     };
 
     # K8s 节点生成函数
-    mkK8sNode = name: attrs: nixpkgs-stable.lib.nixosSystem {
+    mkK8sNode = name: attrs: nixpkgs.lib.nixosSystem {
       specialArgs = { inherit inputs dataDir; };
       modules = [
         { nixpkgs.hostPlatform = "x86_64-linux"; }
         ./hosts/k8s-role.nix
-        k8sRoleModules.${attrs.role}
+      ] ++ k8sRoleModules.${attrs.role} ++ [
         # 注入节点特定的 Hostname 和 IP 配置
         {
           networking.hostName = attrs.hostname or name;
         }
-        (if attrs ? ip then {
+        {
           networking.interfaces.eth0.ipv4.addresses = [{
-            address = attrs.ip;
+            address = attrs.ip or (throw "k8s node '${name}' is missing required 'ip' field");
             prefixLength = 24;
           }];
-        } else {})
+          # kubernetes 必需：master 节点的地址
+          services.kubernetes.masterAddress = attrs.ip;
+        }
       ] ++ attrs.imports;
     };
   in {
@@ -85,13 +88,13 @@
         ];
       };
 
-      server = nixpkgs-stable.lib.nixosSystem {
+      server = nixpkgs.lib.nixosSystem {
         specialArgs = { inherit inputs dataDir; };
         modules = [
           { nixpkgs.hostPlatform = "x86_64-linux"; }
           ./hosts/server
           { networking.hostName = "server"; } # 独立 Server 主机默认名称
-          home-manager-stable.nixosModules.home-manager
+          home-manager.nixosModules.home-manager
           {
             home-manager = {
               useGlobalPkgs = true;

@@ -2,15 +2,14 @@
   imports = [ ./k8s-common.nix ];
 
   # ── 控制平面组件 ───────────────────────────────────────
-  services.kubernetes = {
-    master.enable = true;       # apiserver + controller-manager + scheduler
-    etcd.enable = true;         # 分布式存储
-  };
+  # 设置角色为 master 自动启用 apiserver、scheduler、controllerManager 等
+  services.kubernetes.roles = [ "master" ];
+
+  # etcd 由 roles = ["master"] 自动启用，但此处显式开启以确保
+  services.etcd.enable = true;
 
   # ── kube-apiserver: NodePort 范围扩展 ─────────────────
-  services.kubernetes.apiserver.extraOptions = [
-    "--service-node-port-range=1-32767"
-  ];
+  services.kubernetes.apiserver.extraOpts = "--service-node-port-range=1-32767";
 
   # ── 防火墙：控制平面端口 ───────────────────────────────
   networking.firewall.allowedTCPPorts = [

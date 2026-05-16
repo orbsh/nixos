@@ -36,10 +36,9 @@ in {
   boot.kernelModules = [ "overlay" "br_netfilter" ];
 
   # ── k8s 所需系统参数 ────────────────────────────────────
+  # 注意：bridge-nf-call-iptables、ip_forward、bridge-nf-call-ip6tables
+  # 已由 nixpkgs kubelet 模块自动设置，此处仅保留额外参数
   boot.kernel.sysctl = {
-    "net.bridge.bridge-nf-call-iptables" = 1;
-    "net.ipv4.ip_forward" = 1;
-    "net.bridge.bridge-nf-call-ip6tables" = 1;
     "fs.inotify.max_user_instances" = 8192;
   };
 
@@ -56,12 +55,39 @@ in {
   # ── Kubelet（所有节点） ────────────────────────────────
   services.kubernetes.kubelet = {
     enable = true;
-    extraOptions = [
+    extraOpts = lib.concatStringsSep " " [
       "--container-runtime-endpoint=unix://${criSocket}"
       "--runtime-request-timeout=10m"
       "--max-pods=500"
     ];
+    # 统一由 kubelet 管理 CNI 配置，避免与 CRI-O 的 environment.etc 条目冲突
+    cni.config = lib.mkIf config.virtualisation.cri-o.enable [
+      {
+        cniVersion = "0.4.0";
+        name = "crio-bridge";
+        type = "bridge";
+        bridge = "cni0";
+        isGateway = true;
+        ipMasq = true;
+        hairpinMode = true;
+        ipam = {
+          type = "host-local";
+          subnet = "10.85.0.0/16";
+          routes = [ { dst = "0.0.0.0/0"; } ];
+        };
+      }
+      {
+        cniVersion = "0.4.0";
+        name = "loopback";
+        type = "loopback";
+      }
+    ];
   };
+
+  # 禁用 CRI-O 模块自动创建的 CNI 文件条目
+  # 使用 enable = false 让 etc 模块跳过这些条目，避免与 kubelet 的目录符号链接冲突
+  environment.etc."cni/net.d/10-crio-bridge.conflist".enable = lib.mkIf config.virtualisation.cri-o.enable (lib.mkForce false);
+  environment.etc."cni/net.d/99-loopback.conflist".enable = lib.mkIf config.virtualisation.cri-o.enable (lib.mkForce false);
 
   # ── CLI 工具 ───────────────────────────────────────────
   environment.systemPackages = with pkgs; [
