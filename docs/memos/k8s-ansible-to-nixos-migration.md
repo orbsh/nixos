@@ -110,7 +110,7 @@ services.kubernetes.kubelet = {
 
 ### 问题 3：运行时下载外部资源超时
 
-**现象**: `deploy-gateway-api-crds.service` 下载 GitHub CRD 超时，`deploy-flannel` 同理
+**现象**: `deploy-gateway-api-crds.service` 下载 GitHub CRD 超时，Flannel manifest 同理
 **原因**: 服务器无法直接访问 GitHub
 **解决**: 改用 `pkgs.fetchurl` 在 Nix 构建阶段下载，运行时从 /nix/store 读取：
 ```nix
@@ -120,13 +120,20 @@ gatewayApiCrdFile = pkgs.fetchurl {
 };
 ```
 
-### 问题 3.5：Flannel 部署认证失败
+### 问题 3.5：Flannel 部署
 
-**现象**: `deploy-flannel.service` 启动失败，kubectl 无法连接 API Server
+**方案**: `kube-flannel-apply.service`（NixOS 管理的 systemd oneshot 服务）
 
-**原因**: 使用了 `kube-apiserver.pem`（服务端证书）作为 kubectl 客户端证书
+**部署流程**：
+1. 删除旧 DaemonSet（`selector` 字段不可变，必须先删后建）
+2. `kubectl apply` 官方 manifest（创建 ConfigMap + DaemonSet）
+3. Patch ConfigMap 的 `net-conf.json`，将 `Network` 替换为集群级 `podCIDR` 配置
+4. 重启 flannel pod 使其读取新配置
 
-**解决**: 改用 `cluster-admin.pem` + `cluster-admin-key.pem`，并添加 `--validate=false` 兼容早期启动阶段 OpenAPI 未就绪的情况
+**关键配置**：
+- `podCIDR`：集群级必填配置（如 `10.1.0.0/16`），必须包含各节点的 PodCIDR
+- manifest 通过 `pkgs.fetchurl` 在构建时下载，避免运行时网络问题
+- 使用 `/etc/kubernetes/cluster-admin.kubeconfig` 进行认证
 
 ### 问题 4：CoreDNS targetPort 错误
 

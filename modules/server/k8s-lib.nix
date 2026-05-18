@@ -55,7 +55,7 @@ in
       in
       acc // (builtins.foldl' (nodeAcc: nodeName:
         nodeAcc // {
-          "${clusterName}__${nodeName}" = (injectMasterIP nodeName cluster.nodes.${nodeName}) // { runtime = cluster.runtime; } // (lib.optionalAttrs (cluster ? adminEmail) { inherit (cluster) adminEmail; });
+          "${clusterName}__${nodeName}" = (injectMasterIP nodeName cluster.nodes.${nodeName}) // { runtime = cluster.runtime; } // (lib.optionalAttrs (cluster ? adminEmail) { inherit (cluster) adminEmail; }) // (lib.optionalAttrs (cluster ? podCIDR) { inherit (cluster) podCIDR; });
         }
       ) {} (builtins.attrNames cluster.nodes))
     ) {} (builtins.attrNames clusters);
@@ -63,7 +63,7 @@ in
   # K8s 节点生成函数
   mkK8sNode = name: attrs: let
     # 提取已处理的属性，其余作为 NixOS 模块注入
-    nodeModule = lib.removeAttrs attrs [ "hostname" "ip" "role" "runtime" "imports" "masterIP" "isFirstControl" "adminEmail" ];
+    nodeModule = lib.removeAttrs attrs [ "hostname" "ip" "role" "runtime" "imports" "masterIP" "isFirstControl" "adminEmail" "podCIDR" ];
     # 获取运行时（必须显式指定）
     runtime = attrs.runtime or (throw "k8s node '${name}' is missing required 'runtime' field");
     # 获取 socket 路径
@@ -95,6 +95,8 @@ in
         services.kubernetes.runtime = runtime;
         # 集群管理员邮箱（可选）
         services.kubernetes.adminEmail = attrs.adminEmail or null;
+        # 集群 Pod CIDR（必须指定）
+        services.kubernetes.podCIDR = attrs.podCIDR or (throw "k8s node '${name}' is missing required 'podCIDR' field");
       }
       {
         networking.interfaces.eth0.ipv4.addresses = [{
