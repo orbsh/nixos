@@ -73,7 +73,7 @@ let
         echo "[k8s-addons] Service will retry on next activation."
         exit 1
       fi
-      echo "[k8s-addons] Attempt $i/$MAX_RETRIES, retrying in ${RETRY_INTERVAL}s..."
+      echo "[k8s-addons] Attempt $i/$MAX_RETRIES, retrying in ''${RETRY_INTERVAL}s..."
       sleep $RETRY_INTERVAL
     done
 
