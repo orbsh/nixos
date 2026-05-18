@@ -39,6 +39,11 @@ in {
     plugins."io.containerd.grpc.v1.cri" = {
       sandbox_image = "registry.aliyuncs.com/google_containers/pause:3.9";
 
+      # ── CNI 网络插件配置 ──────────────────────────────
+      # 显式指定 CNI 配置文件目录和二进制目录，防止 containerd 使用内置 fallback
+      cni.conf_dir = "/etc/cni/net.d";
+      cni.bin_dir = "/opt/cni/bin";
+
       # ── 镜像仓库配置（Containerd 原生格式）─────────────
       registry = {
         # 代理镜像（mirrors）

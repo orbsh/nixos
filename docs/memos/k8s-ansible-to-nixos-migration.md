@@ -133,7 +133,7 @@ gatewayApiCrdFile = pkgs.fetchurl {
 3. 自动删除旧 DaemonSet 再重建（selector 不可变）
 4. Flannel manifest + CIDR patch + CoreDNS env patch 一站式完成
 5. Server-Side Apply (`--server-side --force-conflicts`) 确保幂等
-6. CoreDNS 使用 `kubectl patch --type=merge` 而非 apply（处理部分 Deployment spec）
+6. CoreDNS 使用 `kubectl patch --type=strategic` 配合 `$setElementOrder/containers`（避免 `--type=merge` 覆盖整个 containers 数组）
 
 **关键修复 - 双网桥冲突**：
 ```
@@ -143,11 +143,39 @@ gatewayApiCrdFile = pkgs.fetchurl {
       services.kubernetes.flannel.enable = lib.mkForce false;
 ```
 
+**关键修复 - containerd CNI 发现**：
+```
+问题: containerd 未配置 conf_dir/bin_dir，找不到 CNI 配置文件
+      → 触发内置 mynet fallback CNI → Pod 网络不通
+解决: containerd.nix 中添加:
+      cni.conf_dir = "/etc/cni/net.d";
+      cni.bin_dir = "/opt/cni/bin";
+```
+
+**关键修复 - 部署时序**：
+```
+问题: CoreDNS patch 在 Flannel 创建 cni0 之前执行 → 检测不到 IP
+解决: k8s-addons.nix 中添加两步等待：
+      1. kubectl rollout status daemonset kube-flannel-ds --timeout=120s
+      2. for i in $(seq 1 30); do ip link show cni0 && break; sleep 2; done
+```
+
+**关键修复 - API Server TLS 证书**：
+```
+问题: CoreDNS 通过 10.1.1.1:6443 访问 API Server，但证书不包含此 IP
+      → x509: certificate is valid for 172.178.5.123, 10.0.0.1, 127.0.0.1, not 10.1.1.1
+解决: k8s-common.nix 中 extraSANs 添加 "10.1.1.1"
+注意: 修改后需删除旧证书触发重新生成:
+      sudo rm -f /var/lib/kubernetes/secrets/kube-apiserver*.pem
+      nixos-rebuild switch
+```
+
 **关键配置**：
 - `podCIDR`：集群级必填配置（如 `10.1.0.0/16`）
 - manifest 通过 `pkgs.fetchurl` 在构建时下载
 - 使用 `/etc/kubernetes/cluster-admin.kubeconfig` 认证
-- CNI packages 仅包含 `pkgs.cni-plugins`，排除 `pkgs.cni-plugin-flannel`
+- CNI packages 包含 `pkgs.cni-plugins` + `pkgs.cni-plugin-flannel`
+- 声明式创建 `10-flannel.conflist`，`cniVersion: "1.0.0"`
 
 ### 问题 3.6：istio-system 删除卡住
 
@@ -226,12 +254,48 @@ echo "Retrying in ''${RETRY_INTERVAL}s..."
 **原因**: 服务只等待 istio-system namespace 存在，不等 Service 实际创建
 **解决**: 改为等待 `kubectl get svc istio-ingressgateway -n istio-system` 返回成功（最多 3 分钟）
 
-## 待办事项
+### 问题 11：containerd 使用内置 fallback CNI
 
-- [ ] 配置 SMTP 邮件通知，替换 cert auto-renew 脚本中的 TODO
-- [ ] 验证 multi-node 集群的证书自动续期是否正常工作
-- [ ] 评估是否需要保留 Ansible 作为 NixOS 的补充（如一次性任务）
-- [ ] 考虑将 CoreDNS/Flannel/Istio 迁移到 GitOps（ArgoCD）管理
+**现象**: `mynet` 网桥持续存在，Pod 网络不通，CoreDNS CrashLoopBackOff
+**原因**: `containerd.nix` 未配置 `cni.conf_dir` 和 `cni.bin_dir`，containerd 找不到 NixOS 声明式创建的 CNI 配置文件（`/etc/cni/net.d/10-flannel.conflist`）
+**解决**: containerd.nix 中添加：
+```nix
+virtualisation.containerd.settings.plugins."io.containerd.grpc.v1.cri" = {
+  cni.conf_dir = "/etc/cni/net.d";
+  cni.bin_dir = "/opt/cni/bin";
+};
+```
+**注意**: 修改后必须重启 containerd 并删除已存在的 Pod（它们使用旧 CNI 创建）：
+```bash
+sudo systemctl restart containerd
+kubectl delete pods -n kube-system --all --grace-period=0 --force
+```
+
+### 问题 12：CoreDNS 无法通过 TLS 连接 API Server
+
+**现象**: CoreDNS 日志报 `x509: certificate is valid for 172.178.5.123, 10.0.0.1, 127.0.0.1, not 10.1.1.1`
+**原因**: CoreDNS 通过 `KUBERNETES_SERVICE_HOST=10.1.1.1`（cni0 桥接 IP）连接 API Server，但 API Server 证书不包含此 IP
+**解决**: k8s-common.nix 中 `extraSANs` 添加 `"10.1.1.1"`
+**注意**: 证书更新后需重启 API Server：
+```bash
+sudo systemctl restart kube-apiserver
+```
+
+### 问题 13：Istio install 不支持 --wait=false
+
+**现象**: `deploy-istio.service` 启动失败，exit code 64/USAGE
+**原因**: 当前 istioctl 版本不再支持 `--wait=false` 标志
+**解决**: 移除 `--wait=false` 参数，istioctl install 默认会等待资源就绪
+
+### 问题 14：CoreDNS patch 覆盖容器镜像字段
+
+**现象**: `kubectl patch --type=merge` 后 CoreDNS Deployment 的 image 字段丢失
+**原因**: `--type=merge` 直接替换了整个 containers 数组，未保留原有字段
+**解决**: 改用 Strategic Merge（默认类型），配合 `$setElementOrder/containers` 指定容器顺序：
+```bash
+kubectl patch deployment coredns -n kube-system \
+  -p '{"spec":{"template":{"spec":{"$setElementOrder/containers":[{"name":"coredns"}],"containers":[...]}}}}'
+```
 
 ## 回滚方案
 

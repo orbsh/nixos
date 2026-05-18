@@ -17,10 +17,33 @@ let
   };
 
   # ── 生成 CoreDNS env patch 脚本 ─────────────────────────
-  # 使用 merge patch（无论 env 是否存在都能正确工作）
+  # 使用 strategic merge（默认类型，根据容器名合并而非替换）
+  # KUBERNETES_SERVICE_HOST 使用 cni0 桥接 IP（Pod 网络可达）
   patchCoreDNSScript = pkgs.writeShellScript "patch-coredns.sh" ''
+    # 等待 cni0 接口出现（Flannel Pod 启动后创建）
+    echo "[coredns-patch] Waiting for cni0 interface..."
+    for i in $(seq 1 30); do
+      if ip link show cni0 >/dev/null 2>&1; then
+        echo "[coredns-patch] cni0 interface detected"
+        break
+      fi
+      if [ $i -eq 30 ]; then
+        echo "[coredns-patch] ERROR: cni0 interface not found after 60s"
+        exit 1
+      fi
+      echo "[coredns-patch] Attempt $i/30, waiting for Flannel to create cni0..."
+      sleep 2
+    done
+
+    # 动态获取 cni0 接口 IP（API Server 在单节点集群中可通过此地址访问）
+    apiServerIP=$(ip -4 addr show cni0 2>/dev/null | grep -oP 'inet \K[\d.]+')
+    if [ -z "$apiServerIP" ]; then
+      echo "[coredns-patch] ERROR: Could not detect cni0 IP"
+      exit 1
+    fi
+    echo "[coredns-patch] Using API server IP: $apiServerIP"
     ${kubectl} --kubeconfig=${kubeconfig} patch deployment coredns -n kube-system \
-      --type='merge' -p '{"spec":{"template":{"spec":{"containers":[{"name":"coredns","env":[{"name":"KUBERNETES_SERVICE_HOST","value":"${apiServerIP}"},{"name":"KUBERNETES_SERVICE_PORT","value":"6443"}]}]}}}}'
+      -p "{\"spec\":{\"template\":{\"spec\":{\"\$setElementOrder/containers\":[{\"name\":\"coredns\"}],\"containers\":[{\"name\":\"coredns\",\"env\":[{\"name\":\"KUBERNETES_SERVICE_HOST\",\"value\":\"$apiServerIP\"},{\"name\":\"KUBERNETES_SERVICE_PORT\",\"value\":\"6443\"}]}]}}}}"
   '';
 
   # ── 生成 Flannel CIDR patch YAML ───────────────────────────
@@ -43,7 +66,7 @@ let
 
   # ── 完整部署脚本（带重试机制） ──────────────────────────
   deployScript = pkgs.writeShellScript "k8s-addons-deploy.sh" ''
-    set -euo pipefail
+    set -uo pipefail
 
     KUBECTL="${kubectl} --kubeconfig=${kubeconfig}"
     MAX_RETRIES=12
@@ -83,24 +106,32 @@ let
 
     # 3. Apply Flannel 官方 manifest
     echo "[k8s-addons] Applying Flannel manifest (v${flannelVersion})..."
-    $KUBECTL apply -f ${flannelManifest} --server-side --force-conflicts 2>/dev/null || {
-      echo "[k8s-addons] WARN: Flannel apply failed, will retry on next activation."
+    if ! $KUBECTL apply -f ${flannelManifest} --server-side --force-conflicts; then
+      echo "[k8s-addons] ERROR: Flannel apply failed"
       exit 1
-    }
+    fi
 
     # 4. Patch Flannel CIDR 为配置的 Pod 网段（使用 merge patch 保留 cni-conf.json）
     echo "[k8s-addons] Patching Flannel CIDR to ${podCIDR}..."
-    $KUBECTL patch configmap kube-flannel-cfg -n kube-flannel --type=merge --patch-file=${flannelCIDRYaml} 2>/dev/null || {
-      echo "[k8s-addons] WARN: Flannel CIDR patch failed, will retry on next activation."
+    if ! $KUBECTL patch configmap kube-flannel-cfg -n kube-flannel --type=merge --patch-file=${flannelCIDRYaml}; then
+      echo "[k8s-addons] ERROR: Flannel CIDR patch failed"
       exit 1
-    }
+    fi
+
+    # 4.5. 等待 Flannel Pod 就绪（确保 cni0 网桥已创建）
+    echo "[k8s-addons] Waiting for Flannel DaemonSet to be ready..."
+    if ! $KUBECTL rollout status daemonset kube-flannel-ds -n kube-flannel --timeout=120s; then
+      echo "[k8s-addons] WARN: Flannel DaemonSet not ready within 120s, will retry on next activation"
+      exit 1
+    fi
+    echo "[k8s-addons] Flannel DaemonSet is ready"
 
     # 5. Patch CoreDNS env（使用 kubectl patch 而非 apply）
     echo "[k8s-addons] Patching CoreDNS with API server address..."
-    ${patchCoreDNSScript} 2>/dev/null || {
-      echo "[k8s-addons] WARN: CoreDNS patch failed, will retry on next activation."
+    if ! ${patchCoreDNSScript}; then
+      echo "[k8s-addons] ERROR: CoreDNS patch failed"
       exit 1
-    }
+    fi
 
     # 6. 重启受影响的 Pod 使其读取新配置
     echo "[k8s-addons] Restarting affected pods..."
@@ -133,17 +164,38 @@ in {
       deps = [];
     };
 
-    # CNI 插件：仅包含 cni-plugins，排除 cni-plugin-flannel
-    # （避免 NixOS 自动生成 11-flannel.conf 创建多余的 mynet 网桥）
+    # CNI 插件：包含标准插件 + flannel 二进制
     services.kubernetes.kubelet.cni.packages =
-      lib.mkForce [ pkgs.cni-plugins ];
+      lib.mkForce [ pkgs.cni-plugins pkgs.cni-plugin-flannel ];
+
+    # 声明式创建 Flannel CNI 配置（替代 DaemonSet 运行时写入）
+    environment.etc."cni/net.d/10-flannel.conflist".text = ''
+      {
+        "name": "cbr0",
+        "cniVersion": "1.0.0",
+        "plugins": [
+          {
+            "type": "flannel",
+            "delegate": {
+              "hairpinMode": true,
+              "isDefaultGateway": true
+            }
+          },
+          {
+            "type": "portmap",
+            "capabilities": {
+              "portMappings": true
+            }
+          }
+        ]
+      }
+    '';
 
     # ── Addon 部署服务 ────────────────────────────────────
     systemd.services.k8s-addons-apply = {
       description = "Apply K8s addon manifests (NixOS-managed)";
       wantedBy = lib.mkForce [];
       after = [ "kubelet.service" "kube-apiserver.service" ];
-      wants = [ "kube-addon-manager.service" ];
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;

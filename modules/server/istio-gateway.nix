@@ -190,13 +190,13 @@ in {
           sleep 10
         done
 
-        # 检查是否需要重新安装（--wait=false 避免阻塞 switch-to-configuration）
+        # 检查是否需要重新安装
         if ${kubectl} get namespace istio-system &>/dev/null; then
           echo "[deploy-istio] Detected existing Istio installation, reconciling with IstioOperator..."
-          ${istioctl} install -y --wait=false -f ${istioOperator}
+          ${istioctl} install -y -f ${istioOperator}
         else
           echo "[deploy-istio] Installing Istio with IstioOperator..."
-          ${istioctl} install -y --wait=false -f ${istioOperator}
+          ${istioctl} install -y -f ${istioOperator}
         fi
       '';
     };

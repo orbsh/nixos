@@ -111,6 +111,7 @@ in {
     "kubernetes.default"
     "kubernetes.default.svc"
     "kubernetes.default.svc.cluster.local"
+    "10.1.1.1"  # cni0 桥接 IP（单节点集群中 Pod 访问 API Server 的地址）
   ];
 
   # 监听所有网络接口，允许远程访问
