@@ -156,53 +156,9 @@ in {
     istioctl
   ];
 
-  # ── Flannel CNI 插件 ───────────────────────────────────
-  # NixOS 声明式管理：构建时下载 manifest，激活时 apply
-  services.kubernetes.kubelet.cni.packages = with pkgs; [ cni-plugins ];
-
-  # Flannel DaemonSet：通过 NixOS systemd 服务管理
-  # 使用 pkgs.fetchurl 在构建时下载（避免运行时受网络限制）
-  # 通过 systemd oneshot 服务在激活时 apply（幂等）
-  systemd.services.kube-flannel-apply = let
-    flannelVersion = "0.28.4";
-    manifestUrl = "https://github.com/flannel-io/flannel/releases/download/v${flannelVersion}/kube-flannel.yml";
-    flannelYaml = pkgs.fetchurl {
-      url = manifestUrl;
-      hash = "sha256-0HgBl0PF4BlM6WUSX8gO8ArwwWYeyeEjljEfHP7IYKI=";
-    };
-    kubectl = "${pkgs.kubectl}/bin/kubectl";
-    kubeconfig = "/etc/kubernetes/cluster-admin.kubeconfig";
-    # 完整部署脚本（严格按顺序执行）
-    flannelDeploy = pkgs.writeShellScript "flannel-deploy.sh" ''
-      set -e
-
-      # 获取配置的 Pod CIDR（必须指定，否则 Nix 评估时会报错）
-      POD_CIDR="${config.services.kubernetes.podCIDR}"
-
-      # 1. 删除旧 DaemonSet（selector 不可变，必须先删后建）
-      ${kubectl} --kubeconfig=${kubeconfig} delete daemonset kube-flannel-ds -n kube-flannel --ignore-not-found=true --wait
-
-      # 2. Apply manifest（创建 ConfigMap + DaemonSet）
-      ${kubectl} apply -f ${flannelYaml} --kubeconfig=${kubeconfig}
-
-      # 3. 修复 CIDR：将 flannel Network 替换为集群 Pod CIDR
-      #    官方默认是 10.244.0.0/16，必须 patch 为配置的网段
-      ${kubectl} --kubeconfig=${kubeconfig} patch configmap kube-flannel-cfg -n kube-flannel \
-        --type merge -p "{\"data\":{\"net-conf.json\":\"{\\n  \\\"Network\\\": \\\"$POD_CIDR\\\",\\n  \\\"EnableNFTables\\\": false,\\n  \\\"Backend\\\": {\\n    \\\"Type\\\": \\\"vxlan\\\"\\n  }\\n}\"}}"
-
-      # 4. 重启 flannel pod 使其读取新配置
-      ${kubectl} --kubeconfig=${kubeconfig} delete pod -n kube-flannel -l app=flannel --ignore-not-found=true --wait
-    '';
-  in {
-    description = "Apply Flannel DaemonSet manifest (NixOS-managed)";
-    wantedBy = [ "multi-user.target" ];
-    after = [ "kubelet.service" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      ExecStart = flannelDeploy;
-    };
-  };
+  # ── CNI 插件配置 ───────────────────────────────────────
+  # 已由 k8s-addons.nix 统一管理（lib.mkForce [ cni-plugins ]）
+  # 此处仅做文档说明，实际配置在 addons 模块中
 
   # ── 防火墙：通用端口 ───────────────────────────────────
   networking.firewall.allowedTCPPorts = [
@@ -217,5 +173,9 @@ in {
 
   # ── 关闭 swap（k8s 要求） ──────────────────────────────
   swapDevices = lib.mkForce [];
+
+  # ── CoreDNS 修复 ──────────────────────────────────────
+  # 已由 k8s-addons.nix 统一管理（通过声明式 YAML patch）
+  # 旧的 patch-coredns-env.service 已移除
   };  # config
 }

@@ -1,5 +1,5 @@
 { pkgs, ... }: {
-  imports = [ ./k8s-common.nix ./istio-gateway.nix ./cert-manager.nix ];
+  imports = [ ./k8s-common.nix ./k8s-addons.nix ./istio-gateway.nix ./cert-manager.nix ];
 
   # ── 控制平面组件 ───────────────────────────────────────
   # 设置角色为 master 自动启用 apiserver、scheduler、controllerManager 等
