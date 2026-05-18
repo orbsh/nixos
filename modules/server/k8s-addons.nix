@@ -157,13 +157,13 @@ in {
 
   # ── 系统配置 ────────────────────────────────────────────
   config = lib.mkIf cfg.enable {
-    # 重建完成后打印 K8s 服务启动命令
-    system.activationScripts.k8s-service-reminder = {
+    # 重建完成后打印 K8s 部署服务启动命令
+    system.activationScripts.k8s-addons-reminder = {
       text = ''
         echo ""
-        echo "=== K8s 部署服务启动命令 ==="
+        echo "=== K8s Addons 部署服务启动命令 ==="
         echo ""
-        echo "  sudo systemctl start k8s-addons-apply.service deploy-istio.service deploy-cert-manager.service"
+        echo "  sudo systemctl start k8s-addons-apply.service"
         echo ""
       '';
       deps = [];

@@ -163,6 +163,7 @@
     kubectl
     kubernetes-helm
     istioctl
+    yq-go
   ];
 
   # ── 禁用 NixOS 自动 flannel（改由 k8s-addons.nix 声明式部署） ──

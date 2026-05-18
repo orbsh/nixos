@@ -139,5 +139,17 @@
       ${kubectl} apply -f ${issuersManifest}
     '';
   };
+
+  # ── 重建完成后打印 Cert-Manager 服务启动命令 ────────────────────
+  system.activationScripts.cert-manager-reminder = {
+    text = ''
+      echo ""
+      echo "=== Cert-Manager 部署服务启动命令 ==="
+      echo ""
+      echo "  sudo systemctl start deploy-cert-manager.service deploy-ingressclass.service deploy-issuers.service"
+      echo ""
+    '';
+    deps = [];
+  };
 };
 }

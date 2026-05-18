@@ -255,7 +255,9 @@ in {
       };
       script = ''
         echo "Deploying Gateway API Experimental CRDs..."
-        ${kubectl} apply -f ${gatewayApiCrdFile}
+        # 使用 --server-side 避免客户端注解超过 256KB 限制
+        # 详见: https://github.com/kubernetes-sigs/gateway-api/issues/4156
+        ${kubectl} apply --server-side -f ${gatewayApiCrdFile}
       '';
     };
 
@@ -307,8 +309,20 @@ in {
       };
       script = ''
         echo "Deploying Gateway resources..."
-        ${kubectl} apply -f ${gatewayManifest}
+        ${kubectl} apply --server-side -f ${gatewayManifest}
       '';
+    };
+
+    # ── 重建完成后打印 Istio 服务启动命令 ────────────────────
+    system.activationScripts.istio-reminder = {
+      text = ''
+        echo ""
+        echo "=== Istio 部署服务启动命令 ==="
+        echo ""
+        echo "  sudo systemctl start deploy-istio.service deploy-gateway-api-crds.service deploy-gateways.service"
+        echo ""
+      '';
+      deps = [];
     };
   };
 }
