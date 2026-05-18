@@ -156,9 +156,9 @@ in {
     istioctl
   ];
 
-  # ── CNI 插件配置 ───────────────────────────────────────
-  # 已由 k8s-addons.nix 统一管理（lib.mkForce [ cni-plugins ]）
-  # 此处仅做文档说明，实际配置在 addons 模块中
+  # ── 禁用 NixOS 自动 flannel（改由 k8s-addons.nix 声明式部署） ──
+  # 不设置此项则 NixOS 会生成 11-flannel.conf 创建 mynet 网桥
+  services.kubernetes.flannel.enable = lib.mkForce false;
 
   # ── 防火墙：通用端口 ───────────────────────────────────
   networking.firewall.allowedTCPPorts = [

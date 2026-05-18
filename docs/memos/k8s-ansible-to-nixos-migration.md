@@ -60,11 +60,12 @@
 ├── hosts/                       # 主机硬件配置
 ├── modules/
 │   ├── server/
-│   │   ├── k8s-common.nix       # K8s 通用配置（kubelet/flannel/proxy/easyCerts）
+│   │   ├── k8s-common.nix       # K8s 基础（kubelet/证书/禁用 flannel）
+│   │   ├── k8s-addons.nix       # K8s Addons（Flannel/CoreDNS/RBAC 声明式部署）
 │   │   ├── k8s-control.nix      # 控制平面（apiserver/scheduler/controllerManager）
 │   │   ├── k8s-worker.nix       # 工作节点
 │   │   ├── k8s-lib.nix          # 节点构建工具函数
-│   │   ├── istio-gateway.nix    # Istio + Gateway API
+│   │   ├── istio-gateway.nix    # Istio + Gateway API（含 cleanup 服务）
 │   │   ├── cert-manager.nix     # Cert-Manager + Issuers
 │   │   ├── crio.nix             # CRI-O 运行时
 │   │   └── containerd.nix       # Containerd 运行时
@@ -120,20 +121,45 @@ gatewayApiCrdFile = pkgs.fetchurl {
 };
 ```
 
-### 问题 3.5：Flannel 部署
+### 问题 3.5：Flannel 部署（已重构为 k8s-addons.nix）
 
-**方案**: `kube-flannel-apply.service`（NixOS 管理的 systemd oneshot 服务）
+**旧方案**: `kube-flannel-apply.service`（独立的 systemd oneshot 服务）
 
-**部署流程**：
-1. 删除旧 DaemonSet（`selector` 字段不可变，必须先删后建）
-2. `kubectl apply` 官方 manifest（创建 ConfigMap + DaemonSet）
-3. Patch ConfigMap 的 `net-conf.json`，将 `Network` 替换为集群级 `podCIDR` 配置
-4. 重启 flannel pod 使其读取新配置
+**新方案**: `k8s-addons-apply.service`（统一管理所有 K8s Addons）
+
+**核心改进**：
+1. API Server 就绪等待（12 次 × 10 秒重试）
+2. 自动删除 NixOS 创建的冲突 ClusterRoleBinding（User → ServiceAccount）
+3. 自动删除旧 DaemonSet 再重建（selector 不可变）
+4. Flannel manifest + CIDR patch + CoreDNS env patch 一站式完成
+5. Server-Side Apply (`--server-side --force-conflicts`) 确保幂等
+6. CoreDNS 使用 `kubectl patch --type=merge` 而非 apply（处理部分 Deployment spec）
+
+**关键修复 - 双网桥冲突**：
+```
+问题: NixOS services.kubernetes.flannel.enable=true 自动生成 11-flannel.conf
+      → 创建 mynet 网桥，与 Flannel 官方 cni0 冲突
+解决: k8s-common.nix 中添加:
+      services.kubernetes.flannel.enable = lib.mkForce false;
+```
 
 **关键配置**：
-- `podCIDR`：集群级必填配置（如 `10.1.0.0/16`），必须包含各节点的 PodCIDR
-- manifest 通过 `pkgs.fetchurl` 在构建时下载，避免运行时网络问题
-- 使用 `/etc/kubernetes/cluster-admin.kubeconfig` 进行认证
+- `podCIDR`：集群级必填配置（如 `10.1.0.0/16`）
+- manifest 通过 `pkgs.fetchurl` 在构建时下载
+- 使用 `/etc/kubernetes/cluster-admin.kubeconfig` 认证
+- CNI packages 仅包含 `pkgs.cni-plugins`，排除 `pkgs.cni-plugin-flannel`
+
+### 问题 3.6：istio-system 删除卡住
+
+**现象**: `kubectl delete namespace istio-system` 永远卡在 Terminating
+**原因**: Istio Gateway 资源和 IstioOperator CR 的 finalizers 阻止删除
+**解决**: 添加 `cleanup-istio.service` 强制清理：
+1. 遍历所有 Gateway/Istio CR 资源，移除 finalizers
+2. 遍历 istio-system 命名空间所有资源，移除 finalizers
+3. 强制删除命名空间（`--grace-period=0 --force`）
+4. 如仍失败，提示使用 API finalize 端点手动干预
+
+用法: `systemctl start cleanup-istio.service`
 
 ### 问题 4：CoreDNS targetPort 错误
 
@@ -167,12 +193,45 @@ kubectl = "${pkgs.kubectl}/bin/kubectl --kubeconfig /etc/kubernetes/cluster-admi
 **原因**: 该选项需要字符串列表，不是单个字符串
 **解决**: `"10.0.0.254"` → `[ "10.0.0.254" ]`
 
+### 问题 8：systemd 服务在 API Server 就绪前执行
+
+**现象**: `k8s-addons-apply.service` / `deploy-istio.service` 启动失败，exit code 1
+**原因**: systemd 服务依赖 `kubelet.service`，但 kubelet 启动 ≠ API Server 已就绪
+**解决**: 所有需要访问 K8s API 的 systemd 服务添加 API Server 等待逻辑：
+```bash
+for i in $(seq 1 12); do
+  if kubectl cluster-info --request-timeout=5s >/dev/null 2>&1; then
+    break
+  fi
+  sleep 10
+done
+```
+
+### 问题 9：Nix 字符串中的 bash 变量需要转义
+
+**现象**: `error: undefined variable 'RETRY_INTERVAL'`
+**原因**: Nix 的 `''...''` 缩进字符串中，`${VAR}` 被当作 Nix 变量插值
+**解决**: bash 变量使用 `''${VAR}` 转义：
+```nix
+# 错误
+echo "Retrying in ${RETRY_INTERVAL}s..."
+
+# 正确
+echo "Retrying in ''${RETRY_INTERVAL}s..."
+```
+
+### 问题 10：set-external-traffic-policy 服务失败
+
+**现象**: 尝试 patch istio-ingressgateway Service 时失败
+**原因**: 服务只等待 istio-system namespace 存在，不等 Service 实际创建
+**解决**: 改为等待 `kubectl get svc istio-ingressgateway -n istio-system` 返回成功（最多 3 分钟）
+
 ## 待办事项
 
 - [ ] 配置 SMTP 邮件通知，替换 cert auto-renew 脚本中的 TODO
 - [ ] 验证 multi-node 集群的证书自动续期是否正常工作
-- [ ] 考虑将 NixOS 配置文件同步到服务器（目前可能在本地管理）
 - [ ] 评估是否需要保留 Ansible 作为 NixOS 的补充（如一次性任务）
+- [ ] 考虑将 CoreDNS/Flannel/Istio 迁移到 GitOps（ArgoCD）管理
 
 ## 回滚方案
 

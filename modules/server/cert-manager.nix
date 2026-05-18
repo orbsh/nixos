@@ -15,8 +15,11 @@
     systemd.services.deploy-cert-manager = {
     description = "Install cert-manager";
     after = [ "kubelet.service" ];
-    wantedBy = [ "multi-user.target" ];
-    serviceConfig.Type = "oneshot";
+    wantedBy = lib.mkForce [];
+    serviceConfig = {
+      Type = "oneshot";
+      TimeoutStartSec = "2min";
+    };
     script = let
       kubectl = "${pkgs.kubectl}/bin/kubectl --kubeconfig /etc/kubernetes/cluster-admin.kubeconfig";
       certManagerVersion = "v1.18.2";
@@ -35,8 +38,11 @@
   systemd.services.wait-for-cert-manager-webhook = {
     description = "Wait for cert-manager webhook to be ready";
     after = [ "deploy-cert-manager.service" ];
-    wantedBy = [ "multi-user.target" ];
-    serviceConfig.Type = "oneshot";
+    wantedBy = lib.mkForce [];
+    serviceConfig = {
+      Type = "oneshot";
+      TimeoutStartSec = "6min";
+    };
     script = let
       kubectl = "${pkgs.kubectl}/bin/kubectl --kubeconfig /etc/kubernetes/cluster-admin.kubeconfig";
     in ''
@@ -57,8 +63,11 @@
   systemd.services.deploy-ingressclass = {
     description = "Deploy Istio IngressClass";
     after = [ "wait-for-cert-manager-webhook.service" ];
-    wantedBy = [ "multi-user.target" ];
-    serviceConfig.Type = "oneshot";
+    wantedBy = lib.mkForce [];
+    serviceConfig = {
+      Type = "oneshot";
+      TimeoutStartSec = "2min";
+    };
     script = let
       kubectl = "${pkgs.kubectl}/bin/kubectl --kubeconfig /etc/kubernetes/cluster-admin.kubeconfig";
       ingressclassManifest = pkgs.writeText "ingressclass.yaml" ''
@@ -79,8 +88,11 @@
   systemd.services.deploy-issuers = {
     description = "Deploy cert-manager ClusterIssuers";
     after = [ "wait-for-cert-manager-webhook.service" ];
-    wantedBy = [ "multi-user.target" ];
-    serviceConfig.Type = "oneshot";
+    wantedBy = lib.mkForce [];
+    serviceConfig = {
+      Type = "oneshot";
+      TimeoutStartSec = "2min";
+    };
     script = let
       kubectl = "${pkgs.kubectl}/bin/kubectl --kubeconfig /etc/kubernetes/cluster-admin.kubeconfig";
       email = config.services.kubernetes.certManager.email or "nash@iffy.me";

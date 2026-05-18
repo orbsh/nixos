@@ -16,23 +16,11 @@ let
     hash = "sha256-0HgBl0PF4BlM6WUSX8gO8ArwwWYeyeEjljEfHP7IYKI=";
   };
 
-  # ── 生成 CoreDNS env patch YAML ────────────────────────────
-  corednsPatchYaml = pkgs.writeText "coredns-env-patch.yaml" ''
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: coredns
-      namespace: kube-system
-    spec:
-      template:
-        spec:
-          containers:
-          - name: coredns
-            env:
-            - name: KUBERNETES_SERVICE_HOST
-              value: "${apiServerIP}"
-            - name: KUBERNETES_SERVICE_PORT
-              value: "6443"
+  # ── 生成 CoreDNS env patch 脚本 ─────────────────────────
+  # 使用 merge patch（无论 env 是否存在都能正确工作）
+  patchCoreDNSScript = pkgs.writeShellScript "patch-coredns.sh" ''
+    ${kubectl} --kubeconfig=${kubeconfig} patch deployment coredns -n kube-system \
+      --type='merge' -p '{"spec":{"template":{"spec":{"containers":[{"name":"coredns","env":[{"name":"KUBERNETES_SERVICE_HOST","value":"${apiServerIP}"},{"name":"KUBERNETES_SERVICE_PORT","value":"6443"}]}]}}}}'
   '';
 
   # ── 生成 Flannel CIDR patch YAML ───────────────────────────
@@ -79,6 +67,12 @@ let
 
     echo "[k8s-addons] Starting addon deployment..."
 
+    # 0. 清理 NixOS flannel 残留（旧系统激活后可能仍存在）
+    echo "[k8s-addons] Cleaning up stale NixOS flannel artifacts..."
+    ip link delete mynet 2>/dev/null && echo "[k8s-addons] Deleted mynet bridge" || echo "[k8s-addons] mynet not found (already clean)"
+    # 注意：/etc/cni/net.d/11-flannel.conf 是 NixOS 只读挂载，无法运行时删除
+    # 必须通过 nixos-rebuild 激活新配置（flannel.enable=false）来移除
+
     # 1. 删除 NixOS k8s 模块自动创建的 User 类型 RBAC binding
     echo "[k8s-addons] Removing conflicting flannel ClusterRoleBinding..."
     $KUBECTL delete clusterrolebinding flannel --ignore-not-found=true --wait 2>/dev/null || true
@@ -94,16 +88,16 @@ let
       exit 1
     }
 
-    # 4. Patch Flannel CIDR 为配置的 Pod 网段
+    # 4. Patch Flannel CIDR 为配置的 Pod 网段（使用 merge patch 保留 cni-conf.json）
     echo "[k8s-addons] Patching Flannel CIDR to ${podCIDR}..."
-    $KUBECTL apply -f ${flannelCIDRYaml} 2>/dev/null || {
+    $KUBECTL patch configmap kube-flannel-cfg -n kube-flannel --type=merge --patch-file=${flannelCIDRYaml} 2>/dev/null || {
       echo "[k8s-addons] WARN: Flannel CIDR patch failed, will retry on next activation."
       exit 1
     }
 
-    # 5. Apply CoreDNS env patch
+    # 5. Patch CoreDNS env（使用 kubectl patch 而非 apply）
     echo "[k8s-addons] Patching CoreDNS with API server address..."
-    $KUBECTL apply -f ${corednsPatchYaml} 2>/dev/null || {
+    ${patchCoreDNSScript} 2>/dev/null || {
       echo "[k8s-addons] WARN: CoreDNS patch failed, will retry on next activation."
       exit 1
     }
@@ -127,6 +121,18 @@ in {
 
   # ── 系统配置 ────────────────────────────────────────────
   config = lib.mkIf cfg.enable {
+    # 重建完成后打印 K8s 服务启动命令
+    system.activationScripts.k8s-service-reminder = {
+      text = ''
+        echo ""
+        echo "=== K8s 部署服务启动命令 ==="
+        echo ""
+        echo "  sudo systemctl start k8s-addons-apply.service deploy-istio.service deploy-cert-manager.service"
+        echo ""
+      '';
+      deps = [];
+    };
+
     # CNI 插件：仅包含 cni-plugins，排除 cni-plugin-flannel
     # （避免 NixOS 自动生成 11-flannel.conf 创建多余的 mynet 网桥）
     services.kubernetes.kubelet.cni.packages =
@@ -135,7 +141,7 @@ in {
     # ── Addon 部署服务 ────────────────────────────────────
     systemd.services.k8s-addons-apply = {
       description = "Apply K8s addon manifests (NixOS-managed)";
-      wantedBy = [ "multi-user.target" ];
+      wantedBy = lib.mkForce [];
       after = [ "kubelet.service" "kube-apiserver.service" ];
       wants = [ "kube-addon-manager.service" ];
       serviceConfig = {

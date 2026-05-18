@@ -174,8 +174,11 @@ in {
     systemd.services.deploy-istio = {
       description = "Install Istio service mesh via IstioOperator";
       after = [ "kubelet.service" "kube-apiserver.service" ];
-      wantedBy = [ "multi-user.target" ];
-      serviceConfig.Type = "oneshot";
+      wantedBy = lib.mkForce [];
+      serviceConfig = {
+        Type = "oneshot";
+        TimeoutStartSec = "5min";
+      };
       script = ''
         # 等待 API Server 就绪
         echo "[deploy-istio] Waiting for API server..."
@@ -187,13 +190,13 @@ in {
           sleep 10
         done
 
-        # 检查是否需要重新安装
+        # 检查是否需要重新安装（--wait=false 避免阻塞 switch-to-configuration）
         if ${kubectl} get namespace istio-system &>/dev/null; then
           echo "[deploy-istio] Detected existing Istio installation, reconciling with IstioOperator..."
-          ${istioctl} install -y -f ${istioOperator}
+          ${istioctl} install -y --wait=false -f ${istioOperator}
         else
           echo "[deploy-istio] Installing Istio with IstioOperator..."
-          ${istioctl} install -y -f ${istioOperator}
+          ${istioctl} install -y --wait=false -f ${istioOperator}
         fi
       '';
     };
@@ -212,8 +215,11 @@ in {
     systemd.services.deploy-gateway-api-crds = {
       description = "Deploy Gateway API Standard CRDs";
       after = [ "deploy-istio.service" ];
-      wantedBy = [ "multi-user.target" ];
-      serviceConfig.Type = "oneshot";
+      wantedBy = lib.mkForce [];
+      serviceConfig = {
+        Type = "oneshot";
+        TimeoutStartSec = "2min";
+      };
       script = ''
         echo "Deploying Gateway API CRDs..."
         ${kubectl} apply -f ${gatewayApiCrdFile}
@@ -224,27 +230,36 @@ in {
     systemd.services.set-external-traffic-policy = {
       description = "Set externalTrafficPolicy to Local on istio-ingressgateway";
       after = [ "deploy-istio.service" ];
-      wantedBy = [ "multi-user.target" ];
+      wantedBy = lib.mkForce [];
       serviceConfig = {
         Type = "oneshot";
         Restart = "on-failure";
         RestartSec = 10;
         StartLimitIntervalSec = 300;
         StartLimitBurst = 10;
+        TimeoutStartSec = "3min";
       };
       script = ''
-        # 等待 API Server 就绪（最多 60 秒）
-        for i in $(seq 1 12); do
-          if ${kubectl} get namespace istio-system &>/dev/null; then
+        # 等待 istio-ingressgateway Service 就绪（最多 3 分钟）
+        echo "[external-traffic-policy] Waiting for istio-ingressgateway Service..."
+        for i in $(seq 1 18); do
+          if ${kubectl} get svc istio-ingressgateway -n istio-system &>/dev/null; then
+            echo "[external-traffic-policy] Service found."
             break
           fi
-          echo "Waiting for API server... ($i/12)"
-          sleep 5
+          echo "[external-traffic-policy] Attempt $i/18, retrying in 10s..."
+          sleep 10
         done
 
-        echo "Setting externalTrafficPolicy to Local..."
-        ${kubectl} patch svc -n istio-system istio-ingressgateway \
-          -p '{"spec":{"externalTrafficPolicy":"Local"}}'
+        # 确认 Service 存在后再 patch
+        if ${kubectl} get svc istio-ingressgateway -n istio-system &>/dev/null; then
+          echo "[external-traffic-policy] Setting externalTrafficPolicy to Local..."
+          ${kubectl} patch svc -n istio-system istio-ingressgateway \
+            -p '{"spec":{"externalTrafficPolicy":"Local"}}'
+        else
+          echo "[external-traffic-policy] ERROR: Service not found after 3 minutes."
+          exit 1
+        fi
       '';
     };
 
@@ -252,8 +267,11 @@ in {
     systemd.services.deploy-gateways = {
       description = "Deploy Gateway resources (web and ssh)";
       after = [ "deploy-gateway-api-crds.service" ];
-      wantedBy = [ "multi-user.target" ];
-      serviceConfig.Type = "oneshot";
+      wantedBy = lib.mkForce [];
+      serviceConfig = {
+        Type = "oneshot";
+        TimeoutStartSec = "2min";
+      };
       script = ''
         echo "Deploying Gateway resources..."
         ${kubectl} apply -f ${gatewayManifest}
