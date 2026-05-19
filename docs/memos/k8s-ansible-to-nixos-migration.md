@@ -297,6 +297,49 @@ kubectl patch deployment coredns -n kube-system \
   -p '{"spec":{"template":{"spec":{"$setElementOrder/containers":[{"name":"coredns"}],"containers":[...]}}}}'
 ```
 
+### 问题 15：Envoy Gateway localhost:80 连接被拒绝
+
+**现象**: `curl localhost:80` 返回 "Connection refused"，尽管 Envoy Gateway 已部署
+
+**根因分析（三层问题）**：
+
+1. **xDS Listener Resources 为空**: Envoy Gateway 控制器未向 envoy proxy 推送 Listener 配置
+   - 调试方法：在 EnvoyGateway 配置中启用 `xds: debug` 和 `xds-translator: debug` 日志
+   - 检查命令：`kubectl logs deployment/envoy-gateway -n envoy-gateway-system | grep "Listener Resources"`
+
+2. **Gitea Service Selector 匹配错误**: Service 同时选中了 gitea app 和 gitea-db pods
+   - Kustomize `commonLabels` 会应用到所有资源，包括 gitea-db
+   - 解决：在 gitea deployment 中添加显式 `app: gitea` 标签，Service selector 也使用该标签
+
+3. **EnvoyProxy targetPort 不匹配**: Service targetPort (8080) ≠ xDS listener 端口 (10080)
+   - Envoy Gateway 将 Gateway port 80 映射到 xDS listener 端口 10080（计算公式：10000 + port）
+   - 解决：将 targetPort 设置为与 xDS 生成的端口匹配（10080, 10443, 10022, 10053）
+
+**端口映射表**：
+
+| Gateway Port | Protocol | xDS Listener Port | Service targetPort |
+|-------------|----------|-------------------|-------------------|
+| 80          | HTTP     | 10080             | 10080             |
+| 443         | HTTPS    | 10443             | 10443             |
+| 22          | TCP/SSH  | 10022             | 10022             |
+| 53          | UDP/DNS  | 10053             | 10053             |
+
+**调试命令**：
+
+```bash
+# 检查 xDS Listener 推送
+kubectl logs deployment/envoy-gateway -n envoy-gateway-system --tail=200 | grep -E "listener|xds.*resource"
+
+# 检查 envoy proxy 实际监听的 listeners
+kubectl exec -n envoy-gateway-system <envoy-pod> -c envoy -- curl -s http://127.0.0.1:19001/listeners
+
+# 检查 Service endpoints
+kubectl get endpoints -n devops gitea
+
+# 通过 Envoy Gateway 测试
+curl -H "Host: gitea.s" http://localhost:80/
+```
+
 ## 回滚方案
 
 如果 NixOS 配置导致问题：

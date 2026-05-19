@@ -2,6 +2,7 @@
 { config, lib, pkgs, ... }:
 let
   registriesData = import ../../config/registries.nix;
+  containerdRegistryDir = "/etc/containerd/certs.d";
 in {
   # ── 启用 Containerd ─────────────────────────────────────
   virtualisation.containerd.enable = true;
@@ -35,32 +36,41 @@ in {
   ];
 
   # ── Containerd 运行时设置 ───────────────────────────────
+  # 生成 hosts.toml 文件（containerd v2 新格式）
+
+  # 为每个代理镜像生成 hosts.toml
+  environment.etc = lib.mapAttrs' (prefix: location: {
+    name = "containerd/certs.d/${prefix}/hosts.toml";
+    value = {
+      text = ''
+        server = "https://${prefix}"
+
+        [host."https://${location}"]
+          capabilities = ["pull", "resolve"]
+      '';
+    };
+  }) registriesData.proxyRegistries;
+
   virtualisation.containerd.settings = {
     plugins."io.containerd.grpc.v1.cri" = {
       sandbox_image = "registry.aliyuncs.com/google_containers/pause:3.9";
 
       # ── CNI 网络插件配置 ──────────────────────────────
-      # 显式指定 CNI 配置文件目录和二进制目录，防止 containerd 使用内置 fallback
       cni.conf_dir = "/etc/cni/net.d";
       cni.bin_dir = "/opt/cni/bin";
 
-      # ── 镜像仓库配置（Containerd 原生格式）─────────────
-      registry = {
-        # 代理镜像（mirrors）
-        mirrors = lib.mapAttrs (_prefix: location: {
-          endpoint = [ location ];
-        }) registriesData.proxyRegistries;
+      # ── 镜像仓库配置（containerd v2 新格式：config_path）──
+      registry.config_path = containerdRegistryDir;
 
-        # 非安全镜像（跳过 TLS 验证）
-        configs = builtins.listToAttrs (map (loc: {
-          name = loc;
-          value = {
-            tls = {
-              insecure_skip_verify = true;
-            };
+      # ── 非安全镜像配置 ───────────────────────────────────
+      registry.configs = builtins.listToAttrs (map (loc: {
+        name = loc;
+        value = {
+          tls = {
+            insecure_skip_verify = true;
           };
-        }) registriesData.insecureRegistries);
-      };
+        };
+      }) registriesData.insecureRegistries);
     };
   };
 }

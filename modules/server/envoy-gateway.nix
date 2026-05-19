@@ -7,15 +7,15 @@
 
   # Gateway API CRD 文件 (experimental)
   gatewayApiCrdFile = pkgs.fetchurl {
-    url = "https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.1/experimental-install.yaml";
-    hash = "sha256-VTMn4P8yoaK+RGv5OCPIQTz5JTrGptVAfuvR6NJp9p4=";
+    url = "https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.5.0/experimental-install.yaml";
+    hash = "sha256-98x9MJp62dMWk4NBBG7YHEDnh9gILwsoHfOSYomnpEU=";
   };
 
-  # Envoy Gateway 安装文件 (v1.2.1)
-    # 首次使用需运行: nix-prefetch-url https://github.com/envoyproxy/gateway/releases/download/v1.2.1/install.yaml
+  # Envoy Gateway 安装文件 (v1.8.0)
+    # 首次使用需运行: nix-prefetch-url https://github.com/envoyproxy/gateway/releases/download/v1.8.0/install.yaml
     envoyGatewayRawFile = pkgs.fetchurl {
-      url = "https://github.com/envoyproxy/gateway/releases/download/v1.2.1/install.yaml";
-      hash = "sha256-SleqK41bGrI1KNd9qGlQjSSnxiGqkRhO0yGfWaJ83cs=";
+      url = "https://github.com/envoyproxy/gateway/releases/download/v1.8.0/install.yaml";
+      hash = "sha256-nKa3I+6idxzYBuWuQ3K6lBsVjgIFM1UBc2qkyIavckg=";
     };
 
     # 过滤掉 Gateway API CRD（已由 deploy-gateway-api-crds-eg 部署），避免版本冲突
@@ -23,16 +23,18 @@
       src = envoyGatewayRawFile;
     }
     ''
-      # 使用 yq-go 过滤掉 Gateway API CRD（group 为 gateway.networking.k8s.io）
+      # 1. 使用 sed 为 envoyproxy/gateway 镜像添加私有仓库前缀
+      # 2. 使用 yq-go 过滤掉 Gateway API CRD（group 为 gateway.networking.k8s.io）
+      sed 's|envoyproxy/gateway:|docker.lizzie.fun/envoyproxy/gateway:|g' $src |
       ${pkgs.yq-go}/bin/yq eval-all '
         select(
           .kind != "CustomResourceDefinition" or
           .spec.group != "gateway.networking.k8s.io"
         )
-      ' $src > $out
+      ' > $out
     '';
 
-  # Envoy Gateway 资源清单 (GatewayClass + Gateway)
+  # Envoy Gateway 资源清单 (GatewayClass + Gateway + ConfigMap patch)
   envoyGatewayManifest = pkgs.writeText "envoy-gateways.yaml" ''
     apiVersion: gateway.networking.k8s.io/v1
     kind: GatewayClass
@@ -41,60 +43,111 @@
     spec:
       controllerName: gateway.envoyproxy.io/gatewayclass-controller
     ---
+    # 配置 Envoy proxy 使用 IfNotPresent 策略，优先使用本地镜像
+    # 指定使用本地已有的镜像地址（避免 CRI 无法识别 docker.io tag 的问题）
+    apiVersion: gateway.envoyproxy.io/v1alpha1
+    kind: EnvoyProxy
+    metadata:
+      name: default
+      namespace: envoy-gateway-system
+    spec:
+      provider:
+        type: Kubernetes
+        kubernetes:
+          envoyDeployment:
+            patch:
+              type: StrategicMerge
+              value:
+                spec:
+                  template:
+                    spec:
+                      containers:
+                      - name: envoy
+                        imagePullPolicy: IfNotPresent
+                        image: docker.lizzie.fun/envoyproxy/envoy:distroless-v1.36.0
+          envoyService:
+            patch:
+              type: StrategicMerge
+              value:
+                spec:
+                  type: NodePort
+                  ports:
+                  - name: http
+                    port: 80
+                    nodePort: 80
+                    protocol: TCP
+                    targetPort: 10080
+                  - name: https
+                    port: 443
+                    nodePort: 443
+                    protocol: TCP
+                    targetPort: 10443
+                  - name: tcp-ssh
+                    port: 22
+                    nodePort: 22
+                    protocol: TCP
+                    targetPort: 22
+                  - name: udp-dns
+                    port: 53
+                    nodePort: 10053
+                    protocol: UDP
+                    targetPort: 53
+    ---
+    # ── 统一 Gateway（单 Service，多 listeners，类似 Istio 模式）───
     apiVersion: gateway.networking.k8s.io/v1
     kind: Gateway
     metadata:
-      name: web
+      name: envoy-gateway
       namespace: envoy-gateway-system
     spec:
       gatewayClassName: envoy
+      infrastructure:
+        parametersRef:
+          group: gateway.envoyproxy.io
+          kind: EnvoyProxy
+          name: default
       listeners:
       - name: http
         port: 80
         protocol: HTTP
         allowedRoutes:
+          kinds:
+            - kind: HTTPRoute
           namespaces:
             from: All
-      - name: https
-        port: 443
-        protocol: HTTPS
-        allowedRoutes:
-          namespaces:
-            from: All
-        tls:
-          mode: Terminate
-          certificateRefs:
-            - name: cert-web
-              kind: Secret
-              group: core
-    ---
-    apiVersion: gateway.networking.k8s.io/v1
-    kind: Gateway
-    metadata:
-      name: tcp
-      namespace: envoy-gateway-system
-    spec:
-      gatewayClassName: envoy
-      listeners:
+      ## 禁用通用 HTTPS，应用生成专用 gateway
+      # TODO: HTTPS 监听器需要有效的 TLS certificate
+      # 创建 secret: kubectl create secret tls cert-web --cert=tls.crt --key=tls.key -n envoy-gateway-system
+      # 然后取消下面的注释：
+      # - name: https
+      #   port: 443
+      #   protocol: HTTPS
+      #   hostname: "gitea.x"
+      #   tls:
+      #     mode: Terminate
+      #     certificateRefs:
+      #       - name: cert-web
+      #         kind: Secret
+      #         group: ""
+      #   allowedRoutes:
+      #     kinds:
+      #       - kind: HTTPRoute
+      #     namespaces:
+      #       from: All
       - name: tcp-ssh
         port: 22
         protocol: TCP
         allowedRoutes:
+          kinds:
+            - kind: TCPRoute
           namespaces:
             from: All
-    ---
-    apiVersion: gateway.networking.k8s.io/v1
-    kind: Gateway
-    metadata:
-      name: udp
-      namespace: envoy-gateway-system
-    spec:
-      gatewayClassName: envoy
-      listeners:
       - name: udp-dns
         port: 53
         protocol: UDP
         allowedRoutes:
+          kinds:
+            - kind: UDPRoute
           namespaces:
             from: All
   '';
@@ -147,7 +200,7 @@ in {
       serviceConfig.Type = "oneshot";
       script = ''
         echo "[deploy-envoy-gateways] Deploying Gateway resources..."
-        ${kubectl} apply --server-side -f ${envoyGatewayManifest}
+        ${kubectl} apply --server-side --force-conflicts -f ${envoyGatewayManifest}
       '';
     };
 

@@ -14,5 +14,8 @@
     ../../modules/common/container.nix
     ../../modules/common/extra.nix
     ../../modules/common/vm.nix
+    ../../modules/dev/python.nix
   ];
+
+  dev.python.enable = true;
 }
