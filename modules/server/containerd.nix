@@ -49,7 +49,19 @@ in {
           capabilities = ["pull", "resolve"]
       '';
     };
-  }) registriesData.proxyRegistries;
+  }) registriesData.proxyRegistries //
+  # 为每个非安全镜像生成 hosts.toml（使用 HTTP）
+  lib.listToAttrs (map (loc: {
+    name = "containerd/certs.d/${loc}/hosts.toml";
+    value = {
+      text = ''
+        server = "http://${loc}"
+
+        [host."http://${loc}"]
+          capabilities = ["pull", "resolve"]
+      '';
+    };
+  }) registriesData.insecureRegistries);
 
   virtualisation.containerd.settings = {
     plugins."io.containerd.grpc.v1.cri" = {
@@ -60,17 +72,7 @@ in {
       cni.bin_dir = "/opt/cni/bin";
 
       # ── 镜像仓库配置（containerd v2 新格式：config_path）──
-      registry.config_path = containerdRegistryDir;
-
-      # ── 非安全镜像配置 ───────────────────────────────────
-      registry.configs = builtins.listToAttrs (map (loc: {
-        name = loc;
-        value = {
-          tls = {
-            insecure_skip_verify = true;
-          };
-        };
-      }) registriesData.insecureRegistries);
+      # 已由 environment.etc 生成 hosts.toml 接管，无需 registry.configs
     };
   };
 }
