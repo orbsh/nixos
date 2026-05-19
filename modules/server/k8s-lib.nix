@@ -95,6 +95,18 @@ let
     autoSansModule = lib.optionalAttrs (attrs.isFirstControl or false) {
       services.kubernetes.apiserver.extraSANs = [ attrs.ip ];
     };
+    # 证书同步：首个 control 节点提供服务，其他节点启用同步
+    certSyncModule = if attrs.isFirstControl or false then [
+      # Master 节点：启动 socat 证书服务
+      {
+        services.kubernetes.isCertServer = true;
+      }
+    ] else [
+      # Worker/Secondary 节点：启用 nc 同步
+      {
+        services.kubernetes.autoSyncCerts = true;
+      }
+    ];
   in lib.nixosSystem {
     specialArgs = { inherit inputs dataDir cni0IP; };
     modules = [
@@ -103,6 +115,8 @@ let
     ] ++ k8sRoleModules.${attrs.role} ++ comboSocketModule ++ [
       # 自动为第一个 control/combo 节点添加 API Server SANs
       autoSansModule
+      # 证书同步：master 提供公钥，worker 自动拉取
+      certSyncModule
       # 导入运行时特定模块
       runtimeModules.${runtime}
       # 注入节点特定的配置

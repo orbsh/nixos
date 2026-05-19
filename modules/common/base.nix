@@ -80,15 +80,18 @@
     "net.ipv4.tcp_wmem"                = "4096 65536 16777216";
   };
 
-  # 基础 CLI 工具（两台机器都有）
+  # 基础 CLI 工具（所有主机通用）
   environment.systemPackages = with pkgs; [
-    git curl wget rsync
-    jq tree file unzip fd ripgrep
-    bind  # dig, nslookup
-    dust
+    # ── 网络与传输 ──
+    git curl wget rsync socat netcat-openbsd
+
+    # ── 文件与系统工具 ──
+    util-linux  # mount, fdisk, lsblk 等
+    jq tree file unzip fd ripgrep bind dust  # bind: dig, nslookup
+
+    # ── 终端与编辑器 ──
+    nushell  # 现代 Shell
     delta zellij  # git diff 美化 / 终端复用
     helix  # 编辑器：系统级提供二进制，用户配置由 home-manager 管理
-    nushell  # shell
-    util-linux  # 提供 mount, fdisk, lsblk 等基础工具
   ];
 }

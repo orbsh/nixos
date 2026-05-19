@@ -16,6 +16,18 @@
     description = "Cluster Pod CIDR range (used by Flannel for network configuration)";
   };
 
+  options.services.kubernetes.autoSyncCerts = lib.mkOption {
+    type = lib.types.bool;
+    default = false;
+    description = "Auto-sync certificates from master node before kubelet starts (for worker/secondary nodes)";
+  };
+
+  options.services.kubernetes.isCertServer = lib.mkOption {
+    type = lib.types.bool;
+    default = false;
+    description = "Serve K8s certificates directory to other nodes via socat (for first control node)";
+  };
+
   config = let
     runtime = config.services.kubernetes.runtime;
 
@@ -36,6 +48,72 @@
   # roles 非空时会自动启用 easyCerts、flannel、proxy
   # 此处显式启用以确保
   services.kubernetes.easyCerts = true;
+
+  # ── 证书同步：Master 节点通过 socat 提供证书流 ─────────
+  # 使用 fork 支持多节点并发请求，零状态，不依赖 HTTP/SSH
+  systemd.services.k8s-cert-server = lib.mkIf config.services.kubernetes.isCertServer {
+    description = "Serve K8s certificates to worker nodes via tar stream";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "network.target" ];
+    serviceConfig = {
+      ExecStart = "${pkgs.socat}/bin/socat TCP-LISTEN:9090,reuseaddr,fork EXEC:\"tar cz -C /var/lib/kubernetes/secrets . 2>/dev/null\"";
+      Restart = "always";
+    };
+  };
+
+  # Master 节点开放证书同步端口
+  networking.firewall.allowedTCPPorts = lib.mkIf config.services.kubernetes.isCertServer [ 9090 ];
+
+  # ── 证书同步：非 master 节点在 kubelet 启动前从 master 拉取证书 ──
+  systemd.services.sync-k8s-certs = lib.mkIf config.services.kubernetes.autoSyncCerts {
+    description = "Sync K8s certificates from master node";
+    before = [ "kubelet.service" ];
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = let
+      masterIP = config.services.kubernetes.masterAddress;
+      nc = "${pkgs.netcat-openbsd}/bin/nc";
+    in ''
+      set -euo pipefail
+      SECRETS_DIR="/var/lib/kubernetes/secrets"
+
+      # 如果证书已存在且 CA 有效，跳过
+      if [ -f "$SECRETS_DIR/ca.pem" ]; then
+        if openssl x509 -in "$SECRETS_DIR/ca.pem" -noout -text >/dev/null 2>&1; then
+          echo "[sync-k8s-certs] Certificates already exist and valid, skipping sync"
+          exit 0
+        fi
+      fi
+
+      echo "[sync-k8s-certs] Syncing certificates from master ${masterIP}:9090..."
+      mkdir -p "$SECRETS_DIR"
+
+      # 重试机制：master 可能尚未完全启动或生成证书
+      SUCCESS=false
+      for i in 1 2 3 4 5; do
+        echo "[sync-k8s-certs] Attempt $i..."
+        # 通过 nc 连接 socat，接收 tar.gz 流并直接解压
+        if ${nc} -w 10 ${masterIP} 9090 | tar xz -C "$SECRETS_DIR" 2>/dev/null; then
+          SUCCESS=true
+          break
+        fi
+        sleep 3
+      done
+
+      # 验证证书是否成功同步
+      if [ "$SUCCESS" = true ] && [ -f "$SECRETS_DIR/ca.pem" ]; then
+        echo "[sync-k8s-certs] Certificates synced successfully"
+        ls -la "$SECRETS_DIR/"
+      else
+        echo "[sync-k8s-certs] ERROR: Failed to sync certificates after 5 attempts"
+        exit 1
+      fi
+    '';
+  };
 
   # ── K8s 证书自动续期 ──────────────────────────────────
   # 每周检测证书有效期，到期前 30 天自动 rebuild
