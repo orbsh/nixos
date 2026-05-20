@@ -59,31 +59,6 @@
     '';
   };
 
-  # ── IngressClass ──────────────────────────────────────────
-  systemd.services.deploy-ingressclass = {
-    description = "Deploy Istio IngressClass";
-    after = [ "wait-for-cert-manager-webhook.service" ];
-    wantedBy = lib.mkForce [];
-    serviceConfig = {
-      Type = "oneshot";
-      TimeoutStartSec = "2min";
-    };
-    script = let
-      kubectl = "${pkgs.kubectl}/bin/kubectl --kubeconfig /etc/kubernetes/cluster-admin.kubeconfig";
-      ingressclassManifest = pkgs.writeText "ingressclass.yaml" ''
-        apiVersion: networking.k8s.io/v1
-        kind: IngressClass
-        metadata:
-          name: istio
-        spec:
-          controller: istio.io/ingress-controller
-      '';
-    in ''
-      echo "Deploying IngressClass..."
-      ${kubectl} apply -f ${ingressclassManifest}
-    '';
-  };
-
   # ── ClusterIssuers ────────────────────────────────────────
   systemd.services.deploy-issuers = {
     description = "Deploy cert-manager ClusterIssuers";
@@ -116,8 +91,10 @@
               name: letsencrypt
             solvers:
             - http01:
-                ingress:
-                  class: istio
+                gatewayHTTPRoute:
+                  parentRefs:
+                  - name: envoy-gateway
+                    namespace: envoy-gateway-system
         ---
         apiVersion: cert-manager.io/v1
         kind: ClusterIssuer
@@ -131,12 +108,45 @@
               name: letsencrypt-staging
             solvers:
             - http01:
-                ingress:
-                  class: istio
+                gatewayHTTPRoute:
+                  parentRefs:
+                  - name: envoy-gateway
+                    namespace: envoy-gateway-system
       '';
     in ''
       echo "Deploying ClusterIssuers..."
       ${kubectl} apply -f ${issuersManifest}
+    '';
+  };
+
+  # ── Default Fallback Certificate ──────────────────────────
+  systemd.services.deploy-default-cert = {
+    description = "Deploy default self-signed Certificate for Envoy Gateway fallback";
+    after = [ "deploy-issuers.service" ];
+    wantedBy = lib.mkForce [];
+    serviceConfig = {
+      Type = "oneshot";
+      TimeoutStartSec = "2min";
+    };
+    script = let
+      kubectl = "${pkgs.kubectl}/bin/kubectl --kubeconfig /etc/kubernetes/cluster-admin.kubeconfig";
+      certManifest = pkgs.writeText "default-cert.yaml" ''
+        apiVersion: cert-manager.io/v1
+        kind: Certificate
+        metadata:
+          name: envoy-gateway-cert
+          namespace: envoy-gateway-system
+        spec:
+          secretName: tls-envoy-gateway
+          issuerRef:
+            name: selfsigned
+            kind: ClusterIssuer
+          dnsNames:
+          - "*"
+      '';
+    in ''
+      echo "Deploying default Certificate for tls-envoy-gateway..."
+      ${kubectl} apply -f ${certManifest}
     '';
   };
 
@@ -146,7 +156,7 @@
       echo ""
       echo "=== Cert-Manager 部署服务启动命令 ==="
       echo ""
-      echo "  sudo systemctl start deploy-cert-manager.service deploy-ingressclass.service deploy-issuers.service"
+      echo "  sudo systemctl start deploy-cert-manager.service deploy-issuers.service deploy-default-cert.service"
       echo ""
     '';
     deps = [];
