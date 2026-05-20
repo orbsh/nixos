@@ -66,11 +66,12 @@
                         imagePullPolicy: IfNotPresent
                         image: docker.lizzie.fun/envoyproxy/envoy:distroless-v1.38.0
           envoyService:
+            type: NodePort
+            externalTrafficPolicy: Local
             patch:
               type: StrategicMerge
               value:
                 spec:
-                  type: NodePort
                   ports:
                   - name: http
                     port: 80
@@ -115,25 +116,20 @@
             - kind: HTTPRoute
           namespaces:
             from: All
-      ## 禁用通用 HTTPS，应用生成专用 gateway
-      # TODO: HTTPS 监听器需要有效的 TLS certificate
-      # 创建 secret: kubectl create secret tls cert-web --cert=tls.crt --key=tls.key -n envoy-gateway-system
-      # 然后取消下面的注释：
-      # - name: https
-      #   port: 443
-      #   protocol: HTTPS
-      #   hostname: "gitea.x"
-      #   tls:
-      #     mode: Terminate
-      #     certificateRefs:
-      #       - name: cert-web
-      #         kind: Secret
-      #         group: ""
-      #   allowedRoutes:
-      #     kinds:
-      #       - kind: HTTPRoute
-      #     namespaces:
-      #       from: All
+      - name: https
+        port: 443
+        protocol: HTTPS
+        allowedRoutes:
+          kinds:
+            - kind: HTTPRoute
+          namespaces:
+            from: All
+        tls:
+          mode: Terminate
+          certificateRefs:
+            - name: tls-envoy-gateway
+              kind: Secret
+              group: ""
       - name: tcp-ssh
         port: 22
         protocol: TCP
