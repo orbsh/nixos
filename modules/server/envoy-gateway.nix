@@ -54,7 +54,7 @@
       provider:
         type: Kubernetes
         kubernetes:
-          envoyDeployment:
+          envoyDaemonSet:
             patch:
               type: StrategicMerge
               value:
@@ -64,7 +64,7 @@
                       containers:
                       - name: envoy
                         imagePullPolicy: IfNotPresent
-                        image: docker.lizzie.fun/envoyproxy/envoy:distroless-v1.36.0
+                        image: docker.lizzie.fun/envoyproxy/envoy:distroless-v1.38.0
           envoyService:
             patch:
               type: StrategicMerge
