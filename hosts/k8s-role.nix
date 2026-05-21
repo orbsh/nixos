@@ -7,6 +7,7 @@
 
     ../modules/common/sys.nix
     ../modules/common/base.nix
+    ../modules/common/nix-tools.nix
     ../modules/common/users.nix
     ../modules/common/network.nix
 

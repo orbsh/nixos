@@ -28,4 +28,16 @@ in {
     buildah
     skopeo
   ]);
+
+  # ── OCI 镜像构建（nix2container，在 flake.nix 的 packages 输出中使用）──
+  # nix2container 是 flake 函数库，不是 CLI 工具，无需安装到 systemPackages
+  # 用法示例（在 flake.nix 中添加）：
+  #   packages.x86_64-linux.my-image =
+  #     nix2container.lib.x86_64-linux.buildImage {
+  #       name = "my-image"; tag = "latest";
+  #       fromImage = pkgs.dockerTools.pullImage { ... };
+  #       copyToRoot = pkgs.buildEnv { ... };
+  #     };
+  # 构建: nix build .#my-image
+  # 推送: skopeo copy docker-archive:result docker:registry:tag
 }

@@ -8,6 +8,7 @@
     ./hardware-configuration.nix  # 始终导入：内核模块等非磁盘硬件配置
     ../../modules/common/sys.nix
     ../../modules/common/base.nix
+    ../../modules/common/nix-tools.nix
     ../../modules/common/users.nix
     ../../modules/common/network.nix
     ./wireguard.nix

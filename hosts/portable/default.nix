@@ -11,6 +11,7 @@
     # ── 通用基础模块 (与 ISO 保持一致，确保工具链完整) ──
     ../../modules/common/sys.nix
     ../../modules/common/base.nix
+    ../../modules/common/nix-tools.nix
     ../../modules/common/users.nix
     ../../modules/common/network.nix
     ../../modules/common/container.nix

@@ -5,6 +5,16 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";       # 全局默认（工作站 / 服务器 / 所有 K8s 节点）
     # nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.11";   # [备用] 稳定分支 (当前未使用，保留以备特定主机降级需求)
 
+    nixos-anywhere = {
+      url = "github:nix-community/nixos-anywhere";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    nix2container = {
+      url = "github:nlewo/nix2container";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -30,7 +40,7 @@
   };
 
   # outputs 函数参数包含所有输入源（stable 系列已注释，目前仅使用 unstable）
-  outputs = { self, nixpkgs, disko, home-manager, my-nushell-src, ... }@inputs:
+  outputs = { self, nixpkgs, nixos-anywhere, nix2container, disko, home-manager, my-nushell-src, ... }@inputs:
   let
     # ── 统一变量定义 ─────────────────────────────────────
     # 集中管理用户名，dataDir 和 home-manager 自动跟随

@@ -1,30 +1,8 @@
 { pkgs, lib, ... }: {
-  # ── Nix 自身配置 ────────────────────────────────────────
-  nix.settings = {
-    experimental-features = [ "nix-command" "flakes" ];
-    auto-optimise-store = true;
-    substituters = [
-      "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
-      "https://mirrors.ustc.edu.cn/nix-channels/store"
-      "https://cache.nixos.org"
-    ];
-    trusted-public-keys = [
-      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
-    ];
-    builders-use-substitutes = true;
-  };
-
   # ── System State Version ─────────────────────────────────
   # Set once on initial install, never change unless doing a major version upgrade.
   # All hosts inherit this value from base.nix.
   system.stateVersion = "26.05";
-
-  # 每周自动清理未使用的包
-  nix.gc = {
-    automatic = lib.mkDefault true;
-    dates = lib.mkDefault "weekly";
-    options = lib.mkDefault "--delete-older-than 7d";
-  };
 
   # 全局允许非自由软件
   nixpkgs.config.allowUnfree = true;
@@ -33,8 +11,6 @@
   time.timeZone = "Asia/Shanghai";
   i18n.defaultLocale = "en_US.UTF-8";
   i18n.extraLocaleSettings.LC_ALL = "zh_CN.UTF-8";
-
-
 
   # sudo 免密码（wheel 组）
   security.sudo = {
