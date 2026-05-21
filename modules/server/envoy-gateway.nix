@@ -35,10 +35,33 @@
     '';
 
   # Kubernetes Reflector manifest for cross-namespace Secret sync
-  reflectorManifest = pkgs.fetchurl {
-    url = "https://github.com/emberstack/kubernetes-reflector/releases/latest/download/reflector.yaml";
-    hash = "sha256-SwcNk/ovfQqiS7pqHrIi+DndcFSulYQI2i+wqPvZ8R0=";
-  };
+  # Patched to use docker.lizzie.fun mirror and add a metrics Service
+  reflectorManifest = pkgs.runCommand "reflector-patched.yaml" {
+    raw = pkgs.fetchurl {
+      url = "https://github.com/emberstack/kubernetes-reflector/releases/latest/download/reflector.yaml";
+      hash = "sha256-SwcNk/ovfQqiS7pqHrIi+DndcFSulYQI2i+wqPvZ8R0=";
+    };
+  } ''
+    sed 's|docker.io/emberstack/|docker.lizzie.fun/emberstack/|g' $raw > $out
+    cat >> $out << 'EOF'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reflector-metrics
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: reflector
+spec:
+  ports:
+    - name: metrics
+      port: 8080
+      targetPort: http
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: reflector
+EOF
+  '';
 
   # Generate YAML snippet for certificateRefs from option
   certRefsYaml = ''
