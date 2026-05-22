@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kube-flannel-cfg
+  namespace: kube-flannel
+data:
+  net-conf.json: |
+    {
+      "Network": "@POD_CIDR@",
+      "EnableNFTables": false,
+      "Backend": {
+        "Type": "vxlan"
+      }
+    }

@@ -9,6 +9,8 @@ let
   apiServerIP = config.services.kubernetes.masterAddress;
   podCIDR = config.services.kubernetes.podCIDR;
 
+  assets = ./.;
+
   # ── 构建时下载 Flannel manifest ────────────────────────────
   flannelVersion = "0.28.4";
   flannelManifest = pkgs.fetchurl {
@@ -16,56 +18,22 @@ let
     hash = "sha256-0HgBl0PF4BlM6WUSX8gO8ArwwWYeyeEjljEfHP7IYKI=";
   };
 
-  # ── metrics-server manifest（独立文件，避免内嵌干扰 Nix 编辑）──
-  metricsServerPatched = ./metrics-server.yaml;
+  # ── metrics-server（纯静态清单） ──────────────────────────
+  metricsServerPatched = "${assets}/metrics-server.yaml";
 
-  # ── 生成 CoreDNS env patch 脚本 ─────────────────────────
-  # 使用 strategic merge（默认类型，根据容器名合并而非替换）
-  # KUBERNETES_SERVICE_HOST 使用 cni0 桥接 IP（Pod 网络可达）
-  patchCoreDNSScript = pkgs.writeShellScript "patch-coredns.sh" ''
-    # 等待 cni0 接口出现（Flannel Pod 启动后创建）
-    echo "[coredns-patch] Waiting for cni0 interface..."
-    for i in $(seq 1 100); do
-      if ip link show cni0 >/dev/null 2>&1; then
-        echo "[coredns-patch] cni0 interface detected"
-        break
-      fi
-      if [ $i -eq 100 ]; then
-        echo "[coredns-patch] ERROR: cni0 interface not found after 300s"
-        exit 1
-      fi
-      echo "[coredns-patch] Attempt $i/100, waiting for Flannel to create cni0..."
-      sleep 3
-    done
+  # ── Flannel CIDR patch（含 @POD_CIDR@ 占位符） ───────────
+  flannelCIDRYaml = pkgs.substituteAll {
+    src = "${assets}/flannel-cidr-patch.yaml";
+    inherit podCIDR;
+  };
 
-    # 动态获取 cni0 接口 IP（API Server 在单节点集群中可通过此地址访问）
-    apiServerIP=$(ip -4 addr show cni0 2>/dev/null | grep -oP 'inet \K[\d.]+')
-    if [ -z "$apiServerIP" ]; then
-      echo "[coredns-patch] ERROR: Could not detect cni0 IP"
-      exit 1
-    fi
-    echo "[coredns-patch] Using API server IP: $apiServerIP"
-    ${kubectl} --kubeconfig=${kubeconfig} patch deployment coredns -n kube-system \
-      -p "{\"spec\":{\"template\":{\"spec\":{\"\$setElementOrder/containers\":[{\"name\":\"coredns\"}],\"containers\":[{\"name\":\"coredns\",\"env\":[{\"name\":\"KUBERNETES_SERVICE_HOST\",\"value\":\"$apiServerIP\"},{\"name\":\"KUBERNETES_SERVICE_PORT\",\"value\":\"6443\"}]}]}}}}"
-  '';
-
-  # ── 生成 Flannel CIDR patch YAML ───────────────────────────
-  flannelCIDRYaml = pkgs.writeText "flannel-cidr-patch.yaml" ''
-    apiVersion: v1
-    kind: ConfigMap
-    metadata:
-      name: kube-flannel-cfg
-      namespace: kube-flannel
-    data:
-      net-conf.json: |
-        {
-          "Network": "${podCIDR}",
-          "EnableNFTables": false,
-          "Backend": {
-            "Type": "vxlan"
-          }
-        }
-  '';
+  # ── CoreDNS env patch 脚本（含 @KUBECTL@ / @KUBECONFIG@ 占位符）─
+  patchCoreDNSScript = pkgs.substituteAll {
+    src = "${assets}/patch-coredns.sh";
+    KUBECTL = kubectl;
+    KUBECONFIG = kubeconfig;
+    isExecutable = true;
+  };
 
   # ── 完整部署脚本（带重试机制） ──────────────────────────
   deployScript = pkgs.writeShellScript "k8s-addons-deploy.sh" ''
