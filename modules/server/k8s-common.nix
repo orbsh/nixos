@@ -129,51 +129,62 @@
     description = "Auto-renew Kubernetes certificates before expiration";
     serviceConfig.Type = "oneshot";
     script = ''
+      set -euo pipefail
+
       SECRETS_DIR="/var/lib/kubernetes/secrets"
       THRESHOLD_DAYS=30
       CONFIG_DIR="/home/master/nixos"
-      HOSTNAME=$(cat /etc/hostname)
 
       # 检查是否存在证书目录
       [ -d "$SECRETS_DIR" ] || exit 0
 
       # 查找所有 .pem 证书并检查过期时间
       EXPIRING=false
-      for cert in $SECRETS_DIR/*.pem; do
+      for cert in "$SECRETS_DIR"/*.pem; do
         [ -f "$cert" ] || continue
-        enddate=$(openssl x509 -enddate -noout -in "$cert" 2>/dev/null | cut -d= -f2)
+        enddate=$(openssl x509 -enddate -noout -in "$cert" 2>/dev/null | cut -d= -f2) || continue
         [ -z "$enddate" ] && continue
         end_epoch=$(date -d "$enddate" +%s 2>/dev/null) || continue
         now_epoch=$(date +%s)
         days_left=$(( (end_epoch - now_epoch) / 86400 ))
-        if [ $days_left -lt $THRESHOLD_DAYS ] && [ $days_left -ge 0 ]; then
-          echo "Certificate $(basename $cert) expires in $days_left days ($enddate)"
+        if [ "$days_left" -lt "$THRESHOLD_DAYS" ] && [ "$days_left" -ge 0 ]; then
+          echo "Certificate $(basename "$cert") expires in $days_left days ($enddate)"
           EXPIRING=true
         fi
       done
 
-      # 有证书即将过期，执行 rebuild
-      if [ "$EXPIRING" = true ]; then
-        echo "Certificates expiring soon, running nixos-rebuild..."
-        if [ -d "$CONFIG_DIR" ]; then
-          nix --extra-experimental-features 'nix-command flakes' build \
-            "$CONFIG_DIR#nixosConfigurations.dev__dxserver.config.system.build.toplevel" \
-            --no-link
-          /run/current-system/bin/switch-to-configuration switch
-          # TODO: 邮件通知（需要配置 SMTP）
-          # 示例：curl --silent --url 'smtps://smtp.example.com:465' \
-          #   --mail-from 'alert@example.com' --mail-rcpt 'admin@example.com' \
-          #   --user 'alert@example.com:password' \
-          #   -T <(echo -e "Subject: K8s Certs Renewed\n\nCertificates renewed on $(hostname)")
-          logger -t k8s-certs "Certificates renewed and applied successfully"
-        else
-          echo "ERROR: NixOS config not found at $CONFIG_DIR. Manual rebuild required."
-          # TODO: 邮件通知失败时发送告警
-          logger -t k8s-certs "ERROR: Auto-renew failed - config not found at $CONFIG_DIR"
-        fi
-      else
+      # 没有即将过期的证书，直接退出
+      if [ "$EXPIRING" = false ]; then
         echo "All certificates are valid for more than $THRESHOLD_DAYS days"
+        exit 0
       fi
+
+      # 有证书即将过期，执行 rebuild
+      echo "Certificates expiring soon, running nixos-rebuild..."
+      if [ ! -d "$CONFIG_DIR" ]; then
+        echo "ERROR: NixOS config not found at $CONFIG_DIR. Manual rebuild required."
+        logger -t k8s-certs "ERROR: Auto-renew failed - config not found at $CONFIG_DIR"
+        exit 1
+      fi
+
+      # 加超时防止 nix build 卡死（600秒 = 10分钟）
+      if ! timeout 600 nix --extra-experimental-features 'nix-command flakes' build \
+        "$CONFIG_DIR#nixosConfigurations.dev__dxserver.config.system.build.toplevel" \
+        --no-link; then
+        echo "ERROR: nix build failed or timed out"
+        logger -t k8s-certs "ERROR: nix build failed or timed out"
+        exit 1
+      fi
+
+      # 加超时防止 switch 卡死（300秒 = 5分钟）
+      if ! timeout 300 /run/current-system/bin/switch-to-configuration switch; then
+        echo "ERROR: switch-to-configuration failed or timed out"
+        logger -t k8s-certs "ERROR: switch-to-configuration failed or timed out"
+        exit 1
+      fi
+
+      logger -t k8s-certs "Certificates renewed and applied successfully"
+      echo "Certificates renewed and applied successfully"
     '';
   };
 
