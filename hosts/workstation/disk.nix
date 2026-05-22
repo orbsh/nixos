@@ -1,7 +1,7 @@
 { ... }: {
   disko.devices = {
     disk.internal = {
-      device = "/dev/nvme0n1"; # 内置 NVMe 硬盘（请根据 lsblk 确认）
+      device = "/dev/disk/by-id/nvme-eui.5cdfb805104023c3"
       type = "disk";
       content = {
         type = "gpt";
@@ -11,6 +11,7 @@
             type = "EF00";
             content = {
               type = "filesystem";
+              _create = false;
               format = "vfat";
               mountpoint = "/boot";
             };
@@ -20,6 +21,7 @@
             label = "disk-internal-root";
             content = {
               type = "filesystem";
+              _create = false;
               format = "xfs";
               mountpoint = "/";
             };

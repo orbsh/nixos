@@ -102,7 +102,7 @@
     (python3.withPackages (ps: [ ps.pyyaml ]))
 
     # ── disko 离线支持 ───────────────────────────────
-    inputs.disko.packages.${pkgs.system}.disko
+    inputs.disko.packages.${pkgs.stdenv.hostPlatform.system}.disko
     gptfdisk dosfstools xfsprogs e2fsprogs
   ];
 }

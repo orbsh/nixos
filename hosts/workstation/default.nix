@@ -8,7 +8,7 @@
     ./hardware-configuration.nix  # 始终导入：内核模块等非磁盘硬件配置
     ../../modules/common/sys.nix
     ../../modules/common/base.nix
-    ../../modules/common/nix-tools.nix
+    ../../modules/common/nix.nix
     ../../modules/common/users.nix
     ../../modules/common/network.nix
     ./wireguard.nix
@@ -34,8 +34,4 @@
   dev.enable = true;
 
   networking.hostName = "workstation";
-
-  # WiFi: iwd backend is more reliable than wpa_supplicant; disable power saving
-  networking.networkmanager.wifi.backend = "iwd";
-  networking.networkmanager.wifi.powersave = false;
 }

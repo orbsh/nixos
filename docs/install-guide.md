@@ -67,41 +67,15 @@ sudo nix run github:nix-community/disko -- --mode disko ./hosts/<目标主机>/d
 > sudo nix run github:nix-community/disko -- --mode mount ./hosts/<目标主机>/disk.nix
 > ```
 
-#### 方案 B：保留现有分区（手动挂载，不格式化）
+#### 方案 B：保留现有分区（使用 disko）
 
-适用于已有数据和独立分区的工作站或迁移场景。
+适用于已有数据和独立分区的场景。通过配置 disko 的 `noFormat`（或新版本 `_create = false`）选项，disko 将仅挂载现有分区而不会格式化数据。
 
-```bash
-# 挂载根分区
-sudo mount /dev/nvme0n1p2 /mnt
-
-# 挂载 EFI 分区（如有）
-sudo mount /dev/nvme0n1p1 /mnt/boot
-
-# 挂载 home 分区（如有独立分区）
-sudo mount /dev/nvme0n1p3 /mnt/home
-```
-
-> ⚠️ **重要：** 不要执行 `mkfs` 或 disko，避免格式化现有数据！
-
-#### 附录：手动分区备选（不使用 disko）
-
-```bash
-# 1. 创建 GPT 分区表
-sudo parted /dev/nvme0n1 -- mklabel gpt
-sudo parted /dev/nvme0n1 -- mkpart ESP fat32 1MiB 513MiB
-sudo parted /dev/nvme0n1 -- set 1 esp on
-sudo parted /dev/nvme0n1 -- mkpart primary xfs 513MiB 100%
-
-# 2. 格式化
-sudo mkfs.vfat -F 32 /dev/nvme0n1p1
-sudo mkfs.xfs -f /dev/nvme0n1p2
-
-# 3. 挂载
-sudo mount /dev/nvme0n1p2 /mnt
-sudo mkdir -p /mnt/boot
-sudo mount /dev/nvme0n1p1 /mnt/boot
-```
+1. 确保 `./hosts/<目标主机>/disk.nix` 配置正确（匹配现有分区结构且不破坏数据）。
+2. 执行挂载：
+   ```bash
+   sudo nix run github:nix-community/disko -- --mode mount ./hosts/<目标主机>/disk.nix
+   ```
 
 ### 5. 生成硬件配置
 
@@ -196,23 +170,18 @@ reboot
 
 #### 方式 A：保留现有分区（推荐）
 
-适用于已有分区和数据的工作站，**不要使用 disko**。
+适用于已有分区和数据的工作站。
 
-```bash
-# 1. 确认并挂载现有分区（见通用流程第 4 步 方案 B）
-# 2. 生成硬件配置
-nixos-generate-config --root /mnt
-# 将生成内容覆盖到 hosts/workstation/hardware-configuration.nix
-
-# 3. 同步配置并安装
-sudo cp -r ./Configuration/nixos/* /mnt/etc/nixos/
-sudo nixos-install --root /mnt --flake /mnt/etc/nixos#workstation
-
-# 4. 设置密码 & 重启
-sudo nixos-enter --root /mnt --command "passwd master"
-sudo umount -R /mnt
-reboot
-```
+1. **挂载分区**：参考 [方案 B](#方案-b保留现有分区使用-disko)，使用 disko 仅挂载模式：
+   ```bash
+   sudo nix run github:nix-community/disko -- --mode mount ./hosts/workstation/disk.nix
+   ```
+2. **生成硬件配置**：
+   ```bash
+   nixos-generate-config --root /mnt
+   # 将生成内容覆盖到 hosts/workstation/hardware-configuration.nix
+   ```
+3. **安装**：后续步骤同通用流程（安装、设置密码等）。
 
 #### 方式 B：全新安装（清空磁盘）
 

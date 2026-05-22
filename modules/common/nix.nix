@@ -34,7 +34,7 @@
   environment.systemPackages = with pkgs; [
     # ── NixOS 部署与安装 ──
     nixos-install-tools           # nixos-install, nixos-enter
-    inputs.nixos-anywhere.packages.${pkgs.system}.nixos-anywhere  # 远程部署 NixOS
+    inputs.nixos-anywhere.packages.${pkgs.stdenv.hostPlatform.system}.nixos-anywhere  # 远程部署 NixOS
 
     # ── Nix 系统管理 ──
     nh                            # 简化 NixOS 管理（nh os switch, nh clean 等）

@@ -1,4 +1,9 @@
-{ config, pkgs, ... }: {
+{ config, pkgs, ... }:
+{
+  # 禁用 xdg-user-dirs-update 自动更新，防止根据 locale 创建中文目录
+  xdg.configFile."user-dirs.conf".text = ''
+    enabled=False
+  '';
   xdg = {
     enable = true;
 

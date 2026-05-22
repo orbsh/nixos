@@ -13,7 +13,28 @@ export module portable {
     export def install [
         host: string = 'portable'
     ] {
-        sudo (which nixos-install).path.0 --root /mnt --flake $".#($host)" --option substituters "file:///nix/store https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store https://mirrors.ustc.edu.cn/nix-channels/store https://cache.nixos.org" --option trusted-public-keys "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+        sudo (which nixos-install).path.0 ...[
+            --root /mnt --flake $".#($host)"
+            --option substituters
+            ([
+                file:///nix/store
+                https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store
+                https://mirrors.ustc.edu.cn/nix-channels/store
+                https://cache.nixos.org
+            ] | str join ' ')
+            --option trusted-public-keys "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+        ]
+    }
+
+    export def rebuild [
+        host: string = 'portable'
+    ] {
+        sudo (which nixos-enter).0.path ...[
+          --root /mnt
+          --
+          /nix/var/nix/profiles/system/sw/bin/nixos-rebuild switch
+          --flake /home/master/nixos#($host)
+        ]
     }
 
     export def generate [

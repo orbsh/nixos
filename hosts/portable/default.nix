@@ -1,8 +1,8 @@
 { inputs, pkgs, lib, ... }: {
   imports = [
-    #./existing-disk.nix
-    ./existing-btrfs.nix  # 现有磁盘挂载配置（不格式化）
-    # ./disk.nix  # disko 重新分区格式化配置（按需启用）
+    ./existing-disk.nix
+    # ./existing-btrfs.nix  # 现有磁盘挂载配置（不格式化）
+    # ./disk.nix
 
     inputs.disko.nixosModules.disko
 
@@ -11,7 +11,7 @@
     # ── 通用基础模块 (与 ISO 保持一致，确保工具链完整) ──
     ../../modules/common/sys.nix
     ../../modules/common/base.nix
-    ../../modules/common/nix-tools.nix
+    ../../modules/common/nix.nix
     ../../modules/common/users.nix
     ../../modules/common/network.nix
     ../../modules/common/container.nix
@@ -43,10 +43,6 @@
   # ── 网络与存储管理 ────────────────────────────────
   # NetworkManager 提供通用的网络配置能力
   networking.networkmanager.enable = true;
-  # Use iwd as WiFi backend — more reliable than wpa_supplicant
-  networking.networkmanager.wifi.backend = "iwd";
-  # Disable WiFi power management to prevent connection drops
-  networking.networkmanager.wifi.powersave = false;
 
   # udisks2 用于自动挂载可移动设备（方便访问目标硬盘或 U 盘数据）
   services.udisks2.enable = true;
