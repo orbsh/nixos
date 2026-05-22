@@ -244,17 +244,17 @@ let
   patchCoreDNSScript = pkgs.writeShellScript "patch-coredns.sh" ''
     # 等待 cni0 接口出现（Flannel Pod 启动后创建）
     echo "[coredns-patch] Waiting for cni0 interface..."
-    for i in $(seq 1 60); do
+    for i in $(seq 1 100); do
       if ip link show cni0 >/dev/null 2>&1; then
         echo "[coredns-patch] cni0 interface detected"
         break
       fi
-      if [ $i -eq 60 ]; then
-        echo "[coredns-patch] ERROR: cni0 interface not found after 120s"
+      if [ $i -eq 100 ]; then
+        echo "[coredns-patch] ERROR: cni0 interface not found after 300s"
         exit 1
       fi
-      echo "[coredns-patch] Attempt $i/60, waiting for Flannel to create cni0..."
-      sleep 2
+      echo "[coredns-patch] Attempt $i/100, waiting for Flannel to create cni0..."
+      sleep 3
     done
 
     # 动态获取 cni0 接口 IP（API Server 在单节点集群中可通过此地址访问）
