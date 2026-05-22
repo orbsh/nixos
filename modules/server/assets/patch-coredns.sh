@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Patch CoreDNS env to use cni0 bridge IP as KUBERNETES_SERVICE_HOST.
-# Variables @KUBECTL@ and @KUBECONFIG@ are injected by Nix substituteAll.
+# Variables @KUBECTL@ and @KUBECONFIG@ are injected by Nix replaceStrings.
 
 # Wait for cni0 interface to appear (created by Flannel Pod startup)
 echo "[coredns-patch] Waiting for cni0 interface..."

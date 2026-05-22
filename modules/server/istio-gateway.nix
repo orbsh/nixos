@@ -9,11 +9,10 @@
   istioOperator = "${assets}/istio-operator.yaml";
 
   # 强制清理 Istio 资源（处理 finalizers 卡住问题）
-  cleanupIstio = pkgs.substituteAll {
-    src = "${assets}/cleanup-istio.sh";
-    KUBECTL = kubectl;
-    isExecutable = true;
-  };
+  cleanupIstio = pkgs.writeShellScript "cleanup-istio.sh" (
+    builtins.replaceStrings [ "@KUBECTL@" ] [ kubectl ]
+      (builtins.readFile "${assets}/cleanup-istio.sh")
+  );
 
   # Gateway API CRD 文件（experimental 通道，包含 TCPRoute/UDPRoute/GRPCRoute）
   gatewayApiCrdFile = pkgs.fetchurl {
