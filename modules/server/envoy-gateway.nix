@@ -77,10 +77,10 @@ EOF
   '') config.services.envoyGateway.appCerts;
 
   # Envoy Gateway 资源清单 (GatewayClass + EnvoyProxy + Gateway)
-  envoyGatewayManifest = pkgs.replaceVars {
-    src = "${assets}/envoy-gateways.yaml";
-    vars = { CERT_REFS = certRefsYaml; };
-  };
+  envoyGatewayManifest = pkgs.writeText "envoy-gateways.yaml" (
+    builtins.replaceStrings [ "@CERT_REFS@" ] [ certRefsYaml ]
+      (builtins.readFile "${assets}/envoy-gateways.yaml")
+  );
 
   # 清理脚本
   cleanupEnvoyGateway = pkgs.writeShellScript "cleanup-envoy-gateway.sh" ''

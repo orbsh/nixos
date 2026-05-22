@@ -71,10 +71,10 @@
     script = let
       kubectl = "${pkgs.kubectl}/bin/kubectl --kubeconfig /etc/kubernetes/cluster-admin.kubeconfig";
       email = config.services.kubernetes.certManager.email or "nash@iffy.me";
-      issuersManifest = pkgs.replaceVars {
-        src = ./. + "/assets/cert-issuers.yaml";
-        vars = { EMAIL = email; };
-      };
+      issuersManifest = pkgs.writeText "issuers.yaml" (
+        builtins.replaceStrings [ "@EMAIL@" ] [ email ]
+          (builtins.readFile "${./.}/assets/cert-issuers.yaml")
+      );
     in ''
       echo "Deploying ClusterIssuers..."
       ${kubectl} apply -f ${issuersManifest}

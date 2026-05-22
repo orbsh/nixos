@@ -22,20 +22,16 @@ let
   metricsServerPatched = "${assets}/metrics-server.yaml";
 
   # ── Flannel CIDR patch（含 @POD_CIDR@ 占位符） ───────────
-  flannelCIDRYaml = pkgs.replaceVars {
-    src = "${assets}/flannel-cidr-patch.yaml";
-    vars = { inherit podCIDR; };
-  };
+  flannelCIDRYaml = pkgs.writeText "flannel-cidr-patch.yaml" (
+    builtins.replaceStrings [ "@POD_CIDR@" ] [ podCIDR ]
+      (builtins.readFile "${assets}/flannel-cidr-patch.yaml")
+  );
 
   # ── CoreDNS env patch 脚本（含 @KUBECTL@ / @KUBECONFIG@ 占位符）─
-  patchCoreDNSScript = pkgs.replaceVars {
-    src = "${assets}/patch-coredns.sh";
-    vars = {
-      KUBECTL = kubectl;
-      KUBECONFIG = kubeconfig;
-    };
-    isExecutable = true;
-  };
+  patchCoreDNSScript = pkgs.writeShellScript "patch-coredns.sh" (
+    builtins.replaceStrings [ "@KUBECTL@" "@KUBECONFIG@" ] [ kubectl kubeconfig ]
+      (builtins.readFile "${assets}/patch-coredns.sh")
+  );
 
   # ── 完整部署脚本（带重试机制） ──────────────────────────
   deployScript = pkgs.writeShellScript "k8s-addons-deploy.sh" ''
