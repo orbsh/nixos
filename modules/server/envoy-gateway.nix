@@ -5,7 +5,7 @@
   kubeconfig = "/etc/kubernetes/cluster-admin.kubeconfig";
   kubectl = "${pkgs.kubectl}/bin/kubectl --kubeconfig ${kubeconfig}";
 
-  assets = ./.;
+  assets = ./assets;
 
   # Gateway API CRD 文件 (experimental)
   gatewayApiCrdFile = pkgs.fetchurl {

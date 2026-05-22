@@ -9,7 +9,7 @@ let
   apiServerIP = config.services.kubernetes.masterAddress;
   podCIDR = config.services.kubernetes.podCIDR;
 
-  assets = ./.;
+  assets = ./assets;
 
   # ── 构建时下载 Flannel manifest ────────────────────────────
   flannelVersion = "0.28.4";

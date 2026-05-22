@@ -3,7 +3,7 @@
   kubectl = "${pkgs.kubectl}/bin/kubectl --kubeconfig ${kubeconfig}";
   istioctl = "${pkgs.istioctl}/bin/istioctl --kubeconfig ${kubeconfig}";
 
-  assets = ./.;
+  assets = ./assets;
 
   # IstioOperator 配置：包含所有 gateway 设置（含 TCP 端口）
   istioOperator = "${assets}/istio-operator.yaml";
