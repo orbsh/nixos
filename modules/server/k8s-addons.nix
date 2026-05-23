@@ -150,8 +150,14 @@ in {
     services.kubernetes.kubelet.cni.packages =
       lib.mkForce [ pkgs.cni-plugins pkgs.cni-plugin-flannel ];
 
+    # 清除 kubelet 默认 CNI config
+    services.kubernetes.kubelet.cni.config = lib.mkForce [];
+
     # 声明式创建 Flannel CNI 配置（替代 DaemonSet 运行时写入）
-    environment.etc."cni/net.d/10-flannel.conflist".text = ''
+    # 使用 source + writeTextDir 覆盖整个 cni/net.d 目录，
+    # 避免与 kubelet 创建的 /etc/cni/net.d symlink 冲突
+    environment.etc."cni/net.d" = lib.mkForce {
+      source = pkgs.writeTextDir "10-flannel.conflist" ''
       {
         "name": "cbr0",
         "cniVersion": "1.0.0",
@@ -171,7 +177,8 @@ in {
           }
         ]
       }
-    '';
+      '';
+    };
 
     # ── Addon 部署服务 ────────────────────────────────────
     systemd.services.k8s-addons-apply = {
