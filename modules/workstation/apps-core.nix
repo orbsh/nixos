@@ -16,12 +16,12 @@
     alacritty       # 备用终端
 
     # 编辑器
-    neovim
-    neovide         # neovim GUI 前端
+    # neovim
+    # neovide         # neovim GUI 前端
     zed-editor
 
     # 浏览器
-    # vivaldi
+    vivaldi
     firefox
     chromium
     qutebrowser
