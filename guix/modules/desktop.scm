@@ -1,5 +1,5 @@
 ;; modules/desktop.scm — 桌面环境配置模块
-;; 对应 NixOS: modules/workstation/desktop.nix + sys.nix (audio, polkit)
+;; 对应 NixOS: modules/gui/desktop.nix + sys.nix (audio, polkit)
 ;;
 ;; 提供:
 ;;   %desktop-packages   - 桌面相关软件包

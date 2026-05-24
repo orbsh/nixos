@@ -1,5 +1,5 @@
 ;; modules/fonts.scm — 字体配置模块
-;; 对应 NixOS: modules/workstation/fonts.nix
+;; 对应 NixOS: modules/gui/fonts.nix
 ;;
 ;; 提供:
 ;;   %font-packages     - 字体包列表

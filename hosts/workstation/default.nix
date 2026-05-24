@@ -15,11 +15,11 @@
     ../../modules/common/container.nix
     ../../modules/common/extra.nix
 
-    ../../modules/workstation/desktop.nix
-    ../../modules/workstation/laptop.nix
-    ../../modules/workstation/apps-core.nix
-    ../../modules/workstation/apps-im.nix           # 微信单独管理
-    ../../modules/workstation/apps-extra.nix
+    ../../modules/gui/desktop.nix
+    ../../modules/gui/laptop.nix
+    ../../modules/gui/apps-core.nix
+    ../../modules/gui/apps-im.nix           # 微信单独管理
+    ../../modules/gui/apps-extra.nix
     ../../modules/common/vm.nix              # libvirtd/virt-manager 虚拟机支持
 
     ../../modules/dev

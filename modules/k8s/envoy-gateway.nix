@@ -1,4 +1,4 @@
-# modules/server/envoy-gateway.nix
+# modules/k8s/envoy-gateway.nix
 # Envoy Gateway 配置模块（基于 Gateway API）
 # 注意：此模块与 istio-gateway.nix 互斥，切换时需替换 imports
 { pkgs, lib, config, ... }: let

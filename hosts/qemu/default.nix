@@ -14,8 +14,8 @@
     ../../modules/common/container.nix
 
     # 桌面环境 (COSMIC)
-    ../../modules/workstation/desktop.nix
-    #../../modules/workstation/laptop.nix
+    ../../modules/gui/desktop.nix
+    #../../modules/gui/laptop.nix
 
     # 开发工具
     # ../../modules/dev

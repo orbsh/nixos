@@ -18,10 +18,10 @@
     ../../modules/common/extra.nix
 
     # ── 工作站桌面与应用模块 (使 portable 具备完整 GUI 和工具链) ──
-    ../../modules/workstation/desktop.nix
-    ../../modules/workstation/apps-core.nix
-    # # ../../modules/workstation/apps-im.nix
-    # ../../modules/workstation/apps-extra.nix
+    ../../modules/gui/desktop.nix
+    ../../modules/gui/apps-core.nix
+    # # ../../modules/gui/apps-im.nix
+    # ../../modules/gui/apps-extra.nix
     ../../modules/dev
     # 注意：不包含 laptop.nix，避免在非笔记本硬件上报错
     ../../modules/common/vm.nix

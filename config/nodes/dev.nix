@@ -25,7 +25,7 @@
       role = "combo";
       imports = [
         ../../hosts/server
-        ../../modules/server/coredns.nix  # CoreDNS DNS 插件
+        ../../modules/k8s/coredns.nix  # CoreDNS DNS 插件
       ];
 
       # ── CoreDNS 内网 DNS 服务 ──────────────────────────

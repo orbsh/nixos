@@ -424,7 +424,7 @@ sudo reboot
 NVIDIA 显卡用户务必在配置中启用专有驱动，否则可能无法进入图形界面：
 
 ```nix
-# 在 modules/workstation/desktop.nix 或 hardware-configuration.nix 中
+# 在 modules/gui/desktop.nix 或 hardware-configuration.nix 中
 hardware.opengl.enable = true;
 services.xserver.videoDrivers = [ "nvidia" ];
 ```

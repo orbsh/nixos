@@ -53,7 +53,7 @@
     k8sNodes = k8sLib.flattenClusters k8sConfig.clusters;
 
     # ── K8s 节点构建工具 ─────────────────────────────────────
-    k8sLib = import ./modules/server/k8s-lib.nix { inherit nixpkgs inputs dataDir user email; };
+    k8sLib = import ./modules/k8s/k8s-lib.nix { inherit nixpkgs inputs dataDir user email; };
     mkK8sNode = k8sLib.mkK8sNode;
   in {
     nixosConfigurations = (nixpkgs.lib.mapAttrs mkK8sNode k8sNodes) // {
