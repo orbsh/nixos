@@ -1,14 +1,7 @@
-{ pkgs, lib, config, ... }:
+{ pkgs, lib, ... }:
+{
+  environment.systemPackages = [ pkgs.eww ];
 
-let
-  cfg = config.programs.eww;
-in {
-  options.programs.eww.enable = lib.mkEnableOption "Enable eww widget";
-
-  config = lib.mkIf cfg.enable {
-    programs.eww = {
-      enable = true;
-      configDir = ./eww;
-    };
-  };
+  # Deploy eww config to /etc/eww (system-wide)
+  environment.etc."eww".source = ./eww;
 }

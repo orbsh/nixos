@@ -142,6 +142,75 @@ EOF'
 
 ---
 
+## 🚚 独立 vfat + XFS 分区：无损搬家与还原方案
+
+> **适用前提**：系统使用 **独立 vfat 引导分区** + **XFS 根分区** 的布局。希望在安装 NixOS 前将 Arch Linux 所有文件物理隔离，安装失败时可 **2 分钟完整回滚**。
+> **核心思路**：将 vfat 中的 `EFI` 目录重命名保护 → 将根分区所有 Arch 目录移入 `.arch_bak` 隐藏目录 → 根分区变空后执行 `nixos-install`（不格式化）。若 NixOS 失败，反向操作即可恢复 Arch 至原样。
+
+### 第一阶段：搬家（安装 NixOS 前执行）
+
+从移动硬盘引导进入 NixOS 环境（普通用户 `$`）：
+
+```bash
+# 1. 挂载 XFS 根分区和 vfat 引导分区
+#    用 lsblk 确认实际设备号，例如 nvme0n1p2 和 nvme0n1p1
+sudo mount /dev/nvme0n1p2 /mnt
+sudo mount /dev/nvme0n1p1 /mnt/boot
+
+# 2. 保护引导：将 vfat 分区内的 EFI 目录改名，随后立即解挂载
+sudo mv /mnt/boot/EFI /mnt/boot/EFI.arch
+sudo umount /mnt/boot
+
+# 3. 创建隐藏备份目录，将 Arch 核心目录移入（包含 /home）
+cd /mnt
+sudo mkdir .arch_bak
+sudo mv -v bin etc home lib lib64 opt root sbin usr var .arch_bak/
+```
+
+此时 `/mnt` 根目录已干净（仅剩 `.arch_bak` 和空 `boot` 目录）。现在可以重新挂载 vfat 到 `/mnt/boot`，然后执行 `nixos-install`，**切记不要格式化**。
+
+```bash
+sudo mount /dev/nvme0n1p1 /mnt/boot
+# 执行 nixos-install ...
+```
+
+### 第二阶段：还原（NixOS 失败，一键回滚 Arch）
+
+如果 NixOS 安装失败或中断，执行以下步骤即可完整恢复 Arch Linux：
+
+```bash
+# 1. 将 NixOS 写入的半成品文件打包移走，避免与 Arch 冲突
+cd /mnt
+sudo mkdir nixos_trash
+sudo mv nix etc usr var root nixos_trash/ 2>/dev/null
+
+# 2. 将隐藏目录中的 Arch 核心目录精准移回原位
+cd /mnt/.arch_bak
+sudo mv bin etc home lib lib64 opt root sbin usr var ../
+cd /mnt && sudo rmdir .arch_bak
+
+# 3. 挂载 vfat 引导分区，将引导目录名字恢复
+sudo mount /dev/nvme0n1p1 /mnt/boot
+sudo mv /mnt/boot/EFI.arch /mnt/boot/EFI
+sudo umount /mnt/boot
+```
+
+重启并拔掉移动硬盘，Arch Linux 连同所有用户配置、`/home` 数据和引导完整如初。
+
+### ⚠️ 方案对比：LUSTRATE vs 搬家还原
+
+| 维度 | LUSTRATE 方案 | 搬家还原方案 |
+|:---|:---|:---|
+| **数据安全性** | ⭐⭐⭐⭐ 依赖 `/etc/NIXOS_LUSTRATE` 白名单 | ⭐⭐⭐⭐⭐ 物理隔离，.arch_bak 隐藏目录 |
+| **回滚速度** | ⭐⭐ 需手动从 `/old-root` 恢复 | ⭐⭐⭐⭐⭐ 2 分钟完整回滚 |
+| **空间要求** | ⭐⭐ 新旧系统共存，需 20-30% 余量 | ⭐⭐⭐⭐⭐ Arch 文件移出后空间释放 |
+| **适用场景** | 单分区系统，想保留 /home | vfat + XFS 多分区，要求绝对安全 |
+| **引导保护** | ⭐⭐⭐ 由 NixOS 接管引导 | ⭐⭐⭐⭐⭐ EFI 目录改名保护，不会被覆盖 |
+
+**建议**：如果你的分区布局符合（独立 vfat boot + XFS root），优先使用搬家还原方案——它在物理层面隔离了旧系统，回滚代价最低。
+
+---
+
 ## 🌍 NixOS Anywhere 远程部署指南
 
 NixOS Anywhere 允许你通过 SSH 将运行中的 Linux 系统（无论是否为 NixOS）替换为 NixOS。

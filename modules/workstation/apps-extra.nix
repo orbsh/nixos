@@ -18,7 +18,7 @@
     foliate         # 电子书阅读
 
     wechat      # 微信
-    feishu      # 飞书
+    # feishu      # 飞书
     # 以下按需取消注释：
     # lapce
     # bruno           # API 客户端
