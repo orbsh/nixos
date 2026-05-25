@@ -2,8 +2,8 @@
   users.users.${user} = {
     isNormalUser = true;
     shell = pkgs.bash;
-    # 密码 mkpasswd -m yescrypt my-password
-    hashedPassword = "$y$j9T$N8zsqdX1UXaCreKNDa1Le0$xzuUsYXUlkIheSCKdEn8ysxOkhO0r2bI6JMBhh/5n92";
+    # 密码 mkpasswd -m yescrypt "qwer"
+    hashedPassword = "$y$j9T$eHkiXr76s0VRdWQo5DZm5/$pPYnU83oUkbQ8xcYjo6n8jvBxNevWZRoR/5PyQdpnF1";
     extraGroups = [
       "wheel"
       "lp"
