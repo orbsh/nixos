@@ -35,6 +35,15 @@ sudo nixos-rebuild switch --flake .#workstation
 sudo nixos-rebuild switch --flake .#workstation --upgrade
 ```
 
+### 使用 nom 美化输出（Nushell）
+
+默认 nix 日志折叠且难以阅读，可用 `nom`（nix-output-monitor）获取进度条和结构化日志。
+
+```bash
+# Nushell 语法：合并 stdout + stderr 管道传给 nom
+sudo nixos-rebuild switch --flake .#dev__dxserver o+e>| nom
+```
+
 ## 切换世代与回滚
 
 ```bash

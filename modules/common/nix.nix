@@ -14,8 +14,8 @@
     builders-use-substitutes = true;
   };
 
-  # ── D-Bus compliance diagnostics ──
-  imports = [ ../../lib/dbus-compliance.nix ];
+  # ── systemd compliance check ──
+  imports = [ ../../lib/systemd-compliance.nix ];
 
   # 每周自动清理未使用的包
   nix.gc = {
