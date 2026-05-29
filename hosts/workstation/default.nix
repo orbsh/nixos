@@ -23,6 +23,8 @@
 
     ../../modules/dev
     ../../modules/podman/mihomo.nix        # 代理容器
+    ../../modules/podman/gitea.nix         # Gitea + PostgreSQL
+    ../../modules/podman/hermes.nix        # Hermes Agent gateway
     ../../modules/gui/apps-im.nix        # 即时通讯
   ];
 
