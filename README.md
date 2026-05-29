@@ -96,3 +96,50 @@ portable enter
 使用前请修改以下占位符：
 
 | 文件 | 占位符 |
+|------|--------|
+| `flake.nix` | `user = "master"` → 你的用户名 |
+| `flake.nix` | `email = "nash@iffy.me"` → 你的邮箱 |
+
+---
+
+## 📋 本地包与纯评估模式
+
+本配置使用 `lib/local-pkg.nix` 和 `modules/gui/input-method.nix` 引用本地文件（如 `.deb`、`.AppImage`、Rime 五笔数据）。这些文件位于 `/home/${user}/pub/` 或 `/home/${user}/data/` 目录下。
+
+由于 Nix flakes 默认运行在 **纯评估模式 (pure evaluation)** 下，不允许访问任意本地路径，因此重建时需要添加 `--impure` 标志：
+
+```bash
+sudo nixos-rebuild switch --flake .#workstation --impure
+```
+
+### 替代方案（免 `--impure`）
+
+若需要在 CI/CD 或纯评估环境下构建，可：
+
+1. **将文件移入 flake 树**：将本地包放入配置仓库内（如 `./pkgs/local/`）
+2. **使用 `fetchurl`**：从 URL 下载（适用于公开的 `.deb`/`.AppImage`）
+3. **使用 `fetchGit`**：从 Git 仓库获取（适用于 Rime 五笔数据等）
+
+### 受影响的模块
+
+| 模块 | 路径 | 用途 |
+|------|------|------|
+| `lib/local-pkg.nix` | `/home/${user}/pub/Application/Linux/` | Vivaldi、微信等本地包 |
+| `modules/home/rime.nix` | `/home/${user}/data/rime-wubi/` | Rime 五笔输入法数据 |
+| `modules/home/rime.nix` | `data/rime-lua/rime.lua` | Rime Lua 脚本（内置于 flake 树） |
+
+### Fcitx5 自动启动
+
+NixOS 的 `i18n.inputMethod` 模块会自动创建 XDG autostart 条目，在图形会话启动时加载 fcitx5。
+
+**重要**：每次更新输入法配置后，需要重启 fcitx5 以加载新 addon：
+
+```bash
+fcitx5-remote -r   # 或 killall fcitx5 后重新登录
+```
+
+如果重启后 fcitx5 未启动，检查是否运行了正确的二进制：
+```bash
+which fcitx5        # 应指向 /run/current-system/sw/bin/fcitx5
+fcitx5 -d           # 手动启动守护进程
+```

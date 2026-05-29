@@ -49,9 +49,8 @@
   # 快速启动，不等待用户选择
   boot.loader.timeout = 5;
 
-  # 启用 Hyprland 并禁用 COSMIC Greeter 以使用 SDDM
   wayland.windowManager.hyprland.enable = true;
-  services.displayManager.cosmic-greeter.enable = false;
+  services.displayManager.cosmic-greeter.enable = true;
 
   networking.hostName = "workstation";
 }

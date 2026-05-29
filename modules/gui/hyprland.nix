@@ -9,12 +9,6 @@ in {
     # ── Hyprland 合成器 ────────────────────────────────────
     programs.hyprland.enable = true;
 
-    # ── 显示管理器 (SDDM) ─────────────────────────────────
-    services.displayManager.sddm = lib.mkIf (!config.services.displayManager.cosmic-greeter.enable) {
-      enable = true;
-      wayland.enable = true;
-    };
-
     # ── Pipewire Audio ─────────────────────────────────────
     services.pipewire = {
       enable = true;
