@@ -76,11 +76,11 @@ in {
         .venv/bin/python -m pip install -q -e .
       '';
 
-      # 服务真正运行的指令：--replace 允许自动替换已有实例，避免重启冲突
-      ExecStart = "${srcDir}/.venv/bin/hermes gateway run --replace";
+      # 服务真正运行的指令：前台模式（不使用 --replace，由 systemd 管理生命周期）
+      ExecStart = "${srcDir}/.venv/bin/hermes gateway run";
 
       Restart = "on-failure";
-      RestartSec = "5s";
+      RestartSec = "10s";  # 给旧进程足够的优雅关闭时间，避免 --replace 冲突
     };
   };
 }
