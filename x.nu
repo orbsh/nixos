@@ -10,6 +10,10 @@ export module workstation {
     export def update [] {
         sudo nix flake update
     }
+
+    export def check [] {
+        sudo nix flake check --impure
+    }
 }
 
 export module portable {

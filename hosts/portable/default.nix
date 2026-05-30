@@ -10,13 +10,13 @@
 
     # ── 通用基础模块 (与 ISO 保持一致，确保工具链完整) ──
     # ── 核心系统预设 (sys, base, nix, users, network, extra, container) ──
-    ../../modules/system/presets/core.nix
-    ../../modules/system/hardware-generic.nix  # 通用硬件配置
-    ../../modules/system/vm.nix
+    ../../modules/system/core.nix
+    ../../modules/system/units/hardware-generic.nix  # 通用硬件配置
+    ../../modules/system/units/vm.nix
 
     # ── 完整桌面环境 (含所有应用与驱动) ──
-    ../../modules/desktop/presets/full.nix
-    ../../modules/podman/mihomo.nix        # 代理容器
+    ../../modules/desktop/full.nix
+    ../../modules/podman/ladder.nix        # 代理容器
   ];
 
   # udisks2 用于自动挂载可移动设备（方便访问目标硬盘或 U 盘数据）

@@ -7,17 +7,15 @@
 
     ./hardware-configuration.nix           # 始终导入：内核模块等非磁盘硬件配置
     # ── 核心系统预设 (sys, base, nix, users, network, extra, container) ──
-    ../../modules/system/presets/core.nix
-    ../../modules/system/hardware-generic.nix  # 通用硬件配置
+    ../../modules/system/core.nix
+    ../../modules/system/units/hardware-generic.nix  # 通用硬件配置
     ./wireguard.nix
-    ../../modules/system/vm.nix            # libvirtd/virt-manager 虚拟机支持
+    ../../modules/system/units/vm.nix            # libvirtd/virt-manager 虚拟机支持
 
-    ../../modules/desktop/presets/full.nix
+    ../../modules/desktop/full.nix
 
-    ../../modules/dev
-    ../../modules/podman/mihomo.nix        # 代理容器
-    ../../modules/podman/gitea.nix         # Gitea + PostgreSQL
-    ../../modules/podman/miniflux.nix      # Miniflux RSS + PostgreSQL
+    ../../modules/dev/fullstack.nix
+    ../../modules/podman/full.nix      # Podman 全家桶 (代理 + 代码托管 + RSS)
     ../../modules/flake-srv/hermes-system.nix  # Hermes Agent: systemd 守护 + 全局 CLI 包裹
   ];
 

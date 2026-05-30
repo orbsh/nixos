@@ -6,10 +6,10 @@
     ./disk.nix
 
     # ── 核心系统预设 (sys, base, nix, users, network, extra, container) ──
-    ../../modules/system/presets/core.nix
+    ../../modules/system/core.nix
 
     # 桌面环境 (QEMU 定制：基础预设，裁剪掉 extra/hyprland)
-    ../../modules/desktop/presets/base.nix
+    ../../modules/desktop/base.nix
 
     # 开发工具
     # ../../modules/dev

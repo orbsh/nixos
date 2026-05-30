@@ -6,11 +6,9 @@
 
     ./hardware-configuration.nix  # 始终导入：内核模块等非磁盘硬件配置
     # ── 核心系统预设 (sys, base, nix, users, network, extra, container) ──
-    ../../modules/system/presets/core.nix
-    ../../modules/system/vm.nix
+    ../../modules/system/core.nix
+    ../../modules/system/units/vm.nix
     ./wireguard.nix
-    ../../modules/dev/python.nix
+    ../../modules/dev/server.nix
   ];
-
-  dev.python.enable = true;
 }

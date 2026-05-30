@@ -77,7 +77,7 @@
               useUserPackages = true;  # home 包装进系统 profile
               extraSpecialArgs = commonArgs;
               backupFileExtension = "hm-backup";
-              users.${user} = import ./modules/home/presets/desktop.nix;
+              users.${user} = import ./modules/home/desktop.nix;
             };
           }
         ];
@@ -95,7 +95,7 @@
               useGlobalPkgs = true;
               useUserPackages = true;
               extraSpecialArgs = commonArgs;
-              users.${user} = import ./modules/home/presets/headless.nix;
+              users.${user} = import ./modules/home/headless.nix;
             };
           }
         ];
@@ -113,7 +113,7 @@
               useGlobalPkgs = true;
               useUserPackages = true;
               extraSpecialArgs = commonArgs;
-              users.${user} = import ./modules/home/presets/desktop.nix;
+              users.${user} = import ./modules/home/desktop.nix;
             };
           }
         ];
@@ -132,7 +132,7 @@
               extraSpecialArgs = commonArgs;
               users.${user} = {
                 imports = [
-                  ./modules/home/presets/desktop.nix
+                  ./modules/home/desktop.nix
                   # ./modules/home/shell.nix
                   # ./modules/home/common.nix
                 ];
