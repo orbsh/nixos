@@ -9,51 +9,18 @@
     ./hardware-configuration.nix  # 始终导入：内核模块等非磁盘硬件配置
 
     # ── 通用基础模块 (与 ISO 保持一致，确保工具链完整) ──
-    ../../modules/system/sys.nix
-    ../../modules/system/base.nix
-    ../../modules/system/nix.nix
-    ../../modules/system/users.nix
-    ../../modules/system/network.nix
-    ../../modules/system/container.nix
-    ../../modules/system/extra.nix
-
-    # ── 工作站桌面与应用模块 (使 portable 具备完整 GUI 和工具链) ──
-    ../../modules/desktop/desktop.nix
-    ../../modules/desktop/accessibility.nix    # 禁用无障碍语音播报
-    ../../modules/desktop/apps-core.nix
-    # # ../../modules/desktop/apps-im.nix
-    # ../../modules/desktop/apps-extra.nix
-    # ../../modules/dev
-    # 注意：不包含 laptop.nix，避免在非笔记本硬件上报错
+    # ── 核心系统预设 (sys, base, nix, users, network, extra, container) ──
+    ../../modules/system/presets/core.nix
+    ../../modules/system/hardware-generic.nix  # 通用硬件配置
     ../../modules/system/vm.nix
+
+    # ── 完整桌面环境 (含所有应用与驱动) ──
+    ../../modules/desktop/presets/full.nix
     ../../modules/podman/mihomo.nix        # 代理容器
   ];
 
-  # ── 通用硬件支持 ──────────────────────────────────
-  # 启用非自由固件与所有可能的固件，最大化对不同主板、WiFi、GPU 的兼容性
-  hardware.enableRedistributableFirmware = true;
-  hardware.enableAllFirmware = true;
-
-  # 使用最新内核以获得更好的硬件驱动支持
-  boot.kernelPackages = lib.mkForce pkgs.linuxPackages_latest;
-
-  # ── 文件系统支持 ──────────────────────────────────
-  # 安装盘需能读写目标机器的各类分区
-  boot.supportedFilesystems = [ "ntfs" "exfat" "ext4" "btrfs" "xfs" "vfat" ];
-
-  # ── 网络与存储管理 ────────────────────────────────
-  # NetworkManager 提供通用的网络配置能力
-  networking.networkmanager.enable = true;
-
   # udisks2 用于自动挂载可移动设备（方便访问目标硬盘或 U 盘数据）
   services.udisks2.enable = true;
-
-  # ── 性能与体验 ───────────────────────────────────
-  # 启用 zram 交换，提升低内存环境下的响应速度
-  zramSwap.enable = true;
-
-  # 快速启动，不等待用户选择
-  boot.loader.timeout = 5;
 
   # 自动登录 master 用户，启动即用
   networking.hostName = "portable";

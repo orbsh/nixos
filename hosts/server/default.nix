@@ -5,15 +5,10 @@
     inputs.disko.nixosModules.disko
 
     ./hardware-configuration.nix  # 始终导入：内核模块等非磁盘硬件配置
-    ../../modules/system/sys.nix
-    ../../modules/system/base.nix
-    ../../modules/system/nix.nix
-    ../../modules/system/users.nix
-    ../../modules/system/network.nix
-    ./wireguard.nix
-    ../../modules/system/container.nix
-    ../../modules/system/extra.nix
+    # ── 核心系统预设 (sys, base, nix, users, network, extra, container) ──
+    ../../modules/system/presets/core.nix
     ../../modules/system/vm.nix
+    ./wireguard.nix
     ../../modules/dev/python.nix
   ];
 

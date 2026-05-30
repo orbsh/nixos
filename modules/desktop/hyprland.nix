@@ -67,8 +67,8 @@ in {
 
     # ── 部署 toggle 脚本与 apps.yaml 配置到 /etc/hypr/ ──────
     environment.etc = {
-      "hypr/scripts/hypr_toggle.py".source = ./hypr/scripts/hypr_toggle.py;
-      "hypr/apps.yaml".source = ./hypr/apps.yaml;
+      "hypr/scripts/hypr_toggle.py".source = ./assets/hypr/scripts/hypr_toggle.py;
+      "hypr/apps.yaml".source = ./assets/hypr/apps.yaml;
     };
 
     # ── 快捷键：Focus Window (F1-F12) ───────────────────────

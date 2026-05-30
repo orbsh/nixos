@@ -1,12 +1,12 @@
 { config, pkgs, lib, inputs, user, ... }: {
   imports = [
-    ./common.nix
-    ./shell.nix
-    ./editors.nix
-    ./terminals.nix
-    ./git.nix
-    ./xdg.nix
-    ./rime.nix
+    ../common.nix
+    ../shell.nix
+    ../editors.nix
+    ../terminals.nix
+    ../git.nix
+    ../xdg.nix
+    ../rime.nix
   ];
 
   home = {
