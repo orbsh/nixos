@@ -7,11 +7,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1779942106,
-        "narHash": "sha256-81sATQ+hMCcsqFCN5UyhCoXXf62yQfKtzKzuiFXtdxA=",
+        "lastModified": 1780048612,
+        "narHash": "sha256-Md/eOK5OjmvvHc2H52pLZe4zpP4XyfiS5vHqfRCz2HU=",
         "owner": "nix-community",
         "repo": "disko",
-        "rev": "36c1d04e85fc70f7b94f7434b1ea0a1a13bda4cd",
+        "rev": "caa775cf67bfdc47f940edd96c975b5016df9059",
         "type": "github"
       },
       "original": {
@@ -49,11 +49,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1779726696,
-        "narHash": "sha256-/p37CB5n6Wpw250b0Lq0CYwNq2D8uGKzDoBulyLcQqA=",
+        "lastModified": 1780099287,
+        "narHash": "sha256-efIPwVGtIWIjWcznhaop6XN6HxnOL8800hF6CBNvlqQ=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "1a95e2efb477959b70b4a14c51035975c0481df6",
+        "rev": "7d8127d308c3fb9664f7e643eec944be74ebb37d",
         "type": "github"
       },
       "original": {
@@ -63,13 +63,12 @@
       }
     },
     "my-nushell-src": {
-      "flake": false,
       "locked": {
-        "lastModified": 1779016667,
-        "narHash": "sha256-oKT2mYAfszhsK0Mp9doQ9TqvXykW4QvVJLrQLWwYOto=",
+        "lastModified": 1780121533,
+        "narHash": "sha256-ZMNd7lUkPUWd9S4anYLtoj3G0R1a59VoBG6agkfdSI8=",
         "owner": "fj0r",
         "repo": "nushell",
-        "rev": "289c6dd0390d269bb5b2bfc8c37d46b0796caa4b",
+        "rev": "7423cbc25d9e30391d6ca1e8992f07d00b6b70d9",
         "type": "github"
       },
       "original": {

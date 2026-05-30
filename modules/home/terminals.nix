@@ -15,6 +15,7 @@
       window-height         = 40;
       window-width          = 120;
       window-decoration     = false;
+      command               = "zellij attach --create X";
       keybind = [
         "clear"
         "ctrl+shift+comma=reload_config"

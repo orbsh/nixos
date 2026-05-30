@@ -6,6 +6,10 @@ export module workstation {
             sudo nixos-rebuild switch --flake .#workstation --impure
         }
     }
+
+    export def update [] {
+        sudo nix flake update
+    }
 }
 
 export module portable {

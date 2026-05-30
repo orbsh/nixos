@@ -12,10 +12,12 @@ in
     # Enable bash and auto-launch nushell (safe fallback)
     {
       programs.bash.enable = true;
+      programs.command-not-found.enable = false;
       programs.bash.bashrcExtra = ''
         # Auto-launch nushell for interactive shells
+        # -t 0: only if stdin is a real TTY (skip for scripts/AI/tools)
         # Without 'exec' so that if nu crashes, we fallback to bash
-        if [[ $- == *i* && -z "$NU_SHELL" ]] && command -v nu >/dev/null 2>&1; then
+        if [[ -t 0 && $- == *i* && -z "$NU_SHELL" ]] && command -v nu >/dev/null 2>&1; then
           export NU_SHELL=1
           nu --login
           # 退出码 0 = 用户正常输入 exit → 自动退出 bash（只需一次 exit）
