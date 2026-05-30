@@ -45,6 +45,7 @@
     enable = true;
     enableGitIntegration = true;
     options = {
+      paging           = false;
       navigate         = true;
       side-by-side     = true;
       line-numbers     = true;
