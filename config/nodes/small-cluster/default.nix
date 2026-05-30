@@ -14,22 +14,25 @@
       hostname = "k8s-combo-01";
       ip = "192.168.1.31";
       role = "combo";
-      imports = [../../hosts/server];
-      # fileSystems."/" = { device = "/dev/vda2"; fsType = "xfs"; autoResize = true; };
+      imports = [{
+        fileSystems."/" = { device = "/dev/vda2"; fsType = "ext4"; autoResize = true; };
+      }];
     };
     k8s-worker-02 = {
       hostname = "k8s-worker-01";
       ip = "192.168.1.32";
       role = "worker";
-      imports = [../../hosts/server];
-      # fileSystems."/" = { device = "/dev/vda2"; fsType = "xfs"; autoResize = true; };
+      imports = [{
+        fileSystems."/" = { device = "/dev/vda2"; fsType = "ext4"; autoResize = true; };
+      }];
     };
     k8s-worker-03 = {
       hostname = "k8s-worker-02";
       ip = "192.168.1.33";
       role = "worker";
-      imports = [../../hosts/server];
-      # fileSystems."/" = { device = "/dev/vda2"; fsType = "xfs"; autoResize = true; };
+      imports = [{
+        fileSystems."/" = { device = "/dev/vda2"; fsType = "ext4"; autoResize = true; };
+      }];
     };
   };
 }

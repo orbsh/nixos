@@ -24,8 +24,10 @@
       ip = "172.178.5.123";
       role = "combo";
       imports = [
-        ../../hosts/server
-        ../../modules/k8s/coredns.nix  # CoreDNS DNS 插件
+        ../../../hosts/server/hardware/disk.nix
+        ../../../hosts/server/hardware/hardware-configuration.nix
+        ../../../hosts/server/hardware/wireguard.nix
+        ../../../modules/k8s/coredns.nix  # CoreDNS DNS 插件
       ];
 
       # ── CoreDNS 内网 DNS 服务 ──────────────────────────

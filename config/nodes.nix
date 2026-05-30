@@ -23,9 +23,9 @@
 let
   # 各集群定义（运行时 + 节点列表）
   clusters = {
-    dev           = import ./nodes/dev.nix { inherit user dataDir; };
-    smallCluster  = import ./nodes/small-cluster.nix;
-    largeCluster  = import ./nodes/large-cluster.nix;
+    dev           = import ./nodes/dev { inherit user dataDir; };
+    smallCluster  = import ./nodes/small-cluster;
+    largeCluster  = import ./nodes/large-cluster;
   };
 in
 # 返回集群结构，由 flake 层负责展平并添加集群前缀

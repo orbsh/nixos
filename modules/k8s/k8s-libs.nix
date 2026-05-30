@@ -112,7 +112,10 @@ let
     specialArgs = commonArgs // { inherit cni0IP; };
     modules = [
       { nixpkgs.hostPlatform = "x86_64-linux"; }
-      ../../hosts/k8s-role.nix
+      inputs.disko.nixosModules.disko
+      ../system/core.nix
+      ../system/units/vm.nix
+      ../dev/server.nix
       # 加载 Home Manager 模块以支持 hosts/ 中的用户配置定义
       inputs.home-manager.nixosModules.home-manager
       {
@@ -121,6 +124,7 @@ let
           useUserPackages = true;
           extraSpecialArgs = commonArgs // { inherit cni0IP; };
           backupFileExtension = "hm-backup";
+          users.${commonArgs.user}.imports = [ ../home/headless.nix ];
         };
       }
     ] ++ k8sRoleModules.${attrs.role} ++ comboSocketModule ++ [
