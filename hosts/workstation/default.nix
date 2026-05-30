@@ -26,7 +26,7 @@
     ../../modules/podman/mihomo.nix        # 代理容器
     ../../modules/podman/gitea.nix         # Gitea + PostgreSQL
     ../../modules/podman/miniflux.nix      # Miniflux RSS + PostgreSQL
-    ../../modules/flake-srv/hermes.nix     # Hermes Agent gateway
+    ../../modules/flake-srv/hermes-system.nix  # Hermes Agent: systemd 守护 + 全局 CLI 包裹
     ../../modules/gui/apps-im.nix        # 即时通讯
   ];
 
