@@ -1,3 +1,3 @@
-{ ... }: {
-  imports = [ ./units/mihomo.nix ./units/gitea.nix ./units/miniflux.nix ];
+{ pkgs, ... }: {
+  imports = [ ./units/network.nix ./units/mihomo.nix ./units/gitea.nix ./units/miniflux.nix ];
 }

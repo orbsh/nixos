@@ -1,6 +1,6 @@
 { pkgs, lib, config, ... }: {
   # 网络抓包与分析工具 (Wireshark 生态)
-  environment.systemPackages = [ 
+  environment.systemPackages = [
     pkgs.termshark  # TUI 版 Wireshark
   ];
 

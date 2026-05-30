@@ -16,6 +16,8 @@
       ports = [
         "8090:8080"
       ];
+      # 使用独立网络 + 固定 IP
+      extraOptions = [ "--network" "app-net" "--ip" "10.89.0.104" ];
       autoStart = true;
     };
 
@@ -33,6 +35,7 @@
       ports = [
         "5434:5432"
       ];
+      extraOptions = [ "--network" "app-net" "--ip" "10.89.0.103" ];
       autoStart = true;
     };
   };
@@ -42,6 +45,11 @@
       mkdir -p ${dataDir}/miniflux/pg17
       mkdir -p ${dataDir}/miniflux/backup
     '';
+
+
+    # 依赖 app-net 网络就绪
+    after = [ "podman-app-network.target" ];
+    requires = [ "podman-app-network.target" ];
 
     unitConfig = {
       StartLimitBurst = 3;
@@ -60,8 +68,8 @@
     '';
 
     # 确保 miniflux 在 miniflux-pg 之后启动
-    after = [ "podman-miniflux-pg.service" ];
-    requires = [ "podman-miniflux-pg.service" ];
+    after = [ "podman-miniflux-pg.service" "podman-app-network.target" ];
+    requires = [ "podman-miniflux-pg.service" "podman-app-network.target" ];
 
     unitConfig = {
       StartLimitBurst = 3;

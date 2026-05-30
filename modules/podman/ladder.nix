@@ -1,3 +1,3 @@
 { ... }: {
-  imports = [ ./units/mihomo.nix ];
+  imports = [ ./units/network.nix ./units/mihomo.nix ];
 }

@@ -8,6 +8,8 @@
         "7891:7891"
         "9090:9090"
       ];
+      # 使用独立网络 + 固定 IP
+      extraOptions = [ "--network" "app-net" "--ip" "10.89.0.100" ];
       autoStart = true;
     };
   };
@@ -19,6 +21,11 @@
     '';
 
     # 镜像拉取失败时不阻塞系统启动（portable 可能需要先连网才能拉取）
+
+    # 依赖 app-net 网络就绪
+    after = [ "podman-app-network.target" ];
+    requires = [ "podman-app-network.target" ];
+
     unitConfig = {
       StartLimitBurst = 3;
       StartLimitIntervalSec = 60;
