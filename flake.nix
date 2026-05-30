@@ -35,7 +35,7 @@
 
     my-nushell-src = {
       url = "github:fj0r/nushell";
-      flake = false;
+      flake = true;
     };
   };
 
@@ -52,6 +52,7 @@
       inherit inputs dataDir user email;
       nushellSrc = my-nushell-src.outPath;
       nushellGitUrl = "https://github.com/${my-nushell-src.owner}/${my-nushell-src.repo}.git";
+      nushellLocalPath = "/home/${user}/Configuration/nushell";
     };
 
     # ── K8s 节点定义（展平 clusters，自动注入 runtime 和 masterIP） ──

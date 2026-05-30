@@ -1,8 +1,7 @@
-{ config, pkgs, lib, nushellSrc, nushellGitUrl, ... }:
+{ config, pkgs, lib, nushellSrc, nushellGitUrl, nushellLocalPath, ... }:
 
 let
   cfg = config.programs.nushell;
-  nushellDir = "${config.home.homeDirectory}/Configuration/nushell";
   nushellInput = nushellSrc;
 in
 {
@@ -25,28 +24,13 @@ in
         fi
       '';
     }
-    # 始终启用 nushell + 插件 (polars / query web)
-    # 注：插件放入 home.packages 而非 programs.nushell.plugins，避免与整目录 symlink 冲突
-    # {
-    #   xdg.enable = true;
-      # programs.nushell.enable = true;
-      # programs.nushell.plugins = [ pkgs.nushellPlugins.polars pkgs.nushellPlugins.query ];
-    # }
 
-    # 工作站开发模式：符号链接 + 自动克隆
+    # 工作站开发模式：直接 symlink 到本地开发目录
     (lib.mkIf cfg.developMode {
-      # 整目录符号链接
       home.file.".config/nushell" = {
-        source = config.lib.file.mkOutOfStoreSymlink nushellDir;
-        force = true;  # Overwrite if existing file/directory conflicts
+        source = config.lib.file.mkOutOfStoreSymlink nushellLocalPath;
+        force = true;
       };
-
-      # 自动克隆仓库（如果尚未存在）
-      home.activation.cloneNushellConfig = ''
-        if [ ! -d "${nushellDir}/.git" ]; then
-          $DRY_RUN_CMD git clone ${nushellGitUrl} "${nushellDir}"
-        fi
-      '';
     })
 
     # 服务器/只读模式：通过 flake input 部署
