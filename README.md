@@ -104,7 +104,7 @@ portable enter
 
 ## 📋 本地包与纯评估模式
 
-本配置使用 `lib/local-pkg.nix` 和 `modules/gui/input-method.nix` 引用本地文件（如 `.deb`、`.AppImage`、Rime 五笔数据）。这些文件位于 `/home/${user}/pub/` 或 `/home/${user}/data/` 目录下。
+本配置使用 `lib/local-pkg.nix` 和 `modules/desktop/input-method.nix` 引用本地文件（如 `.deb`、`.AppImage`、Rime 五笔数据）。这些文件位于 `/home/${user}/pub/` 或 `/home/${user}/data/` 目录下。
 
 由于 Nix flakes 默认运行在 **纯评估模式 (pure evaluation)** 下，不允许访问任意本地路径，因此重建时需要添加 `--impure` 标志：
 

@@ -1,7 +1,7 @@
 # 小集群示例（控制+工作合一，适合 1-3 台节点省资源）
 #
 # 角色：同时运行控制平面组件和 kubelet，允许调度普通 Pod
-# 注意：combo 节点默认有 control-plane taint，k8s-lib.nix 会自动移除
+# 注意：combo 节点默认有 control-plane taint，k8s-libs.nix 会自动移除
 {
   # ── 集群级配置 ────────────────────────────────────────
   runtime = "containerd";  # 容器运行时：crio / containerd

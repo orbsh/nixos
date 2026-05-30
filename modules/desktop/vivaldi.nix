@@ -4,7 +4,7 @@
 { pkgs, lib, user, ... }:
 
 let
-  localPkg = import ../../lib/local-pkg.nix { inherit pkgs user; };
+  localPkg = import ../../libs/local-pkg.nix { inherit pkgs user; };
 in {
   # ── Vivaldi Overlay：修复 COSMIC 200% 缩放下界面放大 ──
   nixpkgs.overlays = [

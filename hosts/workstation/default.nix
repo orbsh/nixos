@@ -6,28 +6,28 @@
     inputs.disko.nixosModules.disko
 
     ./hardware-configuration.nix           # 始终导入：内核模块等非磁盘硬件配置
-    ../../modules/common/sys.nix
-    ../../modules/common/base.nix
-    ../../modules/common/nix.nix
-    ../../modules/common/users.nix
-    ../../modules/common/network.nix
+    ../../modules/system/sys.nix
+    ../../modules/system/base.nix
+    ../../modules/system/nix.nix
+    ../../modules/system/users.nix
+    ../../modules/system/network.nix
     ./wireguard.nix
-    ../../modules/common/container.nix
-    ../../modules/common/extra.nix
+    ../../modules/system/container.nix
+    ../../modules/system/extra.nix
 
-    ../../modules/gui/desktop.nix
-    ../../modules/gui/laptop.nix
-    ../../modules/gui/accessibility.nix    # 禁用无障碍语音播报
-    ../../modules/gui/apps-core.nix
-    ../../modules/gui/apps-extra.nix
-    ../../modules/common/vm.nix            # libvirtd/virt-manager 虚拟机支持
+    ../../modules/desktop/desktop.nix
+    ../../modules/desktop/laptop.nix
+    ../../modules/desktop/accessibility.nix    # 禁用无障碍语音播报
+    ../../modules/desktop/apps-core.nix
+    ../../modules/desktop/apps-extra.nix
+    ../../modules/system/vm.nix            # libvirtd/virt-manager 虚拟机支持
 
     ../../modules/dev
     ../../modules/podman/mihomo.nix        # 代理容器
     ../../modules/podman/gitea.nix         # Gitea + PostgreSQL
     ../../modules/podman/miniflux.nix      # Miniflux RSS + PostgreSQL
     ../../modules/flake-srv/hermes-system.nix  # Hermes Agent: systemd 守护 + 全局 CLI 包裹
-    ../../modules/gui/apps-im.nix        # 即时通讯
+    ../../modules/desktop/apps-im.nix        # 即时通讯
   ];
 
   # ── 通用硬件支持 ──────────────────────────────────
@@ -57,4 +57,13 @@
   services.displayManager.cosmic-greeter.enable = true;
 
   networking.hostName = "workstation";
+
+  # ── Fcitx5 休眠唤醒后自动重启 ────────────────────────
+  # COSMIC 锁屏 SIGKILL 输入法 Applet 导致 Wayland IM 断联。
+  # 系统级 resume hook 通过 runuser 触发用户级 fcitx5 重启。
+  powerManagement.resumeCommands = ''
+    ${pkgs.systemd}/bin/runuser -u master -- ${pkgs.procps}/bin/pkill -f fcitx5 || true
+    sleep 1
+    ${pkgs.systemd}/bin/runuser -u master -- ${pkgs.fcitx5}/bin/fcitx5 -d || true
+  '';
 }

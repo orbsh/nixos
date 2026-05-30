@@ -3,7 +3,7 @@
 { pkgs, lib, user, ... }:
 
 let
-  localPkg = import ../../lib/local-pkg.nix { inherit pkgs user; };
+  localPkg = import ../../libs/local-pkg.nix { inherit pkgs user; };
 in {
   # ── Zed Overlay：使用 runCommand 复制后包装（避免 symlinkJoin 的符号链接问题） ──────
   nixpkgs.overlays = [

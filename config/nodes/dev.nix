@@ -61,7 +61,7 @@
       ];
 
       # ── 节点特有 API Server SANs ─────────────────────────
-      # 已由 k8s-lib.nix 自动为第一个 control/combo 节点注入
+      # 已由 k8s-libs.nix 自动为第一个 control/combo 节点注入
       # 如需额外 SAN，可在此追加：
       services.kubernetes.apiserver.extraSANs = [ "10.6.6.2" ];
     };

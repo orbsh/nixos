@@ -5,17 +5,17 @@
     ./hardware-configuration.nix  # 保留：内核模块、网络等硬件配置
     ./disk.nix
 
-    ../../modules/common/sys.nix
-    ../../modules/common/base.nix
-    ../../modules/common/nix.nix
-    ../../modules/common/users.nix
-    ../../modules/common/network.nix
-    ../../modules/common/extra.nix
-    ../../modules/common/container.nix
+    ../../modules/system/sys.nix
+    ../../modules/system/base.nix
+    ../../modules/system/nix.nix
+    ../../modules/system/users.nix
+    ../../modules/system/network.nix
+    ../../modules/system/extra.nix
+    ../../modules/system/container.nix
 
     # 桌面环境 (COSMIC)
-    ../../modules/gui/desktop.nix
-    #../../modules/gui/laptop.nix
+    ../../modules/desktop/desktop.nix
+    #../../modules/desktop/laptop.nix
 
     # 开发工具
     # ../../modules/dev

@@ -1,7 +1,7 @@
 { pkgs, user, ... }:
 
 let
-  localPkg = import ../../lib/local-pkg.nix { inherit pkgs user; };
+  localPkg = import ../../libs/local-pkg.nix { inherit pkgs user; };
 in {
   environment.systemPackages = with pkgs; [
     telegram-desktop

@@ -59,7 +59,7 @@
     k8sNodes = k8sLib.flattenClusters k8sConfig.clusters;
 
     # ── K8s 节点构建工具 ─────────────────────────────────────
-    k8sLib = import ./modules/k8s/k8s-lib.nix { inherit nixpkgs inputs dataDir user email; };
+    k8sLib = import ./modules/k8s/k8s-libs.nix { inherit nixpkgs inputs dataDir user email; };
     mkK8sNode = k8sLib.mkK8sNode;
   in {
     nixosConfigurations = (nixpkgs.lib.mapAttrs mkK8sNode k8sNodes) // {
@@ -76,7 +76,7 @@
               useUserPackages = true;  # home 包装进系统 profile
               extraSpecialArgs = commonArgs;
               backupFileExtension = "hm-backup";
-              users.${user} = import ./modules/home/workstation;
+              users.${user} = import ./modules/home/profile-desktop.nix;
             };
           }
         ];
@@ -94,7 +94,7 @@
               useGlobalPkgs = true;
               useUserPackages = true;
               extraSpecialArgs = commonArgs;
-              users.${user} = import ./modules/home/server;
+              users.${user} = import ./modules/home/profile-headless.nix;
             };
           }
         ];
@@ -112,7 +112,7 @@
               useGlobalPkgs = true;
               useUserPackages = true;
               extraSpecialArgs = commonArgs;
-              users.${user} = import ./modules/home/workstation;
+              users.${user} = import ./modules/home/profile-desktop.nix;
             };
           }
         ];
@@ -131,7 +131,7 @@
               extraSpecialArgs = commonArgs;
               users.${user} = {
                 imports = [
-                  ./modules/home/workstation
+                  ./modules/home/profile-desktop.nix
                   # ./modules/home/shell.nix
                   # ./modules/home/common.nix
                 ];

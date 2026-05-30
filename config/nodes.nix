@@ -1,6 +1,6 @@
 # K8s 集群节点定义
 #
-# 【用途】集中管理所有 K8s 节点的静态配置，由 k8s-lib.nix 的 mkK8sNode 函数消费
+# 【用途】集中管理所有 K8s 节点的静态配置，由 k8s-libs.nix 的 mkK8sNode 函数消费
 #
 # 【数据结构】
 #   每个集群文件返回 { runtime = "..."; nodes = { name = { ... }; }; }

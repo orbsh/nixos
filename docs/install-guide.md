@@ -393,7 +393,7 @@ sudo reboot
 
 | 文件 | 占位符 | 说明 |
 |------|--------|------|
-| `modules/common/users.nix` | `ssh-ed25519 AAAA...` | 替换为你的 SSH 公钥 |
+| `modules/system/users.nix` | `ssh-ed25519 AAAA...` | 替换为你的 SSH 公钥 |
 | `modules/home/git.nix` | `you@example.com` | 替换为你的 Git 邮箱 |
 | `hosts/*/hardware-configuration.nix` | UUID 占位符 | 替换为实际磁盘 UUID |
 
@@ -424,7 +424,7 @@ sudo reboot
 NVIDIA 显卡用户务必在配置中启用专有驱动，否则可能无法进入图形界面：
 
 ```nix
-# 在 modules/gui/desktop.nix 或 hardware-configuration.nix 中
+# 在 modules/desktop/desktop.nix 或 hardware-configuration.nix 中
 hardware.opengl.enable = true;
 services.xserver.videoDrivers = [ "nvidia" ];
 ```

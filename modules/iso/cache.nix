@@ -27,20 +27,20 @@
     # ── common/container.nix ─────────────────────────────
     buildah skopeo
 
-    # ── gui/desktop.nix ──────────────────────────
+    # ── desktop/desktop.nix ──────────────────────────
     wl-clipboard
 
-    # ── gui/apps-core.nix ────────────────────────
+    # ── desktop/apps-core.nix ────────────────────────
     ghostty alacritty neovim neovide zed-editor
     qutebrowser
     freefilesync smplayer krita blender flameshot
     # vivaldi
     # calibre
 
-    # ── gui/apps-im.nix ──────────────────────────
+    # ── desktop/apps-im.nix ──────────────────────────
     # wechat-uos telegram-desktop
 
-    # ── gui/apps-extra.nix ───────────────────────
+    # ── desktop/apps-extra.nix ───────────────────────
     surrealist zathura foliate
 
     # ── dev/ ─────────────────────────────────────────────
@@ -62,10 +62,10 @@
     wasmtime gcc cmake gnumake pkg-config
     kubectl kubernetes-helm
 
-    # ── gui/laptop.nix ───────────────────────────
+    # ── desktop/laptop.nix ───────────────────────────
     brightnessctl auto-cpufreq
 
-    # ── gui/wireguard.nix / server/wireguard.nix ─
+    # ── desktop/wireguard.nix / server/wireguard.nix ─
     wireguard-tools
 
     # ── 隐式包：common/container.nix ────────────────────
@@ -82,22 +82,22 @@
     # virtualisation.cri-o.enable = true, pkgs.crun
     cri-o crun
 
-    # ── 隐式包：gui/input-method.nix ────────────
+    # ── 隐式包：desktop/input-method.nix ────────────
     # fcitx5 输入法全家桶
     fcitx5 fcitx5-gtk fcitx5-rime qt6Packages.fcitx5-chinese-addons
 
-    # ── 隐式包：gui/fonts.nix ───────────────────
+    # ── 隐式包：desktop/fonts.nix ───────────────────
     noto-fonts noto-fonts-cjk-sans noto-fonts-color-emoji lilex
     nerd-fonts.jetbrains-mono
 
-    # ── 隐式包：gui/laptop.nix ──────────────────
+    # ── 隐式包：desktop/laptop.nix ──────────────────
     # services.power-profiles-daemon.enable, services.blueman.enable
     power-profiles-daemon blueman
 
-    # ── 隐式包：gui/cosmic.nix ──────────────────
+    # ── 隐式包：desktop/cosmic.nix ──────────────────
     xdg-desktop-portal-cosmic cosmic-greeter
 
-    # ── 隐式包：gui/hyprland.nix（条件启用） ─────
+    # ── 隐式包：desktop/hyprland.nix（条件启用） ─────
     waybar wofi mako grim slurp swappy hyprpaper cliphist wlogout swaylock-effects playerctl networkmanagerapplet pavucontrol xdg-desktop-portal-gtk
     (python3.withPackages (ps: [ ps.pyyaml ]))
 

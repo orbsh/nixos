@@ -15,7 +15,7 @@
   };
 
   # ── systemd compliance check ──
-  imports = [ ../../lib/systemd-compliance.nix ];
+  imports = [ ../../libs/systemd-compliance.nix ];
 
   # 每周自动清理未使用的包
   nix.gc = {

@@ -1,9 +1,9 @@
 { config, pkgs, lib, inputs, user, ... }: {
   imports = [
-    ../common.nix
-    ../shell.nix
-    ../editors.nix
-    ../git.nix
+    ./common.nix
+    ./shell.nix
+    ./editors.nix
+    ./git.nix
   ];
 
   home = {

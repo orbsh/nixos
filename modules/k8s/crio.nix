@@ -3,7 +3,7 @@
 let
   registriesData = import ../../config/registries.nix;
 
-  generateRegistriesConf = import ../../lib/registries-gen.nix {
+  generateRegistriesConf = import ../../libs/registries-gen.nix {
     inherit lib;
     cfg = registriesData;
   };

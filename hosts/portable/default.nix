@@ -9,23 +9,23 @@
     ./hardware-configuration.nix  # 始终导入：内核模块等非磁盘硬件配置
 
     # ── 通用基础模块 (与 ISO 保持一致，确保工具链完整) ──
-    ../../modules/common/sys.nix
-    ../../modules/common/base.nix
-    ../../modules/common/nix.nix
-    ../../modules/common/users.nix
-    ../../modules/common/network.nix
-    ../../modules/common/container.nix
-    ../../modules/common/extra.nix
+    ../../modules/system/sys.nix
+    ../../modules/system/base.nix
+    ../../modules/system/nix.nix
+    ../../modules/system/users.nix
+    ../../modules/system/network.nix
+    ../../modules/system/container.nix
+    ../../modules/system/extra.nix
 
     # ── 工作站桌面与应用模块 (使 portable 具备完整 GUI 和工具链) ──
-    ../../modules/gui/desktop.nix
-    ../../modules/gui/accessibility.nix    # 禁用无障碍语音播报
-    ../../modules/gui/apps-core.nix
-    # # ../../modules/gui/apps-im.nix
-    # ../../modules/gui/apps-extra.nix
+    ../../modules/desktop/desktop.nix
+    ../../modules/desktop/accessibility.nix    # 禁用无障碍语音播报
+    ../../modules/desktop/apps-core.nix
+    # # ../../modules/desktop/apps-im.nix
+    # ../../modules/desktop/apps-extra.nix
     # ../../modules/dev
     # 注意：不包含 laptop.nix，避免在非笔记本硬件上报错
-    ../../modules/common/vm.nix
+    ../../modules/system/vm.nix
     ../../modules/podman/mihomo.nix        # 代理容器
   ];
 

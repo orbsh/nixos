@@ -1,6 +1,6 @@
 # Kubernetes 通用配置（CRI-O / Containerd 公共部分）
 { pkgs, lib, config, cni0IP, user, ... }: {
-  # ── 声明容器运行时选项（必须由 k8s-lib.nix 显式设置） ──
+  # ── 声明容器运行时选项（必须由 k8s-libs.nix 显式设置） ──
   options.services.kubernetes.runtime = lib.mkOption {
     type = lib.types.enum [ "crio" "containerd" ];
     description = "Container runtime for Kubernetes nodes";

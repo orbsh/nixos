@@ -4,7 +4,7 @@ let
 in {
   # ── 容器镜像仓库配置（/etc/containers/registries.conf）──
   environment.etc."containers/registries.conf".text = lib.mkForce (
-    import ../../lib/registries-gen.nix { inherit lib; cfg = registriesData; }
+    import ../../libs/registries-gen.nix { inherit lib; cfg = registriesData; }
   );
 
   # ── Podman ───────────────────────────────────────────────
