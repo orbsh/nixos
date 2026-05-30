@@ -1,4 +1,4 @@
-{ inputs, lib, ... }: {
+{ inputs, user, lib, ... }: {
   imports = [
     ./disk.nix  # disko 重新分区格式化配置（按需启用）
 
@@ -11,4 +11,11 @@
     ./wireguard.nix
     ../../modules/dev/server.nix
   ];
+
+  # ── 用户环境配置 ──────────────────────────────────────
+  home-manager.users.${user} = {
+    imports = [
+      ../../modules/home/headless.nix
+    ];
+  };
 }

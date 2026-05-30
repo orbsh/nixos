@@ -1,4 +1,4 @@
-{ inputs, lib, pkgs, ... }: {
+{ inputs, user, lib, pkgs, ... }: {
   imports = [
     ./existing-disk.nix  # 现有磁盘挂载配置（不格式化）
     # ./disk.nix  # disko 重新分区格式化配置（按需启用）
@@ -18,6 +18,13 @@
     ../../modules/podman/full.nix      # Podman 全家桶 (代理 + 代码托管 + RSS)
     ../../modules/flake-srv/hermes-system.nix  # Hermes Agent: systemd 守护 + 全局 CLI 包裹
   ];
+
+  # ── 用户环境配置 ──────────────────────────────────────
+  home-manager.users.${user} = {
+    imports = [
+      ../../modules/home/desktop.nix
+    ];
+  };
 
   wayland.windowManager.hyprland.enable = true;
   services.displayManager.cosmic-greeter.enable = true;

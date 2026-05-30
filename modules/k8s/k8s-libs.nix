@@ -1,8 +1,9 @@
 # K8s 节点构建工具函数
 # 集中管理角色模块映射和节点生成逻辑
-{ nixpkgs, inputs, dataDir, user, email }:
+{ nixpkgs, inputs, commonArgs }:
 let
   lib = nixpkgs.lib;
+  inherit (commonArgs) dataDir user email;
 
   # ── 角色模块映射 ─────────────────────────────────────────
   # combo 模式同时导入 control 和 worker 模块，roles 列表会合并为 [ "master" "worker" ]
@@ -108,10 +109,20 @@ let
       }
     ];
   in lib.nixosSystem {
-    specialArgs = { inherit inputs dataDir user email cni0IP; };
+    specialArgs = commonArgs // { inherit cni0IP; };
     modules = [
       { nixpkgs.hostPlatform = "x86_64-linux"; }
       ../../hosts/k8s-role.nix
+      # 加载 Home Manager 模块以支持 hosts/ 中的用户配置定义
+      inputs.home-manager.nixosModules.home-manager
+      {
+        home-manager = {
+          useGlobalPkgs = true;
+          useUserPackages = true;
+          extraSpecialArgs = commonArgs // { inherit cni0IP; };
+          backupFileExtension = "hm-backup";
+        };
+      }
     ] ++ k8sRoleModules.${attrs.role} ++ comboSocketModule ++ [
       # 自动为第一个 control/combo 节点添加 API Server SANs
       autoSansModule

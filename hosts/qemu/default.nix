@@ -1,4 +1,4 @@
-{ inputs, pkgs, lib, ... }: {
+{ inputs, pkgs, lib, user, ... }: {
   imports = [
     inputs.disko.nixosModules.disko
 
@@ -14,6 +14,13 @@
     # 开发工具
     # ../../modules/dev
   ];
+
+  # ── 用户环境配置 ──────────────────────────────────────
+  home-manager.users.${user} = {
+    imports = [
+      ../../modules/home/desktop.nix
+    ];
+  };
 
   # QEMU/KVM guest: SPICE agent for clipboard sharing and auto-resolution
   services.spice-vdagentd.enable = true;

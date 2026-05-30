@@ -47,6 +47,9 @@
     email = "nash@iffy.me";
     dataDir = "/home/${user}/data";
 
+    # 修复变量名中的连字符（Nix 函数参数不支持连字符）
+    homeManagerInput = home-manager;
+
     # ── 共享参数（注入 NixOS + Home Manager） ──────────
     commonArgs = {
       inherit inputs dataDir user email;
@@ -59,87 +62,30 @@
     k8sConfig = import ./config/nodes.nix { inherit user dataDir; };
     k8sNodes = k8sLib.flattenClusters k8sConfig.clusters;
 
+    # ── 统一构建函数：集成 NixOS + Home Manager ──
+    mkNixos = import ./libs/nixos-builder.nix { inherit nixpkgs commonArgs homeManagerInput; };
+
     # ── K8s 节点构建工具 ─────────────────────────────────────
-    k8sLib = import ./modules/k8s/k8s-libs.nix { inherit nixpkgs inputs dataDir user email; };
+    k8sLib = import ./modules/k8s/k8s-libs.nix { inherit nixpkgs inputs commonArgs; };
     mkK8sNode = k8sLib.mkK8sNode;
   in {
     nixosConfigurations = (nixpkgs.lib.mapAttrs mkK8sNode k8sNodes) // {
 
-      workstation = nixpkgs.lib.nixosSystem {
-        specialArgs = commonArgs;
-        modules = [
-          { nixpkgs.hostPlatform = "x86_64-linux"; }
-          ./hosts/workstation
-          home-manager.nixosModules.home-manager
-          {
-            home-manager = {
-              useGlobalPkgs = true;    # 用系统的 nixpkgs，避免二次求值
-              useUserPackages = true;  # home 包装进系统 profile
-              extraSpecialArgs = commonArgs;
-              backupFileExtension = "hm-backup";
-              users.${user} = import ./modules/home/desktop.nix;
-            };
-          }
-        ];
+      workstation = mkNixos {
+        hostDir = ./hosts/workstation;
       };
 
-      server = nixpkgs.lib.nixosSystem {
-        specialArgs = commonArgs;
-        modules = [
-          { nixpkgs.hostPlatform = "x86_64-linux"; }
-          ./hosts/server
-          { networking.hostName = "server"; } # 独立 Server 主机默认名称
-          home-manager.nixosModules.home-manager
-          {
-            home-manager = {
-              useGlobalPkgs = true;
-              useUserPackages = true;
-              extraSpecialArgs = commonArgs;
-              users.${user} = import ./modules/home/headless.nix;
-            };
-          }
-        ];
+      server = mkNixos {
+        hostDir = ./hosts/server;
+        hostName = "server";
       };
 
-      qemu = nixpkgs.lib.nixosSystem {
-        specialArgs = commonArgs;
-        modules = [
-          { nixpkgs.hostPlatform = "x86_64-linux"; }
-          ./hosts/qemu
-          { networking.hostName = "qemu"; } # 独立 QEMU 主机默认名称
-          home-manager.nixosModules.home-manager
-          {
-            home-manager = {
-              useGlobalPkgs = true;
-              useUserPackages = true;
-              extraSpecialArgs = commonArgs;
-              users.${user} = import ./modules/home/desktop.nix;
-            };
-          }
-        ];
+      qemu = mkNixos {
+        hostDir = ./hosts/qemu;
       };
 
-      portable = nixpkgs.lib.nixosSystem {
-        specialArgs = commonArgs;
-        modules = [
-          { nixpkgs.hostPlatform = "x86_64-linux"; }
-          ./hosts/portable
-          home-manager.nixosModules.home-manager
-          {
-            home-manager = {
-              useGlobalPkgs = true;
-              useUserPackages = true;
-              extraSpecialArgs = commonArgs;
-              users.${user} = {
-                imports = [
-                  ./modules/home/desktop.nix
-                  # ./modules/home/shell.nix
-                  # ./modules/home/common.nix
-                ];
-              };
-            };
-          }
-        ];
+      portable = mkNixos {
+        hostDir = ./hosts/portable;
       };
 
       # ── ISO 配置（已归档至 modules/iso/default.nix，默认注释掉以防体积报错） ──

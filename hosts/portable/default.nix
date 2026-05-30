@@ -19,6 +19,13 @@
     ../../modules/podman/ladder.nix        # 代理容器
   ];
 
+  # ── 用户环境配置 ──────────────────────────────────────
+  home-manager.users.${user} = {
+    imports = [
+      ../../modules/home/desktop.nix
+    ];
+  };
+
   # udisks2 用于自动挂载可移动设备（方便访问目标硬盘或 U 盘数据）
   services.udisks2.enable = true;
 
