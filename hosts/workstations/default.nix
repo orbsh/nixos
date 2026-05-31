@@ -15,7 +15,7 @@ in {
       ./orbit/hardware.nix
       ./orbit/disk.nix
       ./orbit/wireguard.nix
-      # ../../modules/flake-srv/harmonia.nix
+      ../../modules/flake-srv/harmonia.nix
       (import ../../libs/registries-gen.nix {
         inherit lib;
         runtime = "podman";

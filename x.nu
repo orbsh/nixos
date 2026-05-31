@@ -1,18 +1,21 @@
 export module workstation {
-    export def rebuild [profile: string = 'orbit'] {
-        sudo nixos-rebuild switch --flake $".#workstations_($profile)" --impure
+    export def switch [profile: string = 'orbit'] {
+        sudo nixos-rebuild switch --flake $".#workstations_($profile)"
     }
 
-    export def show [profile: string = 'orbit'] {
-        nh os build $".#workstations_($profile)"
-    }
+    export def build [profile: string = 'orbit'] {
+        nh os build $".#workstations_($profile)"    }
 
     export def update [] {
         nh flake update
     }
 
     export def check [] {
-        sudo nix flake check --impure
+        sudo nix flake check
+    }
+
+    export def add-file [file: path] {
+        nix store add-file $file
     }
 }
 
