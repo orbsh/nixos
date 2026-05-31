@@ -39,7 +39,6 @@
         )
       )
 
-      ; (image :path '/home/master/Downloads/640.jpeg' :image-width 100 )
       (box :orientation "v" :class "chart-box"
         :tooltip "RAM:${round(EWW_RAM.used_mem_perc, 0)}% SWAP:${swap_usage}%"
         (overlay

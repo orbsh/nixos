@@ -4,7 +4,6 @@
     ./units/shell.nix
     ./units/editors.nix
     ./units/git.nix
-    ./units/eww.nix
   ];
 
   home = {
