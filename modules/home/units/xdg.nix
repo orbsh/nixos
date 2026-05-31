@@ -10,15 +10,14 @@
     userDirs = {
       enable        = true;
       createDirectories = true;
-      documents  = "${config.home.homeDirectory}/doc";
-      download   = "${config.home.homeDirectory}/dl";
-      pictures   = "${config.home.homeDirectory}/pic";
-      videos     = "${config.home.homeDirectory}/vid";
-      music      = "${config.home.homeDirectory}/music";
-      # 不需要的目录设为 home，避免自动创建
-      desktop    = "${config.home.homeDirectory}";
-      templates  = "${config.home.homeDirectory}";
-      publicShare = "${config.home.homeDirectory}";
+      documents  = "${config.home.homeDirectory}/Documents";
+      download   = "${config.home.homeDirectory}/Downloads";
+      pictures   = "${config.home.homeDirectory}/Pictures";
+      videos     = "${config.home.homeDirectory}/Videos";
+      music      = "${config.home.homeDirectory}/Music";
+      desktop    = "${config.home.homeDirectory}/Desktop";
+      templates  = "${config.home.homeDirectory}/Templates";
+      publicShare = "${config.home.homeDirectory}/pub";
     };
 
     mimeApps = {

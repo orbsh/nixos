@@ -9,6 +9,7 @@
       "https://cache.nixos.org"
     ];
     trusted-public-keys = [
+      "harmonia-local:bF/+RpECJWbbE8W7/hu1jWRlkQqu/+cXoVrWFENmqXY="
       "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
     ];
     builders-use-substitutes = true;

@@ -22,6 +22,9 @@
     useGlobalPkgs = true;
     useUserPackages = true;
     extraSpecialArgs = { inherit inputs dataDir self user; };
+    sharedModules = [
+      { home.enableNixpkgsReleaseCheck = false; }
+    ];
     users.${user} = {
       imports = [ ../home/shell.nix ../home/common.nix ];
     };

@@ -27,10 +27,13 @@ let
       "home-manager" = {
         useGlobalPkgs = true;
         useUserPackages = true;
-        # 注入节点级 user 覆盖（如 Alice/Bob），否则使用 commonArgs.user
         extraSpecialArgs = commonArgs 
           // lib.optionalAttrs (builtins.hasAttr "user" nodeAttrs) { user = nodeAttrs.user; };
         backupFileExtension = "hm-backup";
+        # 关闭 nixpkgs 版本不匹配警告（unstable 滚动更新，版本号永远不一致）
+        sharedModules = [
+          { home.enableNixpkgsReleaseCheck = false; }
+        ];
       };
     }
   ];

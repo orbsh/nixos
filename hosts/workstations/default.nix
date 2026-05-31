@@ -15,6 +15,7 @@ in {
       ./master/hardware.nix
       ./master/disk.nix
       ./master/wireguard.nix
+      ../../modules/flake-srv/harmonia.nix
       (import ../../libs/registries-gen.nix {
         inherit lib;
         runtime = "podman";
