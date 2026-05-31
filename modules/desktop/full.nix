@@ -5,6 +5,7 @@
     ./units/apps-extra.nix
     ./units/apps-im.nix
     ./units/cosmic.nix
+    ./units/greetd.nix
     ./units/eww.nix
     ./units/fcitx5.nix
     ./units/fonts.nix

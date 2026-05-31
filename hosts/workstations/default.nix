@@ -6,16 +6,16 @@ let
   baseRole = ../../modules/roles/workstation-base.nix;
 in {
   # 成员：master
-  "master" = {
+  "orbit" = {
     user = "master";
     networking.hostName = "workstation";
     imports = [
       inputs.disko.nixosModules.disko
       baseRole
-      ./master/hardware.nix
-      ./master/disk.nix
-      ./master/wireguard.nix
-      ../../modules/flake-srv/harmonia.nix
+      ./orbit/hardware.nix
+      ./orbit/disk.nix
+      ./orbit/wireguard.nix
+      # ../../modules/flake-srv/harmonia.nix
       (import ../../libs/registries-gen.nix {
         inherit lib;
         runtime = "podman";

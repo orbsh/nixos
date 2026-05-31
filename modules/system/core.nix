@@ -7,5 +7,6 @@
     ./units/network.nix
     ./units/extra.nix
     ./units/container.nix
+    ./units/media.nix
   ];
 }

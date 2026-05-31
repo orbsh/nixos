@@ -1,6 +1,7 @@
 { pkgs, ... }: {
   imports = [
     ./units/cosmic.nix
+    ./units/greetd.nix
     ./units/input-method.nix
     ./units/fonts.nix
     ./units/eww.nix
