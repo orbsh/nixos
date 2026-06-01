@@ -30,6 +30,7 @@ in
     };
     Service = {
       Type = "forking";
+      WorkingDirectory = "%h/.config/eww";
       # 启动脚本：探测 Wayland Socket -> 启动 Daemon -> 打开窗口
       ExecStart = "${pkgs.bash}/bin/bash -c 'export PATH=${pkgs.coreutils}/bin:${pkgs.gawk}/bin:${pkgs.bash}/bin:${pkgs.iproute2}/bin:${pkgs.iw}/bin:${pkgs.gnugrep}/bin:${pkgs.procps}/bin:/run/wrappers/bin; for i in 1 2 3 4 5; do WAYLAND_DISPLAY=$(${pkgs.coreutils}/bin/ls /run/user/%U/wayland-* 2>/dev/null | ${pkgs.coreutils}/bin/head -n 1 | ${pkgs.findutils}/bin/xargs -r ${pkgs.coreutils}/bin/basename); if [ -n \"$WAYLAND_DISPLAY\" ]; then break; fi; sleep 0.2; done; if [ -z \"$WAYLAND_DISPLAY\" ]; then echo \"No WAYLAND_DISPLAY\"; exit 1; fi; export WAYLAND_DISPLAY; export XDG_RUNTIME_DIR=/run/user/%U; ${pkgs.eww}/bin/eww daemon && sleep 1 && ${pkgs.eww}/bin/eww open omni-tray'";
       Restart = "on-failure";
