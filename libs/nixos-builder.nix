@@ -39,6 +39,7 @@ let
 
   # ── 条件注入：仅当节点提供静态 IP 时配置 eth0 ──────
   networkModule = lib.optional (builtins.hasAttr "ip" nodeAttrs) {
+    networking.interfaces.eth0.useDHCP = false;
     networking.interfaces.eth0.ipv4.addresses = [{
       address = nodeAttrs.ip;
       prefixLength = 24;
