@@ -1,6 +1,7 @@
 export module workstation {
     export def switch [profile: string = 'orbit'] {
-        sudo nixos-rebuild switch --flake $".#workstations_($profile)"
+        $env.NIXOS_LABEL = (git log -1 --pretty=format:"%s" | sed 's/ /_/g')
+        sudo -E nixos-rebuild switch --flake $".#workstations_($profile)"
     }
 
     export def build [profile: string = 'orbit'] {
