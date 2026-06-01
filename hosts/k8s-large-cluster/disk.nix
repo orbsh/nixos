@@ -6,9 +6,9 @@
       content = {
         type = "gpt";
         partitions = {
-          boot = {
-            size = "2G";
-            content = { type = "filesystem"; format = "ext4"; mountpoint = "/boot"; };
+          bios_boot = {
+            size = "1M";
+            type = "EF02";
           };
           root = {
             size = "100%";

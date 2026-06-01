@@ -49,8 +49,9 @@
       ];
       fileSystems."/home/${user}/data" = {
         device = "/dev/vdb";
-        fsType = "ext4";
+        fsType = "xfs";
         options = [ "nofail" ];
+        autoFormat = true;
       };
     };
     worker-02 = {
@@ -62,8 +63,9 @@
       ];
       fileSystems."/home/${user}/data" = {
         device = "/dev/vdb";
-        fsType = "ext4";
+        fsType = "xfs";
         options = [ "nofail" ];
+        autoFormat = true;
       };
     };
   };
