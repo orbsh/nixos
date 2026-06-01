@@ -19,7 +19,6 @@ let
 
     # 核心系统预设 (所有节点默认加载)
     ../modules/system/core.nix
-    ../modules/system/units/vm.nix
 
     # Home Manager 集成
     homeManagerInput.nixosModules.home-manager
