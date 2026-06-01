@@ -102,7 +102,7 @@ let
               '';
             }] else []
           ) ++ (nodeAttrs.imports or []);
-      };
+      } // lib.removeAttrs nodeAttrs [ "hostname" "ip" "role" "imports" ];
 
     in
     builtins.mapAttrs buildNode clusterDef.nodes;
