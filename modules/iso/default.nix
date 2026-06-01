@@ -1,90 +1,122 @@
-{ lib, inputs, dataDir, self, user, ... }: {
+{ pkgs, lib, inputs, user, email, sshPublicKey, nushellSrc, nushellGitUrl, nushellLocalPath, ... }:
+
+let
+  # ── Nushell 配置（复制到 store，避免 symlink 导致 xorriso 报错） ─
+  nushellConfig = pkgs.runCommand "nushell-config" { } ''
+    cp -r ${nushellSrc} $out
+  '';
+in {
 
   imports = [
-    # ── ISO 专用模块 ─────────────────────────────────
-    ./cache.nix
+    # ── 最小 ISO 构建器（不依赖 installation-cd-minimal） ──
+    "${inputs.nixpkgs}/nixos/modules/installer/cd-dvd/iso-image.nix"
     inputs.disko.nixosModules.disko
     inputs.home-manager.nixosModules.home-manager
-    "${inputs.nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
 
-    # ── 通用基础模块 ─────────────────────────────────
-    ../common/sys.nix
-    ../common/base.nix
-    ../common/users.nix
-    ../common/network.nix
-    ../common/container.nix
-    ../common/extra.nix
+    # ── Nix 生态工具（nh, nixos-anywhere 等） ────
+    ../system/units/nix.nix
   ];
 
-  # ── Home Manager ──────────────────────────────────
-  # 提供用户级配置（如 Nushell）
+  # ── 基础 CLI 工具（复用 base.nix 的包列表） ────
+  environment.systemPackages = with pkgs; [
+    # ── 网络与传输 ──
+    git curl wget rsync socat netcat-openbsd minio-client
+    # ── 文件与系统工具 ──
+    util-linux jq tree file unzip fd ripgrep bind dust
+    # ── 终端与编辑器 ──
+    nushell delta zellij helix
+    # ── 磁盘与网络 ──
+    gptfdisk dosfstools xfsprogs e2fsprogs
+    iproute2 net-tools iputils netcat-openbsd openresolv
+  ];
+
+  # ── Home Manager（nushell + helix 配置） ────────
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
-    extraSpecialArgs = { inherit inputs dataDir self user; };
-    sharedModules = [
-      { home.enableNixpkgsReleaseCheck = false; }
-    ];
+    extraSpecialArgs = { inherit user email nushellGitUrl nushellLocalPath; };
     users.${user} = {
-      imports = [ ../home/shell.nix ../home/common.nix ];
+      imports = [
+        ../home/units/editors.nix
+        ../home/units/git.nix
+        ../home/units/common.nix
+      ];
+      home = {
+        username = "${user}";
+        homeDirectory = "/home/${user}";
+      };
+      programs.home-manager.enable = true;
+      home.enableNixpkgsReleaseCheck = false;
+
+      # ── Nushell 配置（store copy，避免 symlink 报错） ─
+      home.file.".config/nushell" = {
+        source = nushellConfig;
+        force = true;
+      };
+      programs.bash.enable = true;
+      programs.bash.bashrcExtra = ''
+        if [[ -t 0 && $- == *i* && -z "$NU_SHELL" ]] && command -v nu >/dev/null 2>&1; then
+          export NU_SHELL=1
+          nu --login
+          [ $? -eq 0 ] && exit
+        fi
+      '';
     };
   };
 
-  # ── ISO 镜像构建参数 ──────────────────────────────
-  isoImage.volumeID = "my-nixos-live";
-  image.fileName = "my-nixos-live.iso";
-  isoImage.squashfsCompression = "zstd -Xcompression-level 9";
-
-  # 尝试禁用 USB 混合启动以解除 ISO 尺寸限制（~2.5GB）
-  isoImage.makeUsbBootable = lib.mkForce false;
-
-  # ── 引导与文件系统 ────────────────────────────────
-  # 强制排除 ZFS（避免内核模块编译报错）
-  boot.supportedFilesystems = lib.mkForce [ "xfs" "btrfs" ];
-
-  # 覆盖 sys.nix 中的 bootloader timeout
-  boot.loader.timeout = lib.mkForce 10;
-
-  # ── 网络与服务 ────────────────────────────────────
-  networking.hostName = "my-nixos-live";
-  networking.useDHCP = false;
-  networking.usePredictableInterfaceNames = false;
-  networking.interfaces.eth0.useDHCP = true;
-
-  services.getty.autologinUser = lib.mkForce ${user};
-
-  # 局域网发现（avahi/mDNS）
-  services.avahi = {
+  # ── 引导：GRUB EFI + BIOS 双支持 ────────────────
+  boot.loader.grub = {
     enable = true;
-    nssmdns4 = true;
-    publish = {
-      enable = true;
-      addresses = true;
-      domain = true;
-      userServices = true;
-      workstation = true;
-    };
+    device = "nodev";
+    efiSupport = true;
+    efiInstallAsRemovable = true;
   };
 
-  # 启用 flakes 和 SSH 远程管理
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  # ── 内核 ────────────────────────────────────────
+  boot.kernelPackages = pkgs.linuxPackages_latest;
+
+  # ── ISO 构建参数 ────────────────────────────────
+  isoImage.volumeID = "NIXOS_AW";
+  image.fileName = "nixos-anywhere.iso";
+  isoImage.squashfsCompression = "zstd -Xcompression-level 22";
+  isoImage.makeUsbBootable = false;
+  isoImage.efiSplashImage = null;
+
+  # ── 文件系统 ────────────────────────────────────
+  boot.supportedFilesystems = [ "btrfs" "xfs" "vfat" "ntfs" ];
+
+  # ── 网络 ────────────────────────────────────────
+  networking.useDHCP = true;
+
+  # ── SSH：默认开启 + 内置公钥 ───────────────────
   services.openssh = {
     enable = true;
-    settings.PermitRootLogin = lib.mkForce "yes";
+    settings = {
+      PermitRootLogin = "yes";
+      PasswordAuthentication = false;
+    };
   };
 
-  # ── 临时存储与配置挂载 ────────────────────────────
-  # LiveCD 读写层（tmpfs）
+  # ── 用户 ────────────────────────────────────────
+  users.users.${user} = {
+    isNormalUser = true;
+    extraGroups = [ "wheel" ];
+    hashedPassword = "$y$j9T$LuChS39drFFK0G9w05zzW1$ni887.E/FpNqKVqlAimC5uAUrtcytrZwgHhw7280fN0";
+    openssh.authorizedKeys.keys = [ sshPublicKey ];
+  };
+
+  users.users.root.openssh.authorizedKeys.keys = [ sshPublicKey ];
+
+  # ── TTY 自动登录 ────────────────────────────────
+  services.getty.autologinUser = user;
+
+  # ── 临时存储 ────────────────────────────────────
   fileSystems."/nix/.rw-store" = {
     fsType = "tmpfs";
-    options = [ "mode=0755" "nosuid" "nodev" "relatime" "size=14G" ];
+    options = [ "mode=0755" "nosuid" "nodev" "relatime" "size=8G" ];
     neededForBoot = true;
   };
 
-  # 将当前 Flake 目录挂载到 ISO 的 /etc/nixcfg 方便调试
-  environment.etc.nixcfg.source = builtins.filterSource
-    (path: type:
-      let base = builtins.baseNameOf path; in
-      base != ".git" && type != "symlink" && !(lib.hasSuffix ".qcow2" path) && base != "secrets"
-    ) self;
+  # ── 系统版本 ────────────────────────────────────
+  system.stateVersion = "26.05";
 }

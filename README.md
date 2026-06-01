@@ -231,6 +231,34 @@ hosts/k8s-dev/default.nix
 
 ---
 
+### 6. ISO（nixos-anywhere 专用 Live 镜像）
+
+```n
+modules/iso/default.nix          ← ISO 入口（不依赖 installation-cd-minimal）
+  ├── iso-image.nix               ← NixOS 最小 ISO 构建器
+  ├── system/units/nix.nix        ← Nix 生态工具（nh, nixos-anywhere, cachix 等）
+  └── home/units/                 ← 用户配置（editors, git, common）
+        ├── editors.nix            ← Helix 主题 + LSP + 快捷键
+        ├── git.nix               ← Git 配置（用户名/邮箱）
+        └── common.nix            ← 通用用户配置
+```
+
+**设计原则**：
+- 不基于 `installation-cd-minimal.nix`，直接用 `iso-image.nix` 从零构建
+- 体积 **~781MB**（官方最小安装盘 ~1.5GB）
+- 无 GUI，纯 headless
+- SSH 默认开启 + 内置公钥 + root 可登录
+- nushell 配置通过 store copy 注入（避免 symlink 导致 xorriso 报错）
+
+**构建命令**：
+```bash
+nix build .#iso.config.system.build.isoImage
+```
+
+**产物**：`result/iso/nixos-*.iso`
+
+---
+
 ## 📁 目录结构
 
 ```
@@ -270,7 +298,9 @@ nixos/
     ├── podman/                   # Podman 相关模块
     ├── k8s/                      # Kubernetes 模块
     ├── flake-srv/                # Flake 服务器模块
-    └── iso/                      # Live ISO 配置
+    └── iso/                      # nixos-anywhere 专用 Live ISO（~781MB）
+          ├── default.nix          # ISO 入口（iso-image.nix + GRUB 引导）
+          └── (cache.nix 已删除)
 ```
 
 ---
@@ -278,6 +308,9 @@ nixos/
 ## 🔧 常用命令
 
 ```bash
+# 构建 nixos-anywhere 专用 ISO
+nix build .#iso.config.system.build.isoImage
+
 # 重建工作站
 sudo nixos-rebuild switch --flake .#workstations_orbit --impure
 
@@ -304,3 +337,4 @@ sudo nixos-rebuild switch --flake .#qemu --impure
 |------|--------|
 | `flake.nix` | `user = "master"` → 你的用户名 |
 | `flake.nix` | `email = "nash@iffy.me"` → 你的邮箱 |
+| `flake.nix` | `sshPublicKey` → 你的 SSH 公钥（全局唯一） |

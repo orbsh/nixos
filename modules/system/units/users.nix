@@ -1,4 +1,4 @@
-{ pkgs, user, ... }: {
+{ pkgs, user, sshPublicKey, ... }: {
   users.users.${user} = {
     isNormalUser = true;
     shell = pkgs.bash;
@@ -9,10 +9,7 @@
       "lp"
       "podman"
     ];
-    # SSH pubkey
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK2Q46WeaBZ9aBkS3TF2n9laj1spUkpux/zObmliHUOI"
-    ];
+    openssh.authorizedKeys.keys = [ sshPublicKey ];
   };
 
   # lp 组（打印机）

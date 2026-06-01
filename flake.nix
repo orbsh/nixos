@@ -36,13 +36,15 @@
     user = "master";
     email = "nash@iffy.me";
     dataDir = "/home/${user}/data";
+    sshPublicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK2Q46WeaBZ9aBkS3TF2n9laj1spUkpux/zObmliHUOI";
+
 
     # 修复变量名中的连字符（Nix 函数参数不支持连字符）
     homeManagerInput = home-manager;
 
     # ── 共享参数（注入 NixOS + Home Manager） ──────────
     commonArgs = {
-      inherit inputs dataDir user email;
+      inherit inputs dataDir user email sshPublicKey;
       nushellSrc = my-nushell-src.outPath;
       nushellGitUrl = "https://github.com/${my-nushell-src.owner}/${my-nushell-src.repo}.git";
       nushellLocalPath = "/home/${user}/Configuration/nushell";
@@ -83,5 +85,20 @@
     nixosConfigurations = builtins.foldl' (acc: domainName:
       acc // (processDomain domainName)
     ) {} domains;
+
+    # ── nixos-anywhere 专用 ISO ─────────────────────────────
+    # 构建命令：nix build .#iso.config.system.build.isoImage
+    iso = nixpkgs.lib.nixosSystem {
+      specialArgs = {
+        inherit inputs user email sshPublicKey;
+        nushellSrc = my-nushell-src.outPath;
+        nushellGitUrl = "https://github.com/${my-nushell-src.owner}/${my-nushell-src.repo}.git";
+        nushellLocalPath = "/home/${user}/Configuration/nushell";
+      };
+      modules = [
+        { nixpkgs.hostPlatform = "x86_64-linux"; }
+        ./modules/iso
+      ];
+    };
   };
 }
