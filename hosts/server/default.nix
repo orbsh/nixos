@@ -14,7 +14,7 @@ in {
       hardware/wireguard.nix
 
       # 角色预设
-      ../../modules/roles/server.nix  # 提取出的服务器角色基座
+      ../../modules/presets/server.nix  # 提取出的服务器基座
     ];
   };
 }

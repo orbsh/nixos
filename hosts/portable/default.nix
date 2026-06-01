@@ -7,7 +7,7 @@
       inputs.disko.nixosModules.disko
       ./existing-disk.nix
       ./hardware-configuration.nix
-      ../../modules/roles/portable.nix
+      ../../modules/presets/portable.nix
     ];
   };
 }

@@ -78,7 +78,7 @@ let
 
         # 动态模块列表
         imports =
-          [ ../../modules/roles/server.nix ] ++
+          [ ../../modules/presets/server.nix ] ++
           k8sRoleModules.${nodeAttrs.role} ++
           (clusterDef.clusterModules or []) ++
           [
