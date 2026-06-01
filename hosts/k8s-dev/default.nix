@@ -49,6 +49,16 @@ in {
         fsType = "btrfs";
         options = [ "compress=zstd" "subvol=@" ];
       };
+
+      # 允许特定密钥免密登录（格式：ssh-ed25519/ssh-rsa + 公钥 + 注释）
+      users.users.${user}.openssh.authorizedKeys.keys = [
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAzNo0nUZQcEZBIubufcp0cC2x56Giul8iif1iWDRySb ${user}@dx"
+      ];
+
+      # ── 节点特有 API Server SANs ─────────────────────────
+      # 已由 k8s-libs.nix 自动为第一个 control/combo 节点注入
+      # 如需额外 SAN，可在此追加：
+      services.kubernetes.apiserver.extraSANs = [ "10.6.6.2" ];
     };
   };
 }
