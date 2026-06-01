@@ -1,4 +1,4 @@
-{ pkgs, lib, inputs, user, email, sshPublicKey, nushellSrc, nushellGitUrl, nushellLocalPath, ... }:
+{ pkgs, lib, inputs, self, user, email, sshPublicKey, nushellSrc, nushellGitUrl, nushellLocalPath, ... }:
 
 let
   # ── Nushell 配置（复制到 store，避免 symlink 导致 xorriso 报错） ─
@@ -15,6 +15,17 @@ in {
 
     # ── Nix 生态工具（nh, nixos-anywhere 等） ────
     ../system/units/nix.nix
+
+    # ── 全局 overlay（自动扫描 overlay/ 目录下所有模块） ──
+    (let
+      overlayDir = ../overlay;
+      dirEntries = builtins.readDir overlayDir;
+      overlayFiles = builtins.filter (name:
+        dirEntries.${name} == "regular" && lib.hasSuffix ".nix" name
+      ) (builtins.attrNames dirEntries);
+    in {
+      nixpkgs.overlays = map (name: import (overlayDir + "/${name}")) overlayFiles;
+    })
   ];
 
   # ── 基础 CLI 工具（复用 base.nix 的包列表） ────

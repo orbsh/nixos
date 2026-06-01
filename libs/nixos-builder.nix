@@ -15,6 +15,18 @@ let
   # ── 基础模块栈 ───────────────────────────────────────
   baseModules = [
     { nixpkgs.hostPlatform = "x86_64-linux"; }
+
+    # ── 全局 overlay（自动扫描 overlay/ 目录下所有模块） ──
+    (let
+      overlayDir = ../modules/overlay;
+      dirEntries = builtins.readDir overlayDir;
+      overlayFiles = builtins.filter (name:
+        dirEntries.${name} == "regular" && lib.hasSuffix ".nix" name
+      ) (builtins.attrNames dirEntries);
+    in {
+      nixpkgs.overlays = map (name: import (overlayDir + "/${name}")) overlayFiles;
+    })
+
     commonArgs.inputs.disko.nixosModules.disko
 
     # 核心系统预设 (所有节点默认加载)

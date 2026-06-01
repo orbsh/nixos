@@ -24,13 +24,13 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    my-nushell-src = {
+    my-nushell-config = {
       url = "github:fj0r/nushell";
       flake = true;
     };
   };
 
-  outputs = { self, nixpkgs, nixos-anywhere, nix2container, disko, home-manager, my-nushell-src, ... }@inputs:
+  outputs = { self, nixpkgs, nixos-anywhere, nix2container, disko, home-manager, my-nushell-config, ... }@inputs:
   let
     # ── 统一变量定义 ─────────────────────────────────────
     user = "master";
@@ -45,9 +45,13 @@
     # ── 共享参数（注入 NixOS + Home Manager） ──────────
     commonArgs = {
       inherit inputs dataDir user email sshPublicKey;
-      nushellSrc = my-nushell-src.outPath;
-      nushellGitUrl = "https://github.com/${my-nushell-src.owner}/${my-nushell-src.repo}.git";
+      self = ./.;  # flake 根目录路径
+      nushellSrc = my-nushell-config.outPath;
+      nushellGitUrl = "https://github.com/${my-nushell-config.owner}/${my-nushell-config.repo}.git";
       nushellLocalPath = "/home/${user}/Configuration/nushell";
+
+      # ── overlay 目录路径（相对于 flake 根） ──
+      overlayDir = "./modules/overlay";
     };
 
     # ── 通用构建器 ─────────────────────────────────────
@@ -90,9 +94,9 @@
     # 构建命令：nix build .#iso.config.system.build.isoImage
     iso = nixpkgs.lib.nixosSystem {
       specialArgs = {
-        inherit inputs user email sshPublicKey;
-        nushellSrc = my-nushell-src.outPath;
-        nushellGitUrl = "https://github.com/${my-nushell-src.owner}/${my-nushell-src.repo}.git";
+        inherit inputs self user email sshPublicKey;
+        nushellSrc = my-nushell-config.outPath;
+        nushellGitUrl = "https://github.com/${my-nushell-config.owner}/${my-nushell-config.repo}.git";
         nushellLocalPath = "/home/${user}/Configuration/nushell";
       };
       modules = [

@@ -62,7 +62,7 @@
         "type": "github"
       }
     },
-    "my-nushell-src": {
+    "my-nushell-config": {
       "locked": {
         "lastModified": 1780121533,
         "narHash": "sha256-ZMNd7lUkPUWd9S4anYLtoj3G0R1a59VoBG6agkfdSI8=",
@@ -204,7 +204,7 @@
       "inputs": {
         "disko": "disko",
         "home-manager": "home-manager",
-        "my-nushell-src": "my-nushell-src",
+        "my-nushell-config": "my-nushell-config",
         "nix2container": "nix2container",
         "nixos-anywhere": "nixos-anywhere",
         "nixpkgs": "nixpkgs"
