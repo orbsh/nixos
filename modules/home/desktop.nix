@@ -15,9 +15,8 @@
     homeDirectory = "/home/${user}";
   };
 
-  # 工作站开发模式：符号链接 + git clone
-  # TODO: 安装完成后切换回 true
-  programs.nushell.developMode = true;
+  # nushell 配置通过 flake input 部署
+  programs.nushell.developMode = false;
 
   # 让 home-manager 自己管理自己
   programs.home-manager.enable = true;

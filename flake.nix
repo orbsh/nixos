@@ -66,7 +66,7 @@
         # 判断是否为集群模式 (包含 nodes 属性)
         nodes = if builtins.hasAttr "nodes" domainDef
           then k8sLib.expandCluster domainName domainDef
-          else domainDef;
+          else nixpkgs.lib.removeAttrs domainDef [ "imports" ];
       in
       # 统一映射构建，输出 key 为 domain_nodeName（域名=节点名时简化为单名）
       nixpkgs.lib.mapAttrs' (nodeName: nodeConfig:

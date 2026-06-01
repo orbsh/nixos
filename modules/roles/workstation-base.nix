@@ -17,6 +17,9 @@
     imports = [
       ../home/desktop.nix
     ];
+
+    # 工作站开发模式：符号链接 + git clone
+    programs.nushell.developMode = lib.mkForce true;
   };
 
   # 主机名应由具体节点定义，而非基座
