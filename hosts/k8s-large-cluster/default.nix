@@ -3,7 +3,7 @@
 # 控制节点：仅运行 API Server、Scheduler、Controller Manager、etcd
 #           不调度普通 Pod，保证控制平面稳定性
 # 工作节点：仅运行 kubelet + kube-proxy，负责实际 Pod 调度
-{ ... }:
+{ user, ... }:
 {
   # ── 集群级配置 ────────────────────────────────────────
   runtime = "containerd";  # 容器运行时：crio / containerd
@@ -18,25 +18,25 @@
       hostname = "ctrl-01";
       ip = "192.168.1.11";
       role = "control";
-      imports = [{
-        fileSystems."/" = { device = "/dev/vda2"; fsType = "ext4"; autoResize = true; };
-      }];
+      imports = [
+        ./disk.nix
+      ];
     };
     ctrl-02 = {
       hostname = "ctrl-02";
       ip = "192.168.1.12";
       role = "control";
-      imports = [{
-        fileSystems."/" = { device = "/dev/vda2"; fsType = "ext4"; autoResize = true; };
-      }];
+      imports = [
+        ./disk.nix
+      ];
     };
     ctrl-03 = {
       hostname = "ctrl-03";
       ip = "192.168.1.13";
       role = "control";
-      imports = [{
-        fileSystems."/" = { device = "/dev/vda2"; fsType = "ext4"; autoResize = true; };
-      }];
+      imports = [
+        ./disk.nix
+      ];
     };
 
     # ── 工作节点 ──────────────────────────────────────────
@@ -44,17 +44,27 @@
       hostname = "worker-01";
       ip = "192.168.1.21";
       role = "worker";
-      imports = [{
-        fileSystems."/" = { device = "/dev/vda2"; fsType = "ext4"; autoResize = true; };
-      }];
+      imports = [
+        ./disk.nix
+      ];
+      fileSystems."/home/${user}/data" = {
+        device = "/dev/vdb";
+        fsType = "ext4";
+        options = [ "nofail" ];
+      };
     };
     worker-02 = {
       hostname = "worker-02";
       ip = "192.168.1.22";
       role = "worker";
-      imports = [{
-        fileSystems."/" = { device = "/dev/vda2"; fsType = "ext4"; autoResize = true; };
-      }];
+      imports = [
+        ./disk.nix
+      ];
+      fileSystems."/home/${user}/data" = {
+        device = "/dev/vdb";
+        fsType = "ext4";
+        options = [ "nofail" ];
+      };
     };
   };
 }
