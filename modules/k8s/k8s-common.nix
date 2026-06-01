@@ -289,6 +289,7 @@
 
   # ── 关闭 swap（k8s 要求） ──────────────────────────────
   swapDevices = lib.mkForce [];
+  zramSwap.enable = lib.mkForce false;
 
   # ── CoreDNS 修复 ──────────────────────────────────────
   # 已由 k8s-addons.nix 统一管理（通过声明式 YAML patch）
