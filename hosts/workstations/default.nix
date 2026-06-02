@@ -18,6 +18,8 @@
       ./orbit/wireguard.nix
       ../../modules/flake-srv/harmonia.nix
       ../../modules/podman/full.nix
+      ./vivaldi.nix
+      ./wanxiang.nix
       (import ../../libs/registries-gen.nix {
         inherit lib;
         runtime = "podman";

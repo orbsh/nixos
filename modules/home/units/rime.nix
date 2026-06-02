@@ -4,13 +4,9 @@ let
   wubiSrc = "${dataDir}/rime-wubi";
   cfg = config.rime.wubi;
   octCfg = config.rime.octagram;
+  wanxiangCfg = config.rime.wanxiang;
 
-  # ── 万象八股文语法模型 (RIME-LMDG) ──
-  # 轻量版模型 (~200MB)，PC 端推荐使用
-  wanxiangModel = pkgs.fetchurl {
-    url = "https://github.com/amzxyz/RIME-LMDG/releases/download/LTS/wanxiang-lts-zh-hans.gram";
-    sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # 首次构建会报错提示正确 hash
-  };
+  wanxiangModel = wanxiangCfg.src;
 
   # Enumerate all rime-ice files and directories
   rimeIceFiles = [
@@ -44,6 +40,14 @@ in {
   options.rime.wubi.enable = lib.mkEnableOption "Rime 五笔输入支持";
 
   options.rime.octagram.enable = lib.mkEnableOption "Rime Octagram N-Gram 语言模型（提升长句预测准确度）";
+
+  options.rime.wanxiang = {
+    src = lib.mkOption {
+      type = lib.types.nullOr lib.types.path;
+      default = null;
+      description = "万象模型本地源路径（通过 `nix store add-file` 添加到 Nix store 后填入）。为空时不启用万象模型。";
+    };
+  };
 
   config = lib.mkMerge [
     {
@@ -211,7 +215,7 @@ in {
       xdg.dataFile."fcitx5/rime/pinyin_simp.schema.yaml".source = "${wubiSrc}/pinyin_simp.schema.yaml";
     })
 
-    (lib.mkIf octCfg.enable {
+    (lib.mkIf (octCfg.enable && wanxiangModel != null) {
       # ── 万象八股文语法模型 (RIME-LMDG) ──────
       # 模型文件 → ~/.local/share/fcitx5/rime/
       xdg.dataFile."fcitx5/rime/wanxiang-lts-zh-hans.gram".source = wanxiangModel;
