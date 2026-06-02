@@ -12,6 +12,7 @@
     ./units/hyprland.nix
     ./units/input-method.nix
     ./units/laptop.nix
+    ./units/rime.nix
     ./units/zed.nix
   ];
 

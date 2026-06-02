@@ -6,7 +6,6 @@
     ./units/terminals.nix
     ./units/git.nix
     ./units/xdg.nix
-    ./units/rime.nix
     ./units/eww.nix
   ];
 

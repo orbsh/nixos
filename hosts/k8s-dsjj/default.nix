@@ -8,6 +8,11 @@
   runtime = "containerd";  # 容器运行时：crio / containerd
   podCIDR = "10.1.0.0/16";  # 集群 Pod CIDR（需包含各节点 PodCIDR，如 10.1.1.0/24）
   adminEmail = "admin@example.com";  # 集群管理员邮箱
+  clusterModules = [
+      # users.users.${user}.openssh.authorizedKeys.keys = [
+      #   "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAzNo0nUZQcEZBIubufcp0cC2x56Giul8iif1iWDRySb ${user}@dx"
+      # ];
+  ];
 
   # ── 节点定义 ──────────────────────────────────────────
   nodes = {
