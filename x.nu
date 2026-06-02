@@ -25,7 +25,9 @@ export def check [] {
 }
 
 export def add-file [file: path] {
-    nix store add-file $file
+    let h = nix store add-file $file
+    let p = nix hash path $h
+    $'url = "file://($h)";(char newline)narHash = "($p)";'
 }
 
 export module mount {

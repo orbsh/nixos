@@ -1,6 +1,9 @@
-{ user, pkgs, ... }: {
+{ user, ... }: {
   home-manager.users.${user} = {
-    # 使用 fetchTree 引入本地大文件（保持纯评估，无需 git 提交）
+    # 启用八股文 N-Gram 语法模型
+    rime.octagram.enable = true;
+
+    # 万象模型（Nix 纯评估要求 fetchTree 必须提供 narHash）
     rime.wanxiang.src = (builtins.fetchTree {
       type = "file";
       url = "file:///nix/store/h1dwvavq0qxfr4rsfz4xvzqkdvcq3rif-wanxiang-lts-zh-hans.gram";

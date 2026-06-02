@@ -215,29 +215,61 @@ in {
       xdg.dataFile."fcitx5/rime/pinyin_simp.schema.yaml".source = "${wubiSrc}/pinyin_simp.schema.yaml";
     })
 
+    (lib.mkIf octCfg.enable (let
+      # ── 部署 octagram 插件 ──
+      # nixpkgs 的 librime-octagram 是纯源码包，需要单独编译
+      octagramPlugin = pkgs.stdenv.mkDerivation {
+        pname = "librime-octagram-plugin";
+        version = "0-unstable-2024-11-18";
+        src = pkgs.librime-octagram;
+        nativeBuildInputs = [ pkgs.cmake pkgs.pkg-config ];
+        buildInputs = [ pkgs.librime ];
+        cmakeFlags = [ "-DBUILD_TOOLS=OFF" ];
+        installPhase = ''
+          mkdir -p $out/lib
+          find . -name '*.so' -exec cp {} $out/lib/ \;
+        '';
+      };
+    in {
+      home.packages = [ octagramPlugin ];
+
+      # 将插件 .so 部署到 RIME 插件目录（fcitx5-rime 会自动扫描）
+      xdg.dataFile."fcitx5/rime/plugins/librime-octagram.so".source = "${octagramPlugin}/lib/librime-octagram.so";
+    }))
+
     (lib.mkIf (octCfg.enable && wanxiangModel != null) {
       # ── 万象八股文语法模型 (RIME-LMDG) ──────
       # 模型文件 → ~/.local/share/fcitx5/rime/
       xdg.dataFile."fcitx5/rime/wanxiang-lts-zh-hans.gram".source = wanxiangModel;
 
-      # grammar.yaml 配置文件
-      xdg.dataFile."fcitx5/rime/grammar.yaml".text = ''
-        grammar:
-          language: wanxiang-lts-zh-hans
-          binary_path: wanxiang-lts-zh-hans.gram
+      # octagram.yaml — 启用八股文插件并配置万象模型参数
+      xdg.dataFile."fcitx5/rime/octagram.yaml".text = ''
+        octagram:
+          __patch:
+            grammar:
+              language: wanxiang-lts-zh-hans
+              collocation_max_length: 8
+              collocation_min_length: 2
+              collocation_penalty: -15
+              non_collocation_penalty: -5
+              weak_collocation_penalty: -100
+              rear_penalty: -10
+            translator/contextual_suggestions: false
+            translator/max_homophones: 8
+            translator/max_homographs: 8
       '';
 
-      # 在雾凇拼音方案中激活语法模型
+      # 在雾凇拼音方案中激活八股文插件 + 上下文权重
       xdg.dataFile."fcitx5/rime/rime_ice.custom.yaml".text = ''
         patch:
-          __include: grammar:/grammar
+          __include: octagram:/octagram
           "translator/contextual_suggestions_weight": 1.0
       '';
 
-      # 在小鹤双拼方案中激活语法模型
+      # 在小鹤双拼方案中激活八股文插件 + 上下文权重
       xdg.dataFile."fcitx5/rime/double_pinyin_flypy.custom.yaml".text = ''
         patch:
-          __include: grammar:/grammar
+          __include: octagram:/octagram
           "translator/contextual_suggestions_weight": 1.0
       '';
     })
