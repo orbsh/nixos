@@ -3,7 +3,6 @@
   environment.systemPackages = with pkgs; [
     # 终端增强
     glow        # markdown 渲染
-    fzf         # 模糊搜索
 
     # 编辑器（访客/root 可用）
     neovim      # 通用编辑器，各机器均有

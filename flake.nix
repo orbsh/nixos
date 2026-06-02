@@ -2,6 +2,7 @@
   description = "My NixOS configuration";
 
   inputs = {
+    # 切换稳定版：github:NixOS/nixpkgs/nixos-25.05
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     nixos-anywhere = {
