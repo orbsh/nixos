@@ -9,9 +9,11 @@
   podCIDR = "10.1.0.0/16";  # 集群 Pod CIDR（需包含各节点 PodCIDR，如 10.1.1.0/24）
   adminEmail = "admin@example.com";  # 集群管理员邮箱
   clusterModules = [
-      # users.users.${user}.openssh.authorizedKeys.keys = [
-      #   "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAzNo0nUZQcEZBIubufcp0cC2x56Giul8iif1iWDRySb ${user}@dx"
-      # ];
+    ({ config, lib, ... }: {
+      users.users.${user}.openssh.authorizedKeys.keys = lib.mkAfter [
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPPGB9wiEgHoNPPgpn7IOliEJ20S1/gJnJ4AFlPZDjLC root@nscc"
+      ];
+    })
   ];
 
   # ── 节点定义 ──────────────────────────────────────────

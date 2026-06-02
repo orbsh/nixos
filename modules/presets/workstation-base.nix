@@ -11,9 +11,6 @@
     ../flake-srv/hermes-system.nix  # Hermes Agent: systemd 守护 + 全局 CLI 包裹
   ];
 
-  # ── 输入法 ──
-  rime.octagram.enable = true;
-
   # ── 用户环境配置 ──────────────────────────────────────
   home-manager.users.${user} = {
     imports = [
