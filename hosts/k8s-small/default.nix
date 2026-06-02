@@ -8,12 +8,19 @@
   runtime = "containerd";  # 容器运行时：crio / containerd
   podCIDR = "10.1.0.0/16";  # 集群 Pod CIDR（需包含各节点 PodCIDR，如 10.1.1.0/24）
   adminEmail = "admin@example.com";  # 集群管理员邮箱
+  clusterModules = [
+    ({ config, lib, ... }: {
+      users.users.${user}.openssh.authorizedKeys.keys = lib.mkAfter [
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPPGB9wiEgHoNPPgpn7IOliEJ20S1/gJnJ4AFlPZDjLC root@nscc"
+      ];
+    })
+  ];
 
   # ── 节点定义 ──────────────────────────────────────────
   nodes = {
     combo-01 = {
       hostname = "combo-01";
-      ip = "192.168.1.31";
+      ip = "10.0.0.2";
       role = "combo";
       imports = [
         ./disk.nix
@@ -27,7 +34,7 @@
     };
     worker-02 = {
       hostname = "worker-02";
-      ip = "192.168.1.32";
+      ip = "10.0.0.4";
       role = "worker";
       imports = [
         ./disk.nix
@@ -41,7 +48,7 @@
     };
     worker-03 = {
       hostname = "worker-03";
-      ip = "192.168.1.33";
+      ip = "10.0.0.5";
       role = "worker";
       imports = [
         ./disk.nix
