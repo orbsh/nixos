@@ -9,7 +9,7 @@
 
   # ── 代理镜像字典（prefix → location）─────────────────
   proxyRegistries = {
-    "registry.k8s.io" = "registry.aliyuncs.com/google_containers";
+    # "registry.k8s.io" = "registry.aliyuncs.com/google_containers";
     "docker.io" = "docker.lizzie.fun";
     "ghcr.io" = "ghcr.lizzie.fun";
   };
