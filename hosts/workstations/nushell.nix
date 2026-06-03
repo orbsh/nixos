@@ -1,5 +1,7 @@
 { ... }: {
-  nushell.musl.url = "https://github.com/nushell/nushell/releases/download/0.113.0/nu-0.113.0-x86_64-unknown-linux-musl.tar.gz";
-  nushell.musl.sha256 = "sha256-bpTuADU2fEcbNNraV6c15V9WE9l6w/pYwO8kHyKhLt4=";
-  nushell.musl.version = "0.113.0";
+  nushell.musl.src = (builtins.fetchTree {
+    type = "file";
+    url = "file:///nix/store/r6g6xi851mybdvvga4xycvgnjmrbkcq9-nu-0.113.1-x86_64-unknown-linux-musl.tar.gz";
+    narHash = "sha256-aW4E8DRKhCQqQI+LJxnAlJwscVmYqKlnIKcIgX0bkMc=";
+  }).outPath;
 }

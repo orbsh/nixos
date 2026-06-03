@@ -24,12 +24,6 @@ export def check [] {
     sudo nix flake check
 }
 
-export def add-file [file: path] {
-    let h = nix store add-file $file
-    let p = nix hash path $h
-    $'url = "file://($h)";(char newline)narHash = "($p)";'
-}
-
 export module mount {
     export def btrfs [
         --root(-r): string = "/dev/disk/by-uuid/3f9631a2-51ab-448a-9ac2-3b475fde7458"
@@ -96,6 +90,16 @@ export module utils {
         | decode hex
         | encode base64
         | $"sha256-($in)"
+    }
+
+    export def sha256 [file: path] {
+        cat $file | hash sha256 | decode hex | encode base64
+    }
+
+    export def add-file [file: path] {
+        let h = nix store add-file $file
+        let p = nix hash path $h
+        $'url = "file://($h)";(char newline)narHash = "($p)";'
     }
 }
 

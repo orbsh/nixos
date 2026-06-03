@@ -20,7 +20,7 @@
       ../../modules/podman/full.nix
       ./vivaldi.nix
       ./wanxiang.nix
-      # ./nushell.nix
+      ./nushell.nix
       (import ../../libs/registries-gen.nix {
         inherit lib;
         runtime = "podman";

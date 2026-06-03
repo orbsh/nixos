@@ -2,38 +2,26 @@
 
 {
   options.nushell.musl = {
-    url = lib.mkOption {
-      type = lib.types.nullOr lib.types.str;
+    src = lib.mkOption {
+      type = lib.types.nullOr lib.types.path;
       default = null;
-      description = "Nushell 官方 musl 二进制下载 URL。设置后启用 overlay 替换 nixpkgs 版本。";
-    };
-
-    sha256 = lib.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      default = null;
-      description = "Nushell musl 二进制 sha256 校验。";
-    };
-
-    version = lib.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      default = null;
-      description = "Nushell 版本号。";
+      description = "Nushell musl 二进制文件路径。设置后启用 overlay 替换 nixpkgs 版本。";
     };
   };
 
   config = let
     cfg = config.nushell.musl;
   in {
-    nixpkgs.overlays = lib.optional (cfg.url != null && cfg.sha256 != null)
+    nixpkgs.overlays = lib.optional (cfg.src != null)
       (final: prev: {
         nushell = prev.stdenv.mkDerivation {
           pname = "nushell";
-          inherit (cfg) version;
+          version = "0.0.0";
 
-          src = prev.fetchurl {
-            url = cfg.url;
-            sha256 = cfg.sha256;
-          };
+          src = prev.runCommand "nu.tar.gz" {}
+            ''
+              ln -s ${cfg.src} $out
+            '';
 
           installPhase = ''
             mkdir -p $out/bin
