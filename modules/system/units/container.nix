@@ -14,6 +14,11 @@
   };
 
 
+  # ── containers.conf ───────────────────────────────────
+  virtualisation.containers.containersConf.settings = {
+    engine.multi_image_archive = true;
+  };
+
   # Podman storage 配置（系统级多用户共享路径，与 Containerd 隔离避免锁冲突）
   environment.etc."containers/storage.conf".text = lib.mkForce ''
     [storage]
