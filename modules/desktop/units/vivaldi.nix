@@ -3,22 +3,33 @@
 {
   options.desktop.vivaldi = {
     src = lib.mkOption {
-      type = lib.types.nullOr lib.types.path;
+      type = lib.types.nullOr (lib.types.submodule {
+        options = {
+          url = lib.mkOption { type = lib.types.str; };
+          narHash = lib.mkOption { type = lib.types.str; };
+        };
+      });
       default = null;
-      description = "Vivaldi 安装包源路径（通过 `nix store add-file` 添加后填入）。非空时覆盖 nixpkgs 默认版本。";
+      description = "Vivaldi 安装包来源（指定 url 和 narHash）。非空时覆盖 nixpkgs 默认版本。";
     };
   };
 
   config = let
     cfg = config.desktop.vivaldi;
+    srcPath = if cfg.src != null
+      then (builtins.fetchTree {
+        type = "file";
+        inherit (cfg.src) url narHash;
+      }).outPath
+      else null;
   in {
     # ── Vivaldi Overlay：修复 COSMIC 200% 缩放下界面放大 ──
     nixpkgs.overlays = [
       (final: prev: let
         vivaldiBase =
-          if cfg.src != null
+          if srcPath != null
           then prev.vivaldi.overrideAttrs (old: {
-            src = cfg.src;
+            src = srcPath;
           })
           else prev.vivaldi;
       in {

@@ -3,16 +3,27 @@
 {
   options.nushell.musl = {
     src = lib.mkOption {
-      type = lib.types.nullOr lib.types.path;
+      type = lib.types.nullOr (lib.types.submodule {
+        options = {
+          url = lib.mkOption { type = lib.types.str; };
+          narHash = lib.mkOption { type = lib.types.str; };
+        };
+      });
       default = null;
-      description = "Nushell musl 二进制文件路径。设置后启用 overlay 替换 nixpkgs 版本。";
+      description = "Nushell musl 二进制文件来源（指定 url 和 narHash）。设置后启用 overlay 替换 nixpkgs 版本。";
     };
   };
 
   config = let
     cfg = config.nushell.musl;
+    srcPath = if cfg.src != null
+      then (builtins.fetchTree {
+        type = "file";
+        inherit (cfg.src) url narHash;
+      }).outPath
+      else null;
   in {
-    nixpkgs.overlays = lib.optional (cfg.src != null)
+    nixpkgs.overlays = lib.optional (srcPath != null)
       (final: prev: {
         nushell = prev.stdenv.mkDerivation {
           pname = "nushell";
@@ -20,7 +31,7 @@
 
           src = prev.runCommand "nu.tar.gz" {}
             ''
-              ln -s ${cfg.src} $out
+              ln -s ${srcPath} $out
             '';
 
           installPhase = ''

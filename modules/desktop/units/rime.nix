@@ -6,7 +6,14 @@ let
   octCfg = config.rime.octagram;
   wanxiangCfg = config.rime.wanxiang;
 
-  wanxiangModel = wanxiangCfg.src;
+  wanxiangSrcPath = if wanxiangCfg.src != null then
+    (builtins.fetchTree {
+      type = "file";
+      inherit (wanxiangCfg.src) url narHash;
+    }).outPath
+  else null;
+
+  wanxiangModel = wanxiangSrcPath;
 
   # Enumerate all rime-ice files and directories
   rimeIceFiles = [
@@ -43,9 +50,14 @@ in {
 
   options.rime.wanxiang = {
     src = lib.mkOption {
-      type = lib.types.nullOr lib.types.path;
+      type = lib.types.nullOr (lib.types.submodule {
+        options = {
+          url = lib.mkOption { type = lib.types.str; };
+          narHash = lib.mkOption { type = lib.types.str; };
+        };
+      });
       default = null;
-      description = "万象模型本地源路径（通过 `nix store add-file` 添加到 Nix store 后填入）。为空时不启用万象模型。";
+      description = "万象模型来源（指定 url 和 narHash）。为空时不启用万象模型。";
     };
   };
 
