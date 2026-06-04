@@ -4,10 +4,13 @@ metadata:
   name: kube-flannel-cfg
   namespace: kube-flannel
 data:
+  # MTU 计算: 物理网卡 1500 - VXLAN 头 50 - WireGuard 头 80 - 余量 150 = 1220
+  # 放在顶层（非 Backend 内），flannel v0.28 仅识别此位置
   net-conf.json: |
     {
       "Network": "@POD_CIDR@",
       "EnableNFTables": false,
+      "MTU": 1220,
       "Backend": {
         "Type": "vxlan"
       }

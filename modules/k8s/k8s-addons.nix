@@ -12,11 +12,9 @@ let
   assets = ./assets;
 
   # ── 构建时下载 Flannel manifest ────────────────────────────
+  # 本地管理，避免构建时依赖网络（使用 assets/ 目录下的静态文件）
   flannelVersion = "0.28.4";
-  flannelManifest = pkgs.fetchurl {
-    url = "https://github.com/flannel-io/flannel/releases/download/v${flannelVersion}/kube-flannel.yml";
-    hash = "sha256-0HgBl0PF4BlM6WUSX8gO8ArwwWYeyeEjljEfHP7IYKI=";
-  };
+  flannelManifest = ./assets/flannel-v0.28.4.yml;
 
   # ── metrics-server（纯静态清单） ──────────────────────────
   metricsServerPatched = "${assets}/metrics-server.yaml";

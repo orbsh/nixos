@@ -8,60 +8,51 @@
   assets = ./assets;
 
   # Gateway API CRD 文件 (experimental)
-  gatewayApiCrdFile = pkgs.fetchurl {
-    url = "https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.5.0/experimental-install.yaml";
-    hash = "sha256-98x9MJp62dMWk4NBBG7YHEDnh9gILwsoHfOSYomnpEU=";
-  };
+  gatewayApiCrdFile = ./assets/gateway-api-experimental.yaml;
 
-  # Envoy Gateway 安装文件 (v1.8.0)
-    # 首次使用需运行: nix-prefetch-url https://github.com/envoyproxy/gateway/releases/download/v1.8.0/install.yaml
-    envoyGatewayRawFile = pkgs.fetchurl {
-      url = "https://github.com/envoyproxy/gateway/releases/download/v1.8.0/install.yaml";
-      hash = "sha256-nKa3I+6idxzYBuWuQ3K6lBsVjgIFM1UBc2qkyIavckg=";
-    };
+  # Envoy Gateway 安装文件 (v1.8.0) — 本地管理，避免构建时下载
+  envoyGatewayRawFile = ./assets/envoy-gateway-v1.8.0.yaml;
 
-    # 过滤掉 Gateway API CRD（已由 deploy-gateway-api-crds-eg 部署），避免版本冲突
-    envoyGatewayInstallFile = pkgs.runCommand "envoy-gateway-filtered.yaml" {
-      src = envoyGatewayRawFile;
-    }
-    ''
-      # 使用 yq-go 过滤掉 Gateway API CRD（group 为 gateway.networking.k8s.io）
-      ${pkgs.yq-go}/bin/yq eval-all '
-        select(
-          .kind != "CustomResourceDefinition" or
-          .spec.group != "gateway.networking.k8s.io"
-        )
-      ' $src > $out
-    '';
+  # 过滤掉 Gateway API CRD（已由 deploy-gateway-api-crds-eg 部署），避免版本冲突
+  envoyGatewayInstallFile = pkgs.runCommand "envoy-gateway-filtered.yaml" {
+    src = envoyGatewayRawFile;
+  }
+  ''
+    # 使用 yq-go 过滤掉 Gateway API CRD（group 为 gateway.networking.k8s.io）
+    ${pkgs.yq-go}/bin/yq eval-all '
+      select(
+        .kind != "CustomResourceDefinition" or
+        .spec.group != "gateway.networking.k8s.io"
+      )
+    ' $src > $out
+  '';
 
   # Kubernetes Reflector manifest for cross-namespace Secret sync
-  # Adds a metrics Service
-  reflectorManifest = pkgs.runCommand "reflector-patched.yaml" {
-    raw = pkgs.fetchurl {
-      url = "https://github.com/emberstack/kubernetes-reflector/releases/latest/download/reflector.yaml";
-      hash = "sha256-SwcNk/ovfQqiS7pqHrIi+DndcFSulYQI2i+wqPvZ8R0=";
-    };
-  } ''
-    cp $raw $out
-    cat >> $out << 'EOF'
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: reflector-metrics
-  namespace: kube-system
-  labels:
-    app.kubernetes.io/name: reflector
-spec:
-  ports:
-    - name: metrics
-      port: 8080
-      targetPort: http
-      protocol: TCP
-  selector:
-    app.kubernetes.io/name: reflector
-EOF
-  '';
+  # Adds a metrics Service (uses locally managed YAML to avoid runtime fetch)
+  reflectorManifest = pkgs.writeTextFile {
+    name = "reflector-patched.yaml";
+    text =
+      builtins.readFile "${./assets}/reflector.yaml"
+      + ''
+        ---
+        apiVersion: v1
+        kind: Service
+        metadata:
+          name: reflector-metrics
+          namespace: kube-system
+          labels:
+            app.kubernetes.io/name: reflector
+        spec:
+          selector:
+            app.kubernetes.io/name: reflector
+          ports:
+            - port: 8080
+              targetPort: http
+              protocol: TCP
+              name: http
+          type: ClusterIP
+      '';
+  };
 
   # Generate YAML snippet for certificateRefs from option
   certRefsYaml = ''

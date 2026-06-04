@@ -14,11 +14,8 @@
       (builtins.readFile "${assets}/cleanup-istio.sh")
   );
 
-  # Gateway API CRD 文件（experimental 通道，包含 TCPRoute/UDPRoute/GRPCRoute）
-  gatewayApiCrdFile = pkgs.fetchurl {
-    url = "https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.1/experimental-install.yaml";
-    hash = "sha256-VTMn4P8yoaK+RGv5OCPIQTz5JTrGptVAfuvR6NJp9p4=";
-  };
+  # Gateway API CRD 文件（experimental 通道，包含 TCPRoute/UDPRoute/GRPCRoute）— 本地管理避免构建时下载
+  gatewayApiCrdFile = ./assets/gateway-api-experimental-v1.4.1.yaml;
 
   # Gateway 资源清单 (web + ssh/tcp + udp)
   gatewayManifest = "${assets}/istio-gateways.yaml";
