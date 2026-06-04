@@ -33,6 +33,12 @@
     description = "Auto-sync certificates from master node before kubelet starts (for worker/secondary nodes)";
   };
 
+  options.services.kubernetes.useEasyCerts = lib.mkOption {
+    type = lib.types.bool;
+    default = true;
+    description = "Use NixOS easyCerts for automatic certificate generation (disable for external CA)";
+  };
+
   options.services.kubernetes.isCertServer = lib.mkOption {
     type = lib.types.bool;
     default = false;
@@ -61,9 +67,8 @@
   };
 
   # ── 自动证书管理 + Flannel + Proxy ─────────────────────
-  # roles 非空时会自动启用 easyCerts、flannel、proxy
-  # 此处显式启用以确保
-  services.kubernetes.easyCerts = true;
+  # easyCerts 由 useEasyCerts 选项控制（默认启用）
+  services.kubernetes.easyCerts = config.services.kubernetes.useEasyCerts;
 
   # ── 证书同步：Master 节点通过 socat 提供证书流 ─────────
   # 使用 fork 支持多节点并发请求，零状态，不依赖 HTTP/SSH
@@ -129,82 +134,6 @@
         exit 1
       fi
     '';
-  };
-
-  # ── K8s 证书自动续期 ──────────────────────────────────
-  # 每周检测证书有效期，到期前 30 天自动 rebuild
-  # 注意：服务器上必须有 flake 配置才能自动续期
-  systemd.services.renew-k8s-certs = {
-    description = "Auto-renew Kubernetes certificates before expiration";
-    serviceConfig.Type = "oneshot";
-    script = ''
-      set -euo pipefail
-
-      SECRETS_DIR="/var/lib/kubernetes/secrets"
-      THRESHOLD_DAYS=30
-      CONFIG_DIR="/home/${user}/nixos"
-
-      # 检查是否存在证书目录
-      [ -d "$SECRETS_DIR" ] || exit 0
-
-      # 查找所有 .pem 证书并检查过期时间
-      EXPIRING=false
-      for cert in "$SECRETS_DIR"/*.pem; do
-        [ -f "$cert" ] || continue
-        enddate=$(openssl x509 -enddate -noout -in "$cert" 2>/dev/null | cut -d= -f2) || continue
-        [ -z "$enddate" ] && continue
-        end_epoch=$(date -d "$enddate" +%s 2>/dev/null) || continue
-        now_epoch=$(date +%s)
-        days_left=$(( (end_epoch - now_epoch) / 86400 ))
-        if [ "$days_left" -lt "$THRESHOLD_DAYS" ] && [ "$days_left" -ge 0 ]; then
-          echo "Certificate $(basename "$cert") expires in $days_left days ($enddate)"
-          EXPIRING=true
-        fi
-      done
-
-      # 没有即将过期的证书，直接退出
-      if [ "$EXPIRING" = false ]; then
-        echo "All certificates are valid for more than $THRESHOLD_DAYS days"
-        exit 0
-      fi
-
-      # 有证书即将过期，执行 rebuild
-      echo "Certificates expiring soon, running nixos-rebuild..."
-      if [ ! -d "$CONFIG_DIR" ]; then
-        echo "ERROR: NixOS config not found at $CONFIG_DIR. Manual rebuild required."
-        logger -t k8s-certs "ERROR: Auto-renew failed - config not found at $CONFIG_DIR"
-        exit 1
-      fi
-
-      # 加超时防止 nix build 卡死（600秒 = 10分钟）
-      if ! timeout 600 nix --extra-experimental-features 'nix-command flakes' build \
-        "$CONFIG_DIR#nixosConfigurations.dev__dxserver.config.system.build.toplevel" \
-        --no-link; then
-        echo "ERROR: nix build failed or timed out"
-        logger -t k8s-certs "ERROR: nix build failed or timed out"
-        exit 1
-      fi
-
-      # 加超时防止 switch 卡死（300秒 = 5分钟）
-      if ! timeout 300 /run/current-system/bin/switch-to-configuration switch; then
-        echo "ERROR: switch-to-configuration failed or timed out"
-        logger -t k8s-certs "ERROR: switch-to-configuration failed or timed out"
-        exit 1
-      fi
-
-      logger -t k8s-certs "Certificates renewed and applied successfully"
-      echo "Certificates renewed and applied successfully"
-    '';
-  };
-
-  systemd.timers.renew-k8s-certs = {
-    description = "Timer for K8s certificate auto-renewal";
-    wantedBy = [ "timers.target" ];
-    timerConfig = {
-      OnCalendar = "weekly";
-      RandomizedDelaySec = "6h";
-      Persistent = true;
-    };
   };
 
   # ── API Server SANs（通用地址） ────────────────────────
