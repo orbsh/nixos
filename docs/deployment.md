@@ -1,55 +1,96 @@
-# NixOS 部署与迁移指南
+# NixOS 部署指南
 
-本文档为 NixOS 安装、升级与迁移的统一指南，涵盖**服务器**、**工作站**、**K8s 集群**、**远程部署**以及**从第三方系统迁移**等所有场景。
-
----
-
-## 📋 迁移方案选型
-
-从现有系统迁移到 NixOS 时，有两种主要方案：
-
-| 维度 | In-place 升级 (NIXOS_LUSTRATE) | NixOS Anywhere |
-|:---|:---|:---|
-| **保留数据能力** | ⭐⭐⭐⭐⭐ **极强**。直接保留当前根分区指定目录。 | ⭐⭐ **较弱**。通常伴随格式化风险。 |
-| **自动化程度** | ⭐⭐ 需手动执行安装命令和配置。 | ⭐⭐⭐⭐⭐ **极高**。一键远程部署。 |
-| **适用场景** | 现有系统（如 Arch）平滑迁移至 NixOS，数据敏感。 | 全新服务器构建，批量部署，或不在乎数据清空。 |
-
-**结论**：
-- **In-place 升级 (NIXOS_LUSTRATE)**：核心优势是**保留当前根分区数据**。通过 `/etc/NIXOS_LUSTRATE` 机制，重启时自动将旧系统文件移入 `/old-root`，保留指定目录（如 `/home`）原位。**这是单分区系统（如 Arch Linux）原地迁移到 NixOS 的最稳妥方案**。
-- **NixOS Anywhere**：核心优势是**自动化和全新环境构建**。通过 SSH 远程配合 disko 进行全量分区和格式化，适合全新部署或不在乎数据清空的服务器初始化场景。
+本文档说明 NixOS 安装的原理与具体操作。关于项目的 host 结构与配置架构，参见 [README](../README.md)。
 
 ---
 
-## 一、通用安装流程
+## 核心原理
 
-无论目标机器是服务器还是工作站，无论采用何种安装介质，核心步骤均遵循以下流程：
+NixOS 安装的本质是**将声明式配置转化为可启动系统**：
 
 ```
-准备安装环境 → 克隆配置仓库 → 确认目标磁盘 → 分区与挂载 → 生成硬件配置 → 同步配置文件 → 执行安装 → 设置密码 → 重启
+flake.nix (声明) → nixos-install (求值+构建) → /mnt (可启动系统)
 ```
 
-### 1. 准备安装环境
+关键区别：
+- **传统 Linux**：安装器执行命令序列，状态不可复现
+- **NixOS**：安装器求值 flake 输出，构建完整系统闭包，状态由配置决定
 
-有三种方式可以获取 NixOS 安装工具链：
+因此，"安装"只需做一次。之后的所有变更都是 `nixos-rebuild switch`，原理与安装完全一致。
 
-| 方式 | 适用情况 | 说明 |
+---
+
+## 阶段一：准备安装环境
+
+需要获取包含 `nixos-install` 的运行环境。三种方式：
+
+| 方式 | 适用场景 | 特点 |
 |------|----------|------|
-| **官方 ISO** | 快速体验/标准安装 | 从 [NixOS 官网](https://nixos.org/download/) 下载 ISO，放入 Ventoy U 盘启动 |
-| **Portable 自定义 ISO（推荐）** | 包含完整工具链与离线缓存 | 使用 `nix build .#portable` 构建便携系统盘，支持本地优先安装 |
-| **从非 NixOS 系统安装** | 宿主机已有 Linux 且不想制作 U 盘 | 在宿主机安装 Nix 包管理器后获取安装工具 |
+| **自定义 ISO** | 推荐，批量部署 | `nix build .#iso`，体积 ~781MB，包含离线缓存 |
+| **官方 ISO** | 快速体验 | 从 nixos.org 下载，需联网下载所有包 |
+| **宿主机 + nix** | 从现有 Linux 迁移 | 安装 Nix 后进入安装环境 |
 
-> **Ventoy 使用方式：** 只需将 Ventoy 安装到 U 盘一次，之后直接将 ISO 文件拷贝到 U 盘中即可启动，无需重复写入。
-
-### 2. 克隆配置仓库
+### 构建自定义 ISO
 
 ```bash
-git clone <你的仓库地址> ~/nixos-config
-cd ~/nixos-config
+nix build .#iso.config.system.build.isoImage
+# 产物：result/iso/nixos-*.iso
 ```
 
-> 若使用官方 ISO 或 Live 环境，配置目录可能已自动挂载；Portable 系统则需要手动克隆。
+将 ISO 写入 Ventoy U 盘即可启动。
 
-### 3. 确认目标磁盘
+### 从宿主机安装 Nix
+
+如果从现有 Linux（如 Arch）迁移，无需制作 U 盘：
+
+```bash
+# 安装 Nix（daemon 模式）
+sh <(curl -L https://nixos.org/nix/install) --daemon
+source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+
+# 进入安装环境
+nix --experimental-features "nix-command flakes" shell nixpkgs#nixos-install-tools
+```
+
+终端提示符变化后，即可使用 `nixos-install`。
+
+### 离线缓存机制
+
+自定义 ISO 预构建的包存储在 `/nix/store` 中。安装时通过 substituters 配置优先使用本地缓存：
+
+```bash
+# 本地优先，缺失时回退网络
+sudo nixos-install --root /mnt --flake .#<host> \
+  --option substituters "file:///nix/store https://cache.nixos.org"
+```
+
+| 参数 | 说明 |
+|------|------|
+| 无 | 默认从 cache.nixos.org 下载 |
+| `--option substitute false` | 纯离线，缺失则报错 |
+| `--option substituters "file:///nix/store ..."` | 本地优先，回退网络 |
+
+验证缓存是否生效：
+- 看到 `copying path '/nix/store/...'` → 从本地复制
+- 看到 `downloading from 'https://...'` → 网络下载
+
+---
+
+## 阶段二：磁盘规划
+
+### disko 原理
+
+[disko](https://github.com/nix-community/disko) 将分区声明转化为可执行脚本：
+
+```
+disk.nix (声明) → disko 工具 → 分区 + 格式化 + 挂载到 /mnt
+```
+
+关键模式：
+- `--mode disko`：执行分区和格式化（全新安装，**会清空磁盘**）
+- `--mode mount`：仅挂载已有分区（保留数据）
+
+### 确认目标磁盘
 
 ```bash
 lsblk -f
@@ -57,91 +98,202 @@ lsblk -f
 
 常见设备名：
 - `/dev/nvme0n1` — 内置 NVMe 固态硬盘
-- `/dev/sda`     — SATA 硬盘
-- `/dev/sdb`     — 你的 USB 系统盘（**请勿选错！**）
+- `/dev/sda` — SATA 硬盘
+- `/dev/sdb` — USB 系统盘（**请勿选错！**）
 
-请根据容量确认目标硬盘，下文以 `/dev/nvme0n1` 为例。
+根据容量确认目标硬盘。下文以 `/dev/nvme0n1` 为例。
 
-### 4. 分区与挂载
+**⚠️ disk.nix 中的 device 必须指向整块磁盘，而非分区**：
 
-根据是否可清空磁盘，选择以下两种方案之一：
+```nix
+# ✅ 正确：指向整块磁盘
+device = "/dev/nvme0n1";
+device = "/dev/disk/by-id/nvme-Samsung_970_EVO_XXX";
 
-#### 方案 A：使用 disko 分区（全新安装，会清空磁盘）
-
-本项目已集成 [disko](https://github.com/nix-community/disko)，可一键完成分区、格式化和挂载。
-
-```bash
-# 格式化并自动挂载到 /mnt
-sudo nix run github:nix-community/disko -- --mode disko ./hosts/<目标主机>/disk.nix
+# ❌ 错误：指向分区（disko 会失败）
+device = "/dev/nvme0n1p1";  # 分区而非磁盘
+device = "/dev/sda1";        # 分区而非磁盘
 ```
 
-> **💡 提示：安装中断后恢复**
-> 若已分好区但安装中途暂停，下次继续时无需重新格式化，改用 `mount` 模式仅挂载：
-> ```bash
-> sudo nix run github:nix-community/disko -- --mode mount ./hosts/<目标主机>/disk.nix
-> ```
+确认设备类型：
+```bash
+# 查看设备是否为磁盘（TYPE=disk）而非分区（TYPE=part）
+lsblk -d -o name,type | grep nvme0n1
+# 输出：nvme0n1 disk
 
-#### 方案 B：保留现有分区（使用 disko）
+# 或使用 by-id 路径（推荐，更稳定）
+ls -l /dev/disk/by-id/ | select name target
+```
 
-适用于已有数据和独立分区的场景。通过配置 disko 的 `noFormat`（或新版本 `_create = false`）选项，disko 将仅挂载现有分区而不会格式化数据。
+### 全新安装（清空磁盘）
 
-1. 确保 `./hosts/<目标主机>/disk.nix` 配置正确（匹配现有分区结构且不破坏数据）。
-2. 执行挂载：
-   ```bash
-   sudo nix run github:nix-community/disko -- --mode mount ./hosts/<目标主机>/disk.nix
-   ```
+```bash
+# 已安装到系统中，直接使用
+sudo disko --mode disko ./hosts/<host>/disk.nix
+```
 
-### 5. 生成硬件配置
+> **说明**：`disko` 已预装到系统（`modules/system/units/nix.nix`），无需 `nix run` 下载。
+
+disk.nix 定义完整的分区布局：
+- ESP 分区（vfat, 挂载到 `/boot`）
+- 根分区（文件系统类型、子卷结构）
+- 交换空间（可选）
+
+### 保留数据分区
+
+1. 确保 `disk.nix` 中目标分区设置 `noFormat = true` 或 `_create = false`
+2. 使用 `--mode mount` 仅挂载：
+
+```bash
+sudo disko --mode mount ./hosts/<host>/disk.nix
+```
+
+**关键点**：disk.nix 是幂等的声明，但 `--mode disko` 执行时会格式化：
+- 全新安装：用 `--mode disko`
+- 保留数据：用 `--mode mount`，或确保 disk.nix 已配置 `noFormat`
+
+### 安装中断后恢复
+
+若已分好区但安装中途暂停，无需重新格式化：
+
+```bash
+sudo disko --mode mount ./hosts/<host>/disk.nix
+```
+
+---
+
+## 阶段三：配置生成
+
+### hardware-configuration.nix 的作用
+
+此文件记录**当前硬件的实际状态**，由 `nixos-generate-config` 自动生成：
+
+```
+/mnt 下的挂载点 → 扫描 UUID → hardware-configuration.nix
+```
+
+生成的内容包括：
+- 文件系统 UUID（从 `/mnt` 下的挂载点扫描）
+- 内核模块（检测到的硬件驱动）
+- 交换设备
+
+**重要**：
+- 此文件是**硬件快照**，不应手动编辑
+- 更换硬件后必须重新生成
+- 生成后需覆盖到对应的 host 目录
+
+### 生成硬件配置
 
 ```bash
 nixos-generate-config --root /mnt
 ```
 
-该命令会自动扫描 `/mnt` 下的分区 UUID 并生成 `hardware-configuration.nix`，记录当前系统的文件系统 UUID 和内核模块。
+该命令会在 `/mnt/etc/nixos/` 下生成：
+- `configuration.nix` — 基础配置模板
+- `hardware-configuration.nix` — 硬件配置
 
-请将生成的内容覆盖到对应主机的配置文件中（如 `hosts/server/hardware-configuration.nix` 或 `hosts/workstation/hardware-configuration.nix`）。
+**⚠️ 与 disko 的冲突**：
 
-### 6. 同步配置文件
+`nixos-generate-config` 会扫描 `/mnt` 生成 `fileSystems` 定义，但 `disk.nix` (disko) 已经声明了同样的挂载点，导致重复定义。
 
-```bash
-# 将整个配置目录复制到 /mnt/etc/nixos
-sudo cp -r /path/to/this/repo/Configuration/nixos/* /mnt/etc/nixos/
+**解决方案**：编辑生成的 `hardware-configuration.nix`，删除 `fileSystems` 和 `swapDevices` 部分（保留内核模块等其他内容）：
+
+```nix
+# 删除这些（disko 已处理）：
+fileSystems."/" = { ... };
+fileSystems."/boot" = { ... };
+swapDevices = [ ... ];
+
+# 保留这些：
+boot.initrd.availableKernelModules = [ ... ];
+boot.kernelModules = [ ... ];
 ```
 
-> 若已在配置仓库目录下操作，可直接 `sudo cp -r ./* /mnt/etc/nixos/`。
-
-### 7. 执行安装（含离线缓存选项）
-
-Portable ISO 通过 `cache.nix` 预置了大量包，安装时可优先使用本地缓存，避免重复下载。
-
-| 模式 | 命令参数 | 说明 |
-|---|---|---|
-| **纯离线** | `--option substitute false` | 仅使用本地 `/nix/store` 中的包，缺失则报错 |
-| **本地优先** | `--option substituters "file:///nix/store https://cache.nixos.org"` | 本地缺失时自动回退网络下载 |
-| **默认** | 无额外参数 | 直接联网下载（可能重复拉取已有包） |
-
-> **⚠️ 注意**：`--no-substitute` 参数在较新版本中已废弃，请使用 `--option substitute false` 替代。
+**将生成的内容覆盖到 host 目录**：
 
 ```bash
-# 示例：本地优先 + 国内镜像兜底
-sudo nixos-install --root /mnt --flake /mnt/etc/nixos#workstation \
-  --option substituters "file:///nix/store https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store https://cache.nixos.org" \
+# 示例：覆盖到 server 的配置
+sudo cp /mnt/etc/nixos/hardware-configuration.nix ./hosts/server/
+```
+
+每个 host 的 `hardware-configuration.nix` 必须匹配该主机的实际硬件。
+
+### 同步配置文件（可选）
+
+`nixos-install` 支持直接从本地路径读取 flake，无需复制：
+
+```bash
+sudo nixos-install --root /mnt --flake .#<host>
+```
+
+> **注意**：如果从 Live CD 或其他环境安装，配置目录不在当前路径，则需要先复制：
+> ```bash
+> sudo cp -r ./* /mnt/etc/nixos/
+> sudo nixos-install --root /mnt --flake /mnt/etc/nixos#<host>
+> ```
+
+---
+
+## 阶段四：执行安装
+
+### nixos-install 原理
+
+```
+nixos-install --root /mnt --flake .#<host>
+```
+
+执行流程：
+1. **求值 flake**：读取当前目录的 flake.nix，找到 `nixosConfigurations.<host>`
+2. **构建系统闭包**：根据配置生成所有需要的 Nix 包
+3. **安装到 /mnt**：将闭包写入 `/mnt/nix/store`，生成 `/mnt/etc`、`/mnt/run` 等
+4. **安装引导器**：根据 `boot.loader` 配置安装 systemd-boot 或 GRUB
+
+### 执行安装命令
+
+```bash
+# 使用本地缓存 + 网络兜底
+sudo nixos-install --root /mnt --flake .#<host> \
+  --option substituters "file:///nix/store https://cache.nixos.org" \
   --option trusted-public-keys "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
 ```
 
-> **💡 提示：sudo 路径**
-> NixOS 中 `sudo` 的实际路径为 `/run/wrappers/bin/sudo`。若环境中直接输入 `sudo` 提示 `command not found`，请使用完整路径或执行 `export PATH="/run/wrappers/bin:$PATH"`。
+**参数说明**：
+- `--root /mnt`：安装目标目录
+- `--flake /mnt/etc/nixos#<host>`：指定 flake 位置和 host 名称
+- `--option substituters`：缓存源列表（本地优先）
+- `--option trusted-public-keys`：缓存签名公钥
 
-### 8. 设置密码 & 重启
+### 设置密码
+
+**NixOS 密码机制：配置优先**
+
+每次 `nixos-rebuild switch` 后，配置中定义的密码会覆盖手动设置的密码。手动设置只在以下场景有用：
+- 首次安装后、首次 rebuild 前需要登录
+- 配置中完全没有密码/SSH 密钥设置
+
+如果配置中已设置 SSH 公钥或密码，可以跳过此步骤。
+
+如果配置中未设置任何认证方式，安装后需要手动设置：
 
 ```bash
+# 进入安装的系统
+sudo nixos-enter --root /mnt
+
 # 设置用户密码
-sudo nixos-enter --root /mnt --command "passwd master"
+passwd <username>
 
-# 或设置 root 密码（如未配置 SSH 公钥登录）
-sudo passwd
+# 或设置 root 密码（服务器场景）
+passwd
 
-# 卸载并重启
+# 退出
+exit
+```
+
+> **建议**：在配置中设置 SSH 公钥（推荐）或密码，避免安装后手动操作。参见 `modules/system/units/users.nix`。
+
+### 卸载并重启
+
+```bash
 sudo umount -R /mnt
 reboot
 ```
@@ -150,570 +302,139 @@ reboot
 
 ---
 
-## 二、场景特定安装
+## 迁移方案
 
-### 2.1 服务器安装 (Server)
+从现有系统迁移到 NixOS 时，根据数据保留需求选择：
 
-服务器通常采用声明式磁盘配置，安装时指定 `#server` flake：
+| 方案 | 数据保留 | 自动化 | 适用场景 |
+|------|----------|--------|----------|
+| **NIXOS_LUSTRATE** | 强，保留指定目录 | 低，需手动执行 | 单分区系统，数据敏感 |
+| **NixOS Anywhere** | 弱，通常格式化 | 高，一键远程 | 全新服务器，可清空数据 |
 
-```bash
-# 1. 应用 disko 分区（会清空磁盘）
-sudo nix run github:nix-community/disko -- --mode disko ./hosts/server/disk.nix
+### NIXOS_LUSTRATE：原地迁移
 
-# 2. 生成硬件配置
-nixos-generate-config --root /mnt
-# 将生成内容覆盖到 hosts/server/hardware-configuration.nix
+**原理**：在现有系统中安装 Nix，构建 NixOS 系统到 `/nix/store`，然后设置 `/etc/NIXOS_LUSTRATE` 白名单。重启时：
 
-# 3. 同步配置并安装
-sudo cp -r ./Configuration/nixos/* /mnt/etc/nixos/
-sudo nixos-install --root /mnt --flake /mnt/etc/nixos#server
+1. NixOS 内核启动，检测 LUSTRATE 标志
+2. 白名单外的目录（`/usr`、`/var` 等）移到 `/old-root/`
+3. 白名单内的目录（如 `/home`）保留原位
+4. `/nix` 目录作为新系统核心
 
-# 4. 设置密码 & 重启
-sudo nixos-enter --root /mnt --command "passwd master"
-sudo umount -R /mnt
-reboot
-```
+**适用前提**：单分区系统，或 `/home` 与根分区在同一文件系统。
 
-> 服务器主机现作为 K8s 节点使用（支持 control/worker/combo 角色），Nomad 模块已废弃并移除。
-
----
-
-### 2.2 工作站安装 (Workstation)
-
-工作站提供两种安装方式，根据是否有独立数据分区选择：
-
-#### 方式 A：保留现有分区（推荐）
-
-适用于已有分区和数据的工作站。
-
-1. **挂载分区**：参考 [方案 B](#方案-b保留现有分区使用-disko)，使用 disko 仅挂载模式：
-   ```bash
-   sudo nix run github:nix-community/disko -- --mode mount ./hosts/workstation/disk.nix
-   ```
-2. **生成硬件配置**：
-   ```bash
-   nixos-generate-config --root /mnt
-   # 将生成内容覆盖到 hosts/workstation/hardware-configuration.nix
-   ```
-3. **安装**：后续步骤同通用流程（安装、设置密码等）。
-
-#### 方式 B：全新安装（清空磁盘）
+**操作步骤**：
 
 ```bash
-sudo nix run github:nix-community/disko -- --mode disko ./hosts/workstation/disk.nix
-# 后续步骤同通用流程第 5~8 步，安装目标使用 #workstation
-```
-
-#### 桌面环境说明
-
-工作站默认配置了 **COSMIC Desktop Environment** 及相关工具链：
-
-| 类别 | 内容 |
-|------|------|
-| **桌面环境** | COSMIC DE (System76 新一代桌面) |
-| **输入法** | fcitx5 + 中文支持 |
-| **字体** | Noto Sans CJK、Source Han Sans 等 |
-| **核心应用** | Ghostty 终端、Zed 编辑器、浏览器、媒体播放器 |
-| **开发工具** | Rust、Haskell、Bun、Python、WASM、C/C++ 工具链 |
-| **通讯工具** | 微信 (wechat-uos) |
-| **办公套件** | WPS Office、Zathura PDF 阅读器 |
-
-COSMIC 桌面启动后即可使用，所有开发工具已随系统安装，无需额外配置。
-
-#### Home Manager 配置
-
-用户级配置（dotfiles、GUI 应用设置）通过 Home Manager 管理，位于 `modules/home/workstation/`。主要模块包括：
-- `shell.nix` — Nushell 配置
-- `editors.nix` — Helix/Neovim/Zed 配置
-- `terminals.nix` — Ghostty + Zellij 配置
-- `git.nix` — Git + lazygit + delta 配置
-- `xdg.nix` — XDG 目录关联
-
-更新 Home Manager 配置：
-```bash
-sudo nixos-rebuild switch --flake .#workstation
-```
-
----
-
-### 2.3 K8s 集群部署
-
-#### 架构：集群级配置 + 数据驱动
-
-所有 K8s 节点通过 `config/nodes/` 下的集群文件定义，每个集群文件返回 `{ runtime; nodes; }` 结构：
-- `runtime` - 集群级容器运行时（`crio` 或 `containerd`），该集群所有节点共享
-- `nodes` - 节点定义 attrset，每个节点包含 `hostname`、`ip`、`role`、`imports`
-
-```nix
-# config/nodes/large-cluster.nix
-{
-  runtime = "containerd";
-  nodes = {
-    k8s-ctrl-01 = { hostname = "k8s-ctrl-01"; ip = "192.168.1.11"; role = "control"; imports = []; };
-    k8s-ctrl-02 = { hostname = "k8s-ctrl-02"; ip = "192.168.1.12"; role = "control"; imports = []; };
-    k8s-worker-01 = { hostname = "k8s-worker-01"; ip = "192.168.1.21"; role = "worker"; imports = []; };
-  };
-}
-```
-
-> `masterIP` 由 `flake.nix` **自动注入**：首个 control 节点作为 master，其余节点自动指向它。
-
-`flake.nix` 自动展平所有集群并添加集群前缀，生成 `集群__节点` 格式的节点名，避免跨集群同名冲突。
-
-**新增机器只需在对应集群文件中加一行**，无需修改 flake 结构。
-
-#### 节点角色
-
-| 角色 | 说明 | 适用场景 |
-|------|------|----------|
-| `control` | 控制平面（apiserver + etcd + scheduler） | 控制节点 |
-| `worker` | 工作节点（kubelet + kube-proxy） | 工作节点 |
-| `combo` | 控制+工作合一 | 小集群/省资源 |
-
-#### 部署命令
-
-```bash
-# 部署组合节点（小集群）
-sudo nixos-rebuild switch --flake .#smallCluster__k8s-combo-01 --target-host root@192.168.1.31
-
-# 部署控制节点（大集群）
-sudo nixos-rebuild switch --flake .#largeCluster__k8s-ctrl-01 --target-host root@192.168.1.11
-
-# 部署开发服务器
-sudo nixos-rebuild switch --flake .#dev__dxserver --target-host root@172.178.5.123
-```
-
-> 节点名格式：`集群__节点`（双下划线分隔），例如 `smallCluster__k8s-combo-01`、`dev__dxserver`。
-
-#### 运行时选择
-
-运行时是**集群级配置**，同一集群的所有节点必须使用相同的容器运行时：
-- `crio` — CRI-O + podman（支持 `podman load` 导入镜像）
-- `containerd` — Containerd + nerdctl（podman 被禁用）
-
-在集群文件中修改 `runtime` 字段即可切换。
-
-#### 初始化集群
-
-NixOS 的 `services.kubernetes.roles` 模块**自动处理** kubeadm init 和 join：
-- 首个控制节点部署时，自动执行 `kubeadm init`
-- 其他控制节点/工作节点部署时，自动执行 `kubeadm join`
-
-#### 获取 kubeconfig
-
-部署完成后，使用 `scripts/inline-kubeconfig.nu` 生成 kubeconfig（自动读取系统证书，生成内联 base64 配置）：
-
-```bash
-# 在控制节点上生成 kubeconfig
-nu scripts/inline-kubeconfig.nu "https://<控制节点IP>:6443" | save ~/.kube/config
-
-# 或本地访问（默认 127.0.0.1:6443）
-nu scripts/inline-kubeconfig.nu | save ~/.kube/config
-
-# 验证
-kubectl get nodes
-```
-
-#### 实际使用提示
-
-1. **修改 IP/角色**：编辑 `config/nodes/<集群>.nix`，修改 IP 或调整角色
-2. **修改磁盘**：取消注释模板中的 `hardware-configuration.nix` 和 `disk.nix`（安装后生成）
-3. **新增集群**：在 `config/nodes/` 下新建文件，并在 `config/nodes.nix` 的 `clusters` 中添加引用
-
----
-
-### 2.4 NixOS Anywhere 远程部署
-
-NixOS Anywhere 允许你通过 SSH 将运行中的 Linux 系统（无论是否为 NixOS）替换为 NixOS。
-
-#### 场景 A：服务器全新安装（推荐，全量格式化）
-
-适用于新服务器或可以清空数据的机器。此方案最彻底、最自动化。
-
-1. **准备 disko 配置**：在 flake 中定义磁盘分区，使用 `disko` 工具自动格式化。
-2. **执行部署**：
-   ```bash
-   nix run github:nix-community/nixos-anywhere -- --flake .#your-host root@<IP>
-   ```
-
-#### 场景 B：现有系统迁移（保留数据分区）
-
-适用于已有数据（如 `/home`, `/var`）且**有独立分区**的服务器。
-
-⚠️ **风险警告**：默认情况下 NixOS Anywhere 会清空磁盘。要保留数据，必须在 `disko` 配置中**排除**数据分区，或仅对系统分区进行操作。
-
-1. **配置策略**：
-   * 在 `disko` 中**仅定义系统分区**（如 `/` 和 `/boot`）。
-   * 在 `configuration.nix` 中通过 `fileSystems` 挂载现有的数据分区（不要通过 disko 格式化它们）。
-   * **务必确认** `disko` 配置中没有包含数据分区的 `format` 操作。
-2. **执行部署**：同场景 A。
-
----
-
-### 2.5 从第三方 Linux 系统安装
-
-适用于在没有 NixOS 官方安装介质的情况下，直接从其他 Linux 发行版（Ubuntu、Arch、Debian 等）安装 NixOS。
-
-> 此流程仅在宿主机中提供安装所需的工具，**不会**修改当前宿主机的系统配置。实际的 NixOS 系统将被安装到你指定的目标硬盘（通常挂载在 `/mnt`）。
-
-#### 步骤 1：安装 Nix 包管理器
-
-```bash
-sh <(curl -L https://nixos.org/nix/install) --daemon
-source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
-```
-
-#### 步骤 2：进入 NixOS 安装环境
-
-```bash
-nix --experimental-features "nix-command flakes" shell nixpkgs#nixos-install-tools
-```
-
-> 执行该命令后，终端提示符可能发生变化，表示已进入包含 `nixos-install` 等命令的 Shell 环境。如果提示找不到 `nixpkgs`，请使用完整路径：
-> ```bash
-> nix --experimental-features "nix-command flakes" shell github:NixOS/nixpkgs/nixos-unstable#nixos-install-tools
-> ```
-
-#### 步骤 3：分区与安装
-
-进入安装环境后，后续操作与**通用安装流程**完全一致（克隆配置 → 分区 → 生成硬件配置 → 同步配置 → 安装 → 重启）。
-
-安装完成后，退出当前 Shell，卸载目标分区并重启：
-```bash
-exit  # 退出 nix shell
-sudo umount -R /mnt
-sudo reboot
-```
-
----
-
-### 2.6 从 Arch Linux 原地迁移（LUSTRATE 方案）
-
-> **适用前提**：你目前使用的是 Arch Linux，希望通过"保留数据、原地转换"的方式迁移到 NixOS。
-> **核心思路**：在 Arch 中安装 Nix → 借用 Nix 构建出 NixOS 系统文件 → 创建引导标志位 → 重启。重启后，系统会自动将 Arch 的旧文件移入 `/old-root`，而指定的数据目录将保留在原位。
-
-#### 步骤 1：备份（生死攸关）
-虽然此方案较为稳妥，但涉及引导扇区和文件系统变动。
-*   **务必备份** `.config`、数据库、重要个人文件等到外部存储。
-*   确保磁盘有 **20%-30% 的剩余空间**（用于同时容纳新旧系统文件）。
-
-#### 步骤 2：在 Arch 中安装 Nix
-我们需要利用 Nix 的工具来生成 NixOS 系统结构。
-
-```bash
-# 1. 安装 Nix 环境
-sudo pacman -S nix
-
-# 2. 启动服务
+# 1. 在现有系统（如 Arch）中安装 Nix
+sudo pacman -S nix  # 或其他发行版的包管理器
 sudo systemctl enable --now nix-daemon
 
-# 3. 将自己加入 nix 用户组（需重新登录生效）
-sudo usermod -aG nix-users $(whoami)
-```
-
-#### 步骤 3：准备 NixOS 配置文件
-创建配置文件。注意保持 UID 一致（Arch 和 NixOS 默认通常都是 1000）。
-
-```bash
-# 生成硬件配置（会参考当前的 /etc/fstab）
+# 2. 准备 NixOS 配置
 sudo mkdir -p /etc/nixos
 nixos-generate-config --root /
-```
+# 编辑 /etc/nixos/configuration.nix，配置用户、引导、显卡等
 
-编辑 `/etc/nixos/configuration.nix`，重点关注以下部分：
+# 3. 构建 NixOS 系统（不会立即破坏现有系统）
+sudo nixos-install --root / --no-root-passwd
 
-```nix
-{ config, pkgs, ... }: {
-  imports = [ ./hardware-configuration.nix ];
+# 4. 设置 LUSTRATE 标志
+sudo touch /etc/NIXOS
 
-  # 引导配置（根据你的实际情况选择）
-  # 如果是 UEFI:
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiBoot = true;
-
-  # 如果是 BIOS (GRUB):
-  # boot.loader.grub.enable = true;
-  # boot.loader.grub.device = "/dev/sda";
-
-  # 必须包含你现在的用户，确保 UID 一致！
-  users.users."你的用户名" = {
-    isNormalUser = true;
-    extraGroups = [ "wheel" ];
-    uid = 1000;
-  };
-
-  # 显卡驱动（如果是 NVIDIA，务必在此配置，否则重启可能无法进入桌面）
-  # hardware.opengl.enable = true;
-  # services.xserver.videoDrivers = [ "nvidia" ];
-
-  # 磁盘加密 (LUKS) - 如有需要
-  # boot.initrd.luks.devices.root = { ... };
-
-  system.stateVersion = "26.05";
-}
-```
-
-#### 步骤 4：构建并安装系统
-这一步会将 NixOS 的系统组件下载并构建到 `/nix/store`，但**不会**立即破坏你的 Arch 系统。
-
-```bash
-# 添加 NixOS 频道 (可选，视你的配置依赖而定)
-sudo nix-channel --add https://nixos.org nixos
-sudo nix-channel --update
-
-# 执行安装
-# --no-root-passwd 防止交互式报错，重启后配置密码或密钥
-sudo $(nix-build '<nixpkgs/nixos>' -A config.system.build.nixos-install --no-out-link)/bin/nixos-install --root / --no-root-passwd
-```
-
-#### 步骤 5：设置 LUSTRATE 标志（数据保留的关键）
-这是最关键的一步，告诉 NixOS 哪些 Arch 的文件夹**不要**移走。
-
-1.  **标记系统**：
-    ```bash
-    sudo touch /etc/NIXOS
-    ```
-
-2.  **设置白名单**：创建 `/etc/NIXOS_LUSTRATE` 文件。
-    *   内容是你希望保留的**目录名**（**不要**加前缀 `/`）。
-
-    ```bash
-    sudo bash -c 'cat > /etc/NIXOS_LUSTRATE <<EOF
+# 5. 设置白名单（保留的目录名，不要加前缀 /）
+sudo bash -c 'cat > /etc/NIXOS_LUSTRATE <<EOF
 home
 root
 opt
 srv
 EOF'
-    ```
-    *   *提示：如果你有 `/data` 或 `/downloads` 等数据目录，也请加入列表。*
 
-#### 步骤 6：重启与验证
-执行 `sudo reboot`。
+# 6. 重启
+sudo reboot
+```
 
-**启动后发生了什么？**
-1.  NixOS 内核启动，检测到 `/etc/NIXOS_LUSTRATE`。
-2.  **未列入名单**的目录（如 `/usr`, `/var`, `/bin`, `/etc` 的旧内容）会被移动到 **`/old-root/`** 目录下"养老"。
-3.  **列入名单**的目录（如 `/home`）保留原位，数据完好无损。
-4.  `/nix` 目录作为新系统核心被保留。
+**避坑指南**：
+- **磁盘加密 (LUKS)**：务必在配置中正确配置，否则重启后找不到根分区
+- **NVIDIA 显卡**：驱动没配置对，重启后可能进不去图形界面
+- **空间检查**：新旧系统共存期间需要 20-30% 剩余空间
 
-进入系统后，你可以检查 `/home` 下的数据是否都在，并在确认无误后，手动清理 `/old-root`（如需要）。
+### NixOS Anywhere：远程部署
 
-#### ⚠️ LUSTRATE 方案避坑指南
+**原理**：通过 SSH 连接目标机器，使用 disko 分区格式化，然后远程执行 `nixos-install`。
 
-1.  **磁盘加密 (LUKS)**：如果 Arch 使用了加密盘，务必在 `configuration.nix` 中正确配置，否则重启后找不到根分区。
-2.  **独立 Home 分区**：如果你原本就有独立的 `/home` 分区，其实更简单——在 NixOS 安装配置中挂载该分区且不格式化即可，无需使用 `LUSTRATE`。
-3.  **NVIDIA 显卡**：单分区环境通常共用 `/boot` 或内核模块，如果驱动没在配置里写对，重启后可能进不去图形界面。
-4.  **空间检查**：再次提醒，新旧系统共存期间需要大量空间。
+**操作步骤**：
+
+```bash
+# 在本地执行
+nix run github:nix-community/nixos-anywhere -- --flake .#<host> root@<ip>
+```
+
+**适用前提**：
+- 目标机器已运行 Linux，可通过 SSH 访问
+- 可接受数据清空（或数据在独立分区且 disk.nix 已配置保留）
+
+**保留数据的配置策略**：
+- 在 `disk.nix` 中**仅定义系统分区**（如 `/` 和 `/boot`）
+- 在 `configuration.nix` 中通过 `fileSystems` 挂载现有的数据分区
+- **务必确认** disk.nix 中没有包含数据分区的 `format` 操作
 
 ---
 
-### 2.7 独立 vfat + XFS 分区：无损搬家与还原方案
+## 常见问题
 
-> **适用前提**：系统使用 **独立 vfat 引导分区** + **XFS 根分区** 的布局。希望在安装 NixOS 前将 Arch Linux 所有文件物理隔离，安装失败时可 **2 分钟完整回滚**。
-> **核心思路**：将 vfat 中的 `EFI` 目录重命名保护 → 将根分区所有 Arch 目录移入 `.arch_bak` 隐藏目录 → 根分区变空后执行 `nixos-install`（不格式化）。若 NixOS 失败，反向操作即可恢复 Arch 至原样。
+### Q: 安装后无法启动
 
-#### 第一阶段：搬家（安装 NixOS 前执行）
+检查：
+1. BIOS/UEFI 启动顺序是否正确
+2. ESP 分区是否挂载到 `/boot`
+3. 从安装介质启动，重新运行 `nixos-install`（会修复引导器）
 
-从移动硬盘引导进入 NixOS 环境（普通用户 `$`）：
+### Q: dirty tree 错误
 
-```bash
-# 1. 挂载 XFS 根分区和 vfat 引导分区
-#    用 lsblk 确认实际设备号，例如 nvme0n1p2 和 nvme0n1p1
-sudo mount /dev/nvme0n1p1 /mnt
-sudo mount /dev/nvme0n1p2 /mnt/boot
-
-# 2. 保护引导：将 vfat 分区内的 EFI 目录改名，随后立即解挂载
-sudo mv /mnt/boot/EFI /mnt/boot/EFI.arch
-sudo umount /mnt/boot
-
-# 3. 创建隐藏备份目录，将 Arch 核心目录移入（包含 /home）
-cd /mnt
-sudo mkdir .arch_bak
-sudo mv -v bin etc home lib lib64 opt root sbin usr var .arch_bak/
-```
-
-此时 `/mnt` 根目录已干净（仅剩 `.arch_bak` 和空 `boot` 目录）。现在可以重新挂载 vfat 到 `/mnt/boot`，然后执行 `nixos-install`，**切记不要格式化**。
+`flake.cc:37: Assertion failed` 通常因为 Git 有未提交更改，导致 narHash 不匹配：
 
 ```bash
-sudo mount /dev/nvme0n1p2 /mnt/boot
-# 执行 nixos-install ...
-```
-
-#### 第二阶段：还原（NixOS 失败，一键回滚 Arch）
-
-如果 NixOS 安装失败或中断，执行以下步骤即可完整恢复 Arch Linux：
-
-```bash
-# 1. 将 NixOS 写入的半成品文件打包移走，避免与 Arch 冲突
-cd /mnt
-sudo mkdir nixos_trash
-sudo mv nix etc usr var root nixos_trash/ 2>/dev/null
-
-# 2. 将隐藏目录中的 Arch 核心目录精准移回原位
-cd /mnt/.arch_bak
-sudo mv bin etc home lib lib64 opt root sbin usr var ../
-cd /mnt && sudo rmdir .arch_bak
-
-# 3. 挂载 vfat 引导分区，将引导目录名字恢复
-sudo mount /dev/nvme0n1p1 /mnt/boot
-sudo mv /mnt/boot/EFI.arch /mnt/boot/EFI
-sudo umount /mnt/boot
-```
-
-重启并拔掉移动硬盘，Arch Linux 连同所有用户配置、`/home` 数据和引导完整如初。
-
-#### ⚠️ 方案对比：LUSTRATE vs 搬家还原
-
-| 维度 | LUSTRATE 方案 | 搬家还原方案 |
-|:---|:---|:---|
-| **数据安全性** | ⭐⭐⭐⭐ 依赖 `/etc/NIXOS_LUSTRATE` 白名单 | ⭐⭐⭐⭐⭐ 物理隔离，.arch_bak 隐藏目录 |
-| **回滚速度** | ⭐⭐ 需手动从 `/old-root` 恢复 | ⭐⭐⭐⭐⭐ 2 分钟完整回滚 |
-| **空间要求** | ⭐⭐ 新旧系统共存，需 20-30% 余量 | ⭐⭐⭐⭐⭐ Arch 文件移出后空间释放 |
-| **适用场景** | 单分区系统，想保留 /home | vfat + XFS 多分区，要求绝对安全 |
-| **引导保护** | ⭐⭐⭐ 由 NixOS 接管引导 | ⭐⭐⭐⭐⭐ EFI 目录改名保护，不会被覆盖 |
-
-**建议**：如果你的分区布局符合（独立 vfat boot + XFS root），优先使用搬家还原方案——它在物理层面隔离了旧系统，回滚代价最低。
-
----
-
-## 三、通用注意事项
-
-### 3.1 密码设置风险 (`--no-root-passwd`)
-* 使用 `nixos-install` 或 `nixos-anywhere` 时，如果添加了 `--no-root-passwd` 参数，Root 密码将为空。
-* 如果你没有配置 SSH 公钥登录，重启后将**无法登录系统**。请务必确保配置中包含你的 SSH 公钥，或者在配置中设置了初始密码。
-
-### 3.2 占位符替换
-
-使用前请修改以下占位符：
-
-| 文件 | 占位符 | 说明 |
-|------|--------|------|
-| `modules/system/users.nix` | `ssh-ed25519 AAAA...` | 替换为你的 SSH 公钥 |
-| `modules/home/git.nix` | `you@example.com` | 替换为你的 Git 邮箱 |
-| `hosts/*/hardware-configuration.nix` | UUID 占位符 | 替换为实际磁盘 UUID |
-
-### 3.3 硬件配置与分区
-
-| 文件 | 用途 | 适用场景 |
-|------|------|----------|
-| `disk.nix` | 声明式磁盘分区（执行时会格式化） | 服务器 / 虚拟机 / 全新安装 |
-| `hardware-configuration.nix` | 记录当前分区 UUID、挂载点、内核模块 | 所有主机 |
-
-- `hardware-configuration.nix` 由 `nixos-generate-config` 自动生成，**不应手动编辑**。
-- 工作站通常已有分区，直接使用 `hardware-configuration.nix`，**不要**导入 `disk.nix`。
-- 安装新机器或更换硬件后，重新生成并覆盖对应文件。
-
-### 3.4 用户配置写法
-* 推荐使用 `users.users.<name> = { ... };`。
-* 在某些覆盖配置（Overlays）或 Home-Manager 集成场景下，可能会看到 `users.extraUsers.<name>` 的写法，两者在逻辑上等效，但 `extraUsers` 常用于模块化合并。
-
-### 3.5 独立 Home 分区
-
-如果你原本就有独立的 `/home` 分区：
-1. 在 `hardware-configuration.nix` 中确保 `fileSystems."/home"` 配置正确
-2. **不要**在 `disk.nix` 中定义 home 分区的格式化操作
-3. 安装时直接挂载即可，数据会自动保留
-
-### 3.6 显卡驱动
-
-NVIDIA 显卡用户务必在配置中启用专有驱动，否则可能无法进入图形界面：
-
-```nix
-# 在 modules/desktop/desktop.nix 或 hardware-configuration.nix 中
-hardware.opengl.enable = true;
-services.xserver.videoDrivers = [ "nvidia" ];
-```
-
----
-
-## 四、常见问题 (FAQ)
-
-### Q: 安装时报错 `flake.cc:37: Assertion ... failed`？
-这是 Nix flake 的 hash 断言错误，通常由 `flake.lock` 中的 narHash 与实际内容不匹配引起。常见于 Git 树有未提交更改时。
-
-**解决方案：**
-```bash
-# 方案 1：确保所有更改已提交
+# 方案 1：提交更改
 git add -A && git commit -m "fix: ..."
-nixos-install --flake ~/nixos-config#workstation --root /mnt
 
-# 方案 2：临时跳过 lock file 写入（dirty tree 时的权宜之计）
-nixos-install --flake ~/nixos-config#workstation --root /mnt --no-write-lock-file
+# 方案 2：跳过 lock file
+nixos-install --flake .#<host> --root /mnt --no-write-lock-file
 ```
 
-### Q: 使用 `--option substitute false` 时报错 `path ... is not valid`？
-说明本地 `/nix/store` 中没有包含目标配置所需的某个包。
+### Q: disko 报错 "device is busy"
 
-**解决方案：**
-1. 改用本地优先模式，让缺失的包走网络下载：
-   ```bash
-   sudo nixos-install --flake ~/nixos-config#workstation --root /mnt \
-     --option substituters "file:///nix/store https://cache.nixos.org"
-   ```
-2. 或在构建 ISO 前，将缺失的包添加到 `modules/iso/cache.nix` 中，重新构建 ISO。
-
-### Q: 如何验证安装是否在使用本地缓存？
-观察安装输出：
-- 看到 `copying path '/nix/store/...'` → 从本地复制
-- 看到 `downloading from 'https://cache.nixos.org'` → 正在网络下载
-- 使用 `--option substitute false` 时，若全程无 downloading 提示，即为纯离线安装。
-
-### Q: 安装后无法从目标硬盘启动？
-- 检查 BIOS/UEFI 启动顺序，确保目标硬盘在首位
-- 确认 ESP 分区已正确挂载到 `/boot`
-- 使用安装介质启动后，重新运行 `nixos-install`（它会修复 bootloader）
-
-### Q: disko 报错 "device is busy"？
-- 确认目标硬盘没有被挂载：`umount /dev/nvme0n1*`
-- 如果有 swap 或 LVM，先停用：`swapoff -a`、`vgchange -an`
-
-### Q: `nix flake update` 或 `nixos-rebuild` 报 public key 错误？
-当在 portable 系统内部执行 `nix flake update` 时，如果出现 `public key is not valid` 错误，这是因为：
-
-- **`nix flake update` 使用当前运行系统的 nix 配置**（`/etc/nix/nix.conf`），而非 flake 里声明的配置
-- 如果 `/etc/nix/nix.conf` 中的公钥有误（如 `cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkb16ZPMQFGspcDShjY=` 缺少字母 `J`），就会报签名验证失败
-- 这是"鸡生蛋"问题：错误的配置导致无法 update，而 update 后才能重建正确的配置
-
-**解决方案（任选其一）：**
-
-1. **命令行覆盖公钥（推荐）**：
-   ```bash
-   nix flake update --option trusted-public-keys 'cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY='
-   ```
-
-2. **临时禁用签名校验（更简单）**：
-   ```bash
-   nix flake update --option require-sigs false
-   ```
-
-修复后，执行 `sudo nixos-rebuild switch` 重建系统，将正确的配置永久写入 `/etc/nix/nix.conf`。
-
-> **注意**：宿主机（如 Arch Linux）的 nix 配置通常没问题，所以在本机执行 `nix flake update` 不会报错。问题只出现在 portable 系统内部。
-
-### Q: 更新已安装的系统（外部挂载场景）
-
-当你已经在目标磁盘安装好了系统，但在 Live CD 或另一台机器（如 portable）上挂载该磁盘到 `/mnt` 进行配置更新时，请使用 `nixos-install` 而不是 `nixos-rebuild`。
-
-> **注意**：新版 `nixos-rebuild` 已移除 `--root` 参数，它仅用于更新当前正在运行的系统。
+确认目标磁盘未被挂载：
 
 ```bash
-# 正确：使用 nixos-install 更新外部磁盘
-sudo nixos-install --root /mnt --no-root-password --flake .#server
+umount /dev/nvme0n1*
+swapoff -a
+vgchange -an  # 如有 LVM
 ```
 
-- `--no-root-password`：**重要**。避免重置已有系统的 root 密码和用户账户状态。
-- 如果不加此参数，脚本会交互式要求你重新设置 root 密码，可能会覆盖现有配置。
+### Q: 更新已安装的系统（外部挂载）
+
+在 Live CD 或另一台机器上挂载目标磁盘到 `/mnt` 时，用 `nixos-install` 而非 `nixos-rebuild`：
+
+```bash
+sudo nixos-install --root /mnt --no-root-password --flake .#<host>
+```
+
+`--no-root-password` 避免重置已有系统的用户状态。
+
+### Q: sudo 路径问题
+
+NixOS 中 `sudo` 的实际路径为 `/run/wrappers/bin/sudo`。若环境中提示 `command not found`：
+
+```bash
+export PATH="/run/wrappers/bin:$PATH"
+# 或使用完整路径
+/run/wrappers/bin/sudo nixos-rebuild switch --flake .#<host>
+```
 
 ---
 
-## 📚 官方文档与参考资料
+## 参考资料
 
-- [NixOS 官方手册](https://nixos.org/manual/nixos/stable/)
-- [Flakes 文档](https://nixos.wiki/wiki/Flakes)
+- [NixOS 官方手册 - 安装](https://nixos.org/manual/nixos/stable/#sec-installation)
 - [disko 文档](https://github.com/nix-community/disko)
-- [Home Manager 配置选项](https://nix-community.github.io/home-manager/options.xhtml)
 - [NIXOS_LUSTRATE 说明](https://nixos.org/manual/nixos/stable/#sec-upgrading-notes)
-- [nixos-install 说明](https://nixos.org/manual/nixos/stable/#sec-installation)
-- [COSMIC DE 文档](https://github.com/pop-os/cosmic-epoch)
-- [NixOS 包搜索](https://search.nixos.org/packages)
-- [Arch Wiki: Nix](https://wiki.archlinux.org/title/Nix)
+- [NixOS Anywhere](https://github.com/nix-community/nixos-anywhere)

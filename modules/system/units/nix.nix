@@ -39,6 +39,7 @@
   environment.systemPackages = with pkgs; [
     # ── NixOS 部署与安装 ──
     nixos-install-tools           # nixos-install, nixos-enter
+    inputs.disko.packages.${pkgs.stdenv.hostPlatform.system}.default  # 声明式磁盘分区
     inputs.nixos-anywhere.packages.${pkgs.stdenv.hostPlatform.system}.nixos-anywhere  # 远程部署 NixOS
 
     # ── Nix 系统管理 ──

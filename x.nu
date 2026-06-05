@@ -37,10 +37,23 @@ export module mount {
     }
 }
 
+export def mount [
+    file: path
+    --create
+] {
+    if $create {
+        if ([no, yes] | input list '⚠️ WARNING: This will FORMAT the disk and ERASE ALL DATA. Continue? ') == 'yes' {
+            sudo disko --mode disko $file
+        }
+    } else {
+        sudo disko --mode mount $file
+    }
+}
+
 export def install [
     host: string@cmpl-hosts = 'portable'
     --root: path = /mnt
-    --no-root-password
+    --set-root-password
 ] {
     cd $ROOT
     mut args = [
@@ -54,7 +67,7 @@ export def install [
         ] | str join ' ')
         --option trusted-public-keys "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
     ]
-    if $no_root_password { $args ++= [--no-root-password] }
+    if not $set_root_password { $args ++= [--no-root-password] }
     sudo (which nixos-install).path.0 ...$args
 }
 

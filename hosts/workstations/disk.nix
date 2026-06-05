@@ -1,7 +1,7 @@
 { ... }: {
   disko.devices = {
     disk.internal = {
-      device = "/dev/disk/by-id/nvme-eui.5cdfb805104023c3"
+      device = "/dev/disk/by-id/nvme-eui.5cdfb805104023c3";
       type = "disk";
       content = {
         type = "gpt";

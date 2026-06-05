@@ -1,7 +1,7 @@
 { ... }: {
   disko.devices = {
     disk.internal = {
-      device = "/dev/disk/by-id/usb-EAGET_USB_3.2_202302090772-0:0"
+      device = "/dev/disk/by-id/usb-EAGET_USB_3.2_202302090772-0:0";
       type = "disk";
       content = {
         type = "gpt";
