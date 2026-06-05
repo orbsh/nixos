@@ -1,60 +1,56 @@
-# NixOS Binary Cache Operations
+# NixOS Binary Cache
 
-This document outlines how to expose the Nix store as a cache via HTTP or S3 for other nodes to consume. This avoids rebuilding packages on every node.
+本项目使用 [Harmonia](https://github.com/nix-community/harmonia) 作为局域网二进制缓存服务，避免在各节点重复构建。
 
-## 1. Key Generation
-A private key is required to sign the cache; nodes need the public key to trust it.
+## 架构
+
+- 使用 nixpkgs 预编译的 `harmonia` 二进制（无需源码编译）
+- 自建 systemd service `harmonia`，直接调用 `harmonia-cache`
+- 引入 `modules/flake-srv/harmonia.nix` 即启用，无开关
+
+## 密钥（固定，永久复用）
+
+| 类型 | 值 |
+|---|---|
+| 私钥 | 内联于 `harmonia.nix` |
+| 公钥 | `harmonia-local:bF/+RpECJWbbE8W7/hu1jWRlkQqu/+cXoVrWFENmqXY=` |
+
+公钥已硬编码在 `modules/system/units/nix.nix` 的 `trusted-public-keys` 中。
+
+## 服务配置
+
+- 监听：`[::]:5100`
+- 暴露：`/nix/store`
+- 认证：无（仅局域网信任环境使用）
+
+## 客户端配置
+
+目标机器的 `substituters` 加上：
+
+```
+http://<控制机IP>:5100
+```
+
+`trusted-public-keys` 已包含，无需额外配置。
+
+## S3 / MinIO 缓存（可选）
+
+适用于持久化存储或跨网络访问（如集群级缓存）。
+
+### 推送到 S3
+
+需要 `awscli` 或有效的 AWS 环境变量（`AWS_ACCESS_KEY_ID`、`AWS_SECRET_ACCESS_KEY`、`AWS_DEFAULT_REGION`）。
 
 ```bash
-# Generate key pair
-nix-store --generate-binary-cache-key cache-name /tmp/private-key.pem /tmp/public-key.pem
-```
-
-*   **Private Key**: Store securely on the cache server or CI machine.
-*   **Public Key**: Add to `nix.settings.trusted-public-keys` on all client nodes.
-
-## 2. HTTP Cache (`nix-serve`)
-Good for local LANs.
-
-### Server Configuration (`configuration.nix`)
-```nix
-{
-  services.nix-serve = {
-    enable = true;
-    port = 5000; # Default port
-    secretKeyFile = "/path/to/private-key.pem";
-  };
-}
-```
-
-### Client Configuration (`flake.nix` or `configuration.nix`)
-```nix
-{
-  nix.settings = {
-    substituters = [ "http://<cache-server-ip>:5000" ];
-    trusted-public-keys = [ "cache-name:public-key-here..." ];
-  };
-}
-```
-
-## 3. S3 / MinIO Cache
-Preferred for persistence and remote access (e.g., cluster-wide cache).
-
-### Pushing to S3
-Requires `awscli` or valid AWS environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`).
-
-```bash
-# Push a specific path (e.g., /nix/store/hash-foo) or derivation result
+# 推送指定路径
 nix copy --to 's3://bucket-name?endpoint=https://s3.your-domain.com' /nix/store/hash-foo
-```
 
-**Example: Push current system closure**
-```bash
-# For flake-based systems
+# 推送当前系统闭包
 nix copy --to 's3://nix-cache?endpoint=https://registry.s' $(nixos-rebuild build --flake .#myhost)
 ```
 
-### Client Configuration
+### 客户端配置
+
 ```nix
 {
   nix.settings = {
@@ -64,13 +60,14 @@ nix copy --to 's3://nix-cache?endpoint=https://registry.s' $(nixos-rebuild build
 }
 ```
 
-## 4. CI/CD Integration
-In a CI pipeline (like Argo), build and push automatically:
+## CI/CD 集成
+
+在 CI 流水线中自动构建并推送：
 
 ```bash
-# Build
+# 构建
 nix build .#nixosConfigurations.myhost.config.system.build.toplevel
 
-# Push
+# 推送
 nix copy --to 's3://nix-cache?endpoint=https://registry.s' ./result
 ```

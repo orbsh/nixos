@@ -11,8 +11,16 @@ export def switch [host: string@cmpl-hosts = 'workstations_orbit'] {
     sudo -E nixos-rebuild switch --flake $".#($host)"
 }
 
-export def build [host: string@cmpl-hosts = 'workstations_orbit'] {
-    nh os build $"($ROOT)#($host)"    }
+export def build [
+    host: string@cmpl-hosts = 'workstations_orbit'
+    --harmonia: list<string>
+] {
+    mut args = []
+    if ($harmonia | is-not-empty) {
+        $args ++= [--option extra-substituters ($harmonia | str join ' ')]
+    }
+    nh os build $"($ROOT)#($host)" ...$args
+}
 
 export def update [] {
     cd $ROOT
