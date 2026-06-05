@@ -13,6 +13,11 @@
     ../podman/full.nix            # Podman 全家桶
   ];
 
+  # ── SSD 寿命优化：临时构建缓存移入内存 ───────────
+  # 避免 nixos-rebuild 在 /tmp 产生数 GB 高频临时写入磨损 SSD
+  boot.tmp.useTmpfs = true;
+  boot.tmp.tmpfsSize = "50%";  # 分配最大 50% 物理内存给临时盘
+
   # ── 用户环境配置 ──────────────────────────────────────
   home-manager.users.${user} = {
     imports = [
