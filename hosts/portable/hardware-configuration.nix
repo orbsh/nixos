@@ -21,6 +21,8 @@
     "sdhci_pci"    # 内置 SD 卡读卡器控制器
   ];
 
+  boot.initrd.systemd.enable = true;
+
   # 初始 RAM 磁盘所需的内核模块
   boot.initrd.kernelModules = [ "dm-snapshot" ];
 

@@ -18,6 +18,7 @@
     iproute2    # ip/ss 等网络管理
     net-tools   # ifconfig/netstat（传统工具）
     iputils     # ping 等
+    traceroute  # 路由追踪
 
     # ── 文件处理 ──────────────────────────────────────
     patch       # 补丁应用
