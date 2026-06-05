@@ -11,6 +11,12 @@
   # 需能读写目标机器的各类分区
   boot.supportedFilesystems = [ "ntfs" "exfat" "ext4" "btrfs" "xfs" "vfat" ];
 
+  # ── SSD 寿命优化 ──────────────────────────────────
+  # 全局默认为所有文件系统禁用 atime 写入，减少不必要的磁盘写入
+  fileSystems."/".options = lib.mkDefault [ "noatime" ];
+  # 每周批量 TRIM，通知 SSD 清理已删除数据块，保持写入速度并延长寿命
+  services.fstrim.enable = true;
+
   # ── 网络与存储管理 ────────────────────────────────
   # NetworkManager 提供通用的网络配置能力
   networking.networkmanager.enable = true;

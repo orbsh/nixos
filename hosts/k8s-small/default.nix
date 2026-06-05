@@ -28,7 +28,7 @@
       fileSystems."/home/${user}/data" = {
         device = "/dev/vdb";
         fsType = "xfs";
-        options = [ "nofail" ];
+        options = [ "nofail" "noatime" ];
         autoFormat = true;
       };
     };
@@ -42,7 +42,7 @@
       fileSystems."/home/${user}/data" = {
         device = "/dev/vdb";
         fsType = "xfs";
-        options = [ "nofail" ];
+        options = [ "nofail" "noatime" ];
         autoFormat = true;
       };
     };
@@ -56,7 +56,7 @@
       fileSystems."/home/${user}/data" = {
         device = "/dev/vdb";
         fsType = "xfs";
-        options = [ "nofail" ];
+        options = [ "nofail" "noatime" ];
         autoFormat = true;
       };
     };

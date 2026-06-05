@@ -13,6 +13,7 @@
               type = "filesystem";
               format = "vfat";
               mountpoint = "/boot";
+              mountOptions = [ "noatime" ];
             };
           };
           root = {
@@ -22,6 +23,7 @@
               type = "filesystem";
               format = "xfs";
               mountpoint = "/";
+              mountOptions = [ "noatime" ];
             };
           };
         };

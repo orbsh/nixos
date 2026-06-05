@@ -14,6 +14,7 @@
               # _create = false;
               format = "vfat";
               mountpoint = "/boot";
+              mountOptions = [ "noatime" ];
             };
           };
           root = {
@@ -24,6 +25,7 @@
               # _create = false;
               format = "xfs";
               mountpoint = "/";
+              mountOptions = [ "noatime" ];
             };
           };
         };

@@ -48,7 +48,7 @@ in {
       fileSystems."/home/${user}/data" = {
         device = "/dev/disk/by-uuid/79967e21-e2d6-4fc4-a8a4-e45dedf211ef";
         fsType = "btrfs";
-        options = [ "compress=zstd" "subvol=@" "nofail" ];
+        options = [ "compress=zstd" "subvol=@" "nofail" "noatime" ];
       };
 
       # 允许特定密钥免密登录（格式：ssh-ed25519/ssh-rsa + 公钥 + 注释）

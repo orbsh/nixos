@@ -4,12 +4,13 @@
   fileSystems."/" = {
     device = "/dev/disk/by-uuid/77970593-3c29-4fa9-9b4e-411376274d06";
     fsType = "xfs";
+    options = [ "noatime" ];
   };
 
   fileSystems."/boot" = {
     device = "/dev/disk/by-uuid/B0A9-1CC6";
     fsType = "vfat";
-    options = [ "fmask=0022" "dmask=0022" ];
+    options = [ "noatime" "fmask=0022" "dmask=0022" ];
   };
 
   # ── 交换设备 ──────────────────────────────────────
