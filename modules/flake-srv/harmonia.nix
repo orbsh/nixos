@@ -6,7 +6,7 @@ let
     harmonia-local:TgeMeagsZ0PPAvIpHp4JwzMMZtZpevbtT5wOdojkK9hsX/5GkQIlZtsTxbv+G7WNZGWRCq7/5xehWtYUQ2apdg==
   '';
   configFile = pkgs.writeText "harmonia.toml" ''
-    bind = "[::]:5000"
+    bind = "[::]:5100"
     sign_key_paths = ["${secretKeyFile}"]
     workers = 4
     max_connection_rate = 256

@@ -101,8 +101,9 @@ hosts/workstations/default.nix
         │     ├── units/zed.nix
         │     └── hyprland.enable = true
         ├── dev/fullstack.nix            (Python, Rust, JS, Haskell, K8s, WASM 开发工具)
+        ├── flake-srv/hermes-system.nix  (Hermes Agent)
+        ├── flake-srv/harmonia.nix       (本地二进制缓存 :5100)
         ├── podman/full.nix              (Podman 全家桶)
-        └── flake-srv/hermes-system.nix  (Hermes Agent)
         └── home/desktop.nix             (Home Manager)
               ├── units/common.nix
               ├── units/shell.nix        (nushell 配置, developMode = true → 本地 symlink)
@@ -113,6 +114,7 @@ hosts/workstations/default.nix
               ├── units/rime.nix
               ├── units/eww.nix
               └── programs.home-manager.enable = true
+
 ```
 
 **nushell 配置**：`developMode = true` → symlink 到 `~/Configuration/nushell`
@@ -123,22 +125,23 @@ hosts/workstations/default.nix
 
 ```
 hosts/portable/default.nix
-  └── presets/portable.nix
-        ├── system/core.nix              (同上)
-        ├── system/units/hardware-generic.nix
-        ├── desktop/base.nix             (基础桌面预设)
-        │     ├── units/cosmic.nix
-        │     ├── units/greetd.nix
-        │     ├── units/input-method.nix
-        │     ├── units/fonts.nix
-        │     ├── units/accessibility.nix
-        │     ├── units/apps-core.nix
-        │     ├── units/hyprland.nix
-        │     └── hyprland.enable = true
-        ├── podman/ladder.nix            (Podman 代理)
-        └── home/desktop.nix             (Home Manager，同 workstation)
-              ├── units/shell.nix        (nushell 配置, developMode = false → flake input symlink)
-              └── ...
+  ├── presets/portable.nix
+  │     ├── system/core.nix              (同上)
+  │     ├── system/units/hardware-generic.nix
+  │     ├── desktop/base.nix             (基础桌面预设)
+  │     │     ├── units/cosmic.nix
+  │     │     ├── units/greetd.nix
+  │     │     ├── units/input-method.nix
+  │     │     ├── units/fonts.nix
+  │     │     ├── units/accessibility.nix
+  │     │     ├── units/apps-core.nix
+  │     │     ├── units/hyprland.nix
+  │     │     └── hyprland.enable = true
+  │     ├── podman/ladder.nix            (Podman 代理)
+  │     └── home/desktop.nix             (Home Manager，同 workstation)
+  │           ├── units/shell.nix        (nushell 配置, developMode = false → flake input symlink)
+  │           └── ...
+  └── flake-srv/harmonia.nix             (本地二进制缓存 :5100，节点级单独引入)
 ```
 
 **与 workstation 的区别**：
@@ -185,6 +188,7 @@ hosts/server/default.nix
         ├── system/units/hardware-generic.nix
         ├── system/units/vm.nix
         ├── dev/server.nix               (服务器开发工具)
+        ├── flake-srv/harmonia.nix       (本地二进制缓存 :5100)
         └── home/headless.nix            (Home Manager)
               ├── units/common.nix
               ├── units/shell.nix        (nushell, developMode = false)

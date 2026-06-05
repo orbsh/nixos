@@ -9,6 +9,8 @@
 
     ../dev/fullstack.nix
     ../flake-srv/hermes-system.nix  # Hermes Agent: systemd 守护 + 全局 CLI 包裹
+    ../flake-srv/harmonia.nix     # 本地二进制缓存
+    ../podman/full.nix            # Podman 全家桶
   ];
 
   # ── 用户环境配置 ──────────────────────────────────────

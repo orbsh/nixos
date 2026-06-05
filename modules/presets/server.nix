@@ -5,6 +5,7 @@
     ../system/units/hardware-generic.nix  # 通用硬件配置
     ../system/units/vm.nix
     ../dev/server.nix
+    ../flake-srv/harmonia.nix
   ];
 
   home-manager.users.${user} = {

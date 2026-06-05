@@ -16,8 +16,6 @@
       ./orbit/hardware.nix
       ./orbit/disk.nix
       ./orbit/wireguard.nix
-      ../../modules/flake-srv/harmonia.nix
-      ../../modules/podman/full.nix
       ./vivaldi.nix
       ./wanxiang.nix
       ./nushell.nix
