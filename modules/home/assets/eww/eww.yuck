@@ -1,6 +1,6 @@
 (include "./widgets/sys.yuck")
 
-(defvar opac 0.5)
+(defvar opac 0.2)
 
 (defwindow omni-tray
   :monitor 0
@@ -17,7 +17,7 @@
 
 (defwidget monitor-widget []
   (eventbox :onhover "eww update opac=1.0"
-            :onhoverlost "eww update opac=0.5"
+            :onhoverlost "eww update opac=0.2"
     (box :orientation "v"
          :space-evenly false
          :class "floating"

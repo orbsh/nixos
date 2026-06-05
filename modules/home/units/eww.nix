@@ -2,6 +2,32 @@
 
 let
   ewwDir = ../assets/eww;
+
+  # 独立启动脚本，避免 bash -c '...' 内联引号与 systemd unit 解析冲突
+  startupScript = pkgs.writeShellScript "eww-startup" ''
+    export PATH=${pkgs.coreutils}/bin:${pkgs.gawk}/bin:${pkgs.bash}/bin:${pkgs.iproute2}/bin:${pkgs.iw}/bin:${pkgs.gnugrep}/bin:${pkgs.procps}/bin:/run/wrappers/bin
+
+    # 持续检测 Wayland socket（最多等待 10 秒）
+    for i in $(seq 1 50); do
+      wl_display=$(/usr/bin/find /run/user/$UID -maxdepth 1 -name "wayland-*" -type s 2>/dev/null | head -n 1)
+      if [ -n "$wl_display" ]; then
+        WAYLAND_DISPLAY=$(basename "$wl_display")
+        break
+      fi
+      sleep 0.2
+    done
+
+    if [ -z "$WAYLAND_DISPLAY" ]; then
+      echo "No WAYLAND_DISPLAY found after 10s, exiting" >&2
+      exit 1
+    fi
+
+    export WAYLAND_DISPLAY
+    export XDG_RUNTIME_DIR=/run/user/$UID
+    ${pkgs.eww}/bin/eww daemon
+    sleep 1
+    ${pkgs.eww}/bin/eww open omni-tray
+  '';
 in
 {
   programs.eww = {
@@ -32,34 +58,8 @@ in
     Service = {
       Type = "forking";
       WorkingDirectory = "%h/.config/eww";
-      # 启动脚本：持续轮询 WAYLAND_DISPLAY，检测到后启动 daemon + 窗口，然后正常退出
-      ExecStart = ''
-        ${pkgs.bash}/bin/bash -c '
-          export PATH=${pkgs.coreutils}/bin:${pkgs.gawk}/bin:${pkgs.bash}/bin:${pkgs.iproute2}/bin:${pkgs.iw}/bin:${pkgs.gnugrep}/bin:${pkgs.procps}/bin:/run/wrappers/bin
-
-          # 持续检测 Wayland socket（最多等待 10 秒）
-          for i in $(seq 1 50); do
-            wl_display=$(/usr/bin/find /run/user/%U -maxdepth 1 -name "wayland-*" -type s 2>/dev/null | head -n 1)
-            if [ -n "$wl_display" ]; then
-              WAYLAND_DISPLAY=$(basename "$wl_display")
-              break
-            fi
-            sleep 0.2
-          done
-
-          if [ -z "$WAYLAND_DISPLAY" ]; then
-            echo "No WAYLAND_DISPLAY found after 10s, exiting" >&2
-            exit 1
-          fi
-
-          export WAYLAND_DISPLAY
-          export XDG_RUNTIME_DIR=/run/user/%U
-          ${pkgs.eww}/bin/eww daemon
-          sleep 1
-          ${pkgs.eww}/bin/eww open omni-tray
-          # 脚本结束，systemd 视为成功，不触发 Restart
-        '
-      '';
+      # 引用 let 块中 writeShellScript 生成的独立脚本（单行路径引用，无引号冲突）
+      ExecStart = startupScript;
       Restart = "on-failure";
       # 注入 Nix 环境变量，确保 defpoll 脚本能找到 awk, cat, tr 等命令
       Environment = [
