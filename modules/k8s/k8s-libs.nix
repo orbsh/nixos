@@ -51,6 +51,7 @@ let
       runtime = clusterDef.runtime;
       podCIDR = clusterDef.podCIDR;
       adminEmail = clusterDef.adminEmail or null;
+      certIssuer = clusterDef.certIssuer or "selfsigned";
       cni0 = cni0IP podCIDR;
 
       # 获取 Master IP (第一个 control/combo 节点)
@@ -89,6 +90,7 @@ let
                 podCIDR = podCIDR;
                 masterAddress = if masterIP != null then masterIP else nodeAttrs.ip;
                 adminEmail = lib.mkIf (adminEmail != null) adminEmail;
+                certIssuer = certIssuer;
                 # 自动为第一个 control 节点添加 SANs
                 apiserver.extraSANs = if nodeName == builtins.head controlNodes then [ nodeAttrs.ip ] else [];
                 # 证书同步

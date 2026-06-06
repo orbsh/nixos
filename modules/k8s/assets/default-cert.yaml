@@ -6,7 +6,7 @@ metadata:
 spec:
   secretName: tls-envoy-gateway
   issuerRef:
-    name: selfsigned
+    name: "@ISSUER@"
     kind: ClusterIssuer
   dnsNames:
   - "*"

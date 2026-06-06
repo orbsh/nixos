@@ -7,6 +7,7 @@ in {
   inherit runtime;
   podCIDR = "10.1.0.0/16";
   adminEmail = "nash@iffy.me";
+  certIssuer = "selfsigned";  # selfsigned | letsencrypt | letsencrypt-staging
 
   # 集群级模块（自动注入到所有节点）
   clusterModules = [

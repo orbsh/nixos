@@ -91,9 +91,13 @@
       };
       script = let
         kubectl = "${pkgs.kubectl}/bin/kubectl --kubeconfig /etc/kubernetes/cluster-admin.kubeconfig";
-        certManifest = ./. + "/assets/default-cert.yaml";
+        issuer = config.services.kubernetes.certIssuer;
+        certManifest = pkgs.writeText "default-cert.yaml" (
+          builtins.replaceStrings [ "@ISSUER@" ] [ issuer ]
+            (builtins.readFile "${./.}/assets/default-cert.yaml")
+        );
       in ''
-        echo "Deploying default Certificate for tls-envoy-gateway..."
+        echo "Deploying default Certificate for tls-envoy-gateway (issuer: ${issuer})..."
         ${kubectl} apply -f ${certManifest}
       '';
     };

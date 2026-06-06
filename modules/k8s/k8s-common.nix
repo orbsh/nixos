@@ -15,6 +15,12 @@
     description = "Cluster admin email address (used for ACME registration, etc.)";
   };
 
+  options.services.kubernetes.certIssuer = lib.mkOption {
+    type = lib.types.str;
+    default = "selfsigned";
+    description = "Default ClusterIssuer for Gateway TLS certificate (selfsigned | letsencrypt | letsencrypt-staging)";
+  };
+
   options.services.kubernetes.podCIDR = lib.mkOption {
     type = lib.types.str;
     description = "Cluster Pod CIDR range (used by Flannel for network configuration)";
