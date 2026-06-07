@@ -3,6 +3,7 @@
     ./units/direnv.nix
     ./units/python.nix
     ./units/rust.nix
+    ./units/c-cpp.nix
     ./units/javascript.nix
     ./units/haskell.nix
     ./units/data-tools.nix
