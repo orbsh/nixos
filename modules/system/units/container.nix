@@ -26,6 +26,12 @@
     runroot = "/run/containers/storage"
     graphroot = "/var/lib/containers/storage"
   '';
+  # ── 用户环境变量（容器相关）─────────────────────────────
+  # 为用户环境设置 DOCKER_HOST，让某些工具以为在用 Docker
+  environment.sessionVariables = {
+    DOCKER_HOST = "unix:///run/user/1000/podman/podman.sock";
+  };
+
   # ── Container Image Tools（仅在 podman 启用时安装）────
   environment.systemPackages = lib.mkIf config.virtualisation.podman.enable (with pkgs; [
     buildah

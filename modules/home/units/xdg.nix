@@ -122,10 +122,5 @@ in
     VISUAL      = "hx";
     BROWSER     = "vivaldi";
     PAGER       = "glow";
-    # podman socket（让某些工具以为在用 docker）
-    DOCKER_HOST = "unix:///run/user/1000/podman/podman.sock";
-    # Rust
-    CARGO_HOME  = "${config.home.homeDirectory}/.cargo";
-    RUSTUP_HOME = "${config.home.homeDirectory}/.rustup";
   };
 }

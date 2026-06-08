@@ -13,5 +13,7 @@
 
   environment.variables = {
     RUSTC_WRAPPER = "sccache";
+    CARGO_HOME  = "$HOME/.cargo";
+    RUSTUP_HOME = "$HOME/.rustup";
   };
 }

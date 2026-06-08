@@ -223,6 +223,10 @@ in {
       bind = SUPER, q, exec, flameshot gui || grim -g "$(slurp)" - | swappy -f -
 
       source = ~/.config/hypr/user-hyprland.conf
+
+      windowrulev2 = float, class:^(mpv)$
+      windowrulev2 = size 1280 720, class:^(mpv)$
+      windowrulev2 = center, class:^(mpv)$
     '';
   };
 }
