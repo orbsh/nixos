@@ -183,11 +183,11 @@ export module qemu {
             -m 4G
             -smp 4
             -cpu host
-            -vga virtio
+            -vga qxl
             -net "nic,model=virtio"
             -net "user,hostfwd=tcp::2266-:2222"
             -device virtio-balloon-pci
-            -display "gtk,gl=on"
+            -spice "port=5900,addr=127.0.0.1,disable-ticketing=on"
             -device qemu-xhci
             -device usb-tablet
         ]
@@ -222,4 +222,7 @@ export module qemu {
         qemu-system-x86_64 ...$args
     }
 
+    export def conn [] {
+        remote-viewer spice://127.0.0.1:5900
+    }
 }

@@ -24,7 +24,4 @@
   # ── 性能与体验 ───────────────────────────────────
   # 启用 zram 交换，提升低内存环境下的响应速度
   zramSwap.enable = true;
-
-  # 快速启动，不等待用户选择
-  boot.loader.timeout = lib.mkDefault 5;
 }

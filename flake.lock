@@ -64,11 +64,11 @@
     },
     "my-nushell-config": {
       "locked": {
-        "lastModified": 1780121533,
-        "narHash": "sha256-ZMNd7lUkPUWd9S4anYLtoj3G0R1a59VoBG6agkfdSI8=",
+        "lastModified": 1780991104,
+        "narHash": "sha256-z6fbwpyZOv1F4/k13CZsjn+PespDKXPZ96pq7ld5kRQ=",
         "owner": "fj0r",
         "repo": "nushell",
-        "rev": "7423cbc25d9e30391d6ca1e8992f07d00b6b70d9",
+        "rev": "330a10a93461a643ddc9059bc295b39c172cc497",
         "type": "github"
       },
       "original": {
