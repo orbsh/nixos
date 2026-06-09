@@ -17,9 +17,6 @@
     builders-use-substitutes = true;
   };
 
-  # ── systemd compliance check ──
-  imports = [ ./systemd-compliance.nix ];
-
   # 每周自动清理未使用的包
   nix.gc = {
     automatic = lib.mkDefault true;

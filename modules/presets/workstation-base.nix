@@ -2,8 +2,7 @@
   imports = [
     # 核心系统预设 (sys, base, nix, users, network, extra, container)
     ../system/core.nix
-    ../system/units/hardware-generic.nix  # 通用硬件配置
-    ../system/units/vm.nix            # libvirtd/virt-manager 虚拟机支持
+    ../system/virt.nix               # libvirtd/virt-manager 虚拟机支持
 
     ../desktop/full.nix
 

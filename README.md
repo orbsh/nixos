@@ -81,7 +81,7 @@ hosts/workstations/default.nix
         │     ├── units/container.nix    (podman)
         │     └── units/media.nix        (媒体编解码器)
         ├── system/units/hardware-generic.nix  (通用硬件配置)
-        ├── system/units/vm.nix          (libvirtd/virt-manager)
+        ├── system/virt.nix              (libvirtd/virt-manager)
         ├── desktop/full.nix             (完整桌面预设)
         │     ├── units/cosmic.nix
         │     ├── units/greetd.nix
@@ -186,7 +186,7 @@ hosts/server/default.nix
   └── presets/server.nix
         ├── system/core.nix              (同上)
         ├── system/units/hardware-generic.nix
-        ├── system/units/vm.nix
+        ├── system/virt.nix
         ├── dev/server.nix               (服务器开发工具)
         ├── flake-srv/harmonia.nix       (本地二进制缓存 :5100)
         └── home/headless.nix            (Home Manager)
@@ -225,7 +225,7 @@ hosts/k8s-dev/default.nix
         ├── presets/server.nix           (自动注入)
         │     ├── system/core.nix
         │     ├── system/units/hardware-generic.nix
-        │     ├── system/units/vm.nix
+        │     ├── system/virt.nix
         │     ├── dev/server.nix
         │     └── home/headless.nix
         ├── k8s-role: combo            (control + worker 合一)

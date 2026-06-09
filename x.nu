@@ -187,7 +187,7 @@ export module qemu {
             -net "nic,model=virtio"
             -net "user,hostfwd=tcp::2266-:2222"
             -device virtio-balloon-pci
-            -display "sdl,gl=on"
+            -display "gtk,gl=on"
             -device qemu-xhci
             -device usb-tablet
         ]

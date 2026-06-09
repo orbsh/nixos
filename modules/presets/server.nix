@@ -2,8 +2,7 @@
 { pkgs, user, ... }: {
   imports = [
     ../system/core.nix
-    ../system/units/hardware-generic.nix  # 通用硬件配置
-    ../system/units/vm.nix
+    ../system/virt.nix
     ../dev/server.nix
     ../flake-srv/harmonia.nix
   ];

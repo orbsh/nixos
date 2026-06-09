@@ -13,7 +13,7 @@
     ../desktop/mini.nix
 
     # 开发工具
-    # ../../modules/dev
+    ../dev/server.nix
   ];
 
   # ── 用户环境配置 ──────────────────────────────────────
@@ -36,9 +36,6 @@
     command = "${pkgs.hyprland}/bin/Hyprland";
     user = user;
   };
-
-  # Use stable kernel for maximum guest compatibility
-  boot.kernelPackages = lib.mkForce pkgs.linuxPackages;
 
   networking.hostName = "qemu";
 }

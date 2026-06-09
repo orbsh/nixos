@@ -2,8 +2,7 @@
   imports = [
     # 核心系统预设
     ../system/core.nix
-    ../system/units/hardware-generic.nix
-    # ../system/units/vm.nix
+    # ../system/virt.nix
 
     ../desktop/base.nix
     ../podman/ladder.nix
