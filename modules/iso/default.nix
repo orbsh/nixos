@@ -1,4 +1,4 @@
-{ pkgs, lib, inputs, self, user, email, sshPublicKey, nushellSrc, nushellGitUrl, nushellLocalPath, ... }:
+{ pkgs, lib, inputs, self, user, email, sshPublicKey, hashedPassword, nushellSrc, nushellGitUrl, nushellLocalPath, ... }:
 
 let
   # ── Nushell 配置（复制到 store，避免 symlink 导致 xorriso 报错） ─
@@ -104,11 +104,21 @@ in {
     '';
   };
 
+  # ── 键盘：Ctrl 与 Caps Lock 交换 ──────────────────
+  services.xserver.xkb.options = "ctrl:swapcaps";
+  console.useXkbConfig = true;
+
+  # ── sudo 免密码（wheel 组）─────────────────────────
+  security.sudo = {
+    enable = true;
+    wheelNeedsPassword = false;
+  };
+
   # ── 用户 ────────────────────────────────────────
   users.users.${user} = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];
-    hashedPassword = "$y$j9T$LuChS39drFFK0G9w05zzW1$ni887.E/FpNqKVqlAimC5uAUrtcytrZwgHhw7280fN0";
+    inherit hashedPassword;
     openssh.authorizedKeys.keys = [ sshPublicKey ];
   };
 

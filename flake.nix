@@ -38,14 +38,14 @@
     email = "nash@iffy.me";
     dataDir = "/home/${user}/data";
     sshPublicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK2Q46WeaBZ9aBkS3TF2n9laj1spUkpux/zObmliHUOI";
-
+    hashedPassword = "$y$j9T$LuChS39drFFK0G9w05zzW1$ni887.E/FpNqKVqlAimC5uAUrtcytrZwgHhw7280fN0";  # mkpasswd -m yescrypt "qwer"
 
     # 修复变量名中的连字符（Nix 函数参数不支持连字符）
     homeManagerInput = home-manager;
 
     # ── 共享参数（注入 NixOS + Home Manager） ──────────
     commonArgs = {
-      inherit inputs dataDir user email sshPublicKey;
+      inherit inputs dataDir user email sshPublicKey hashedPassword;
       self = ./.;  # flake 根目录路径
       nushellSrc = my-nushell-config.outPath;
       nushellGitUrl = "https://github.com/${my-nushell-config.owner}/${my-nushell-config.repo}.git";
@@ -92,7 +92,7 @@
     # 构建命令：nix build .#iso.config.system.build.isoImage
     iso = nixpkgs.lib.nixosSystem {
       specialArgs = {
-        inherit inputs self user email sshPublicKey;
+        inherit inputs self user email sshPublicKey hashedPassword;
         nushellSrc = my-nushell-config.outPath;
         nushellGitUrl = "https://github.com/${my-nushell-config.owner}/${my-nushell-config.repo}.git";
         nushellLocalPath = "/home/${user}/Configuration/nushell";

@@ -1,9 +1,8 @@
-{ pkgs, user, sshPublicKey, ... }: {
+{ pkgs, user, sshPublicKey, hashedPassword, ... }: {
   users.users.${user} = {
     isNormalUser = true;
     shell = pkgs.bash;
-    # mkpasswd -m yescrypt "qwer"
-    hashedPassword = "$y$j9T$LuChS39drFFK0G9w05zzW1$ni887.E/FpNqKVqlAimC5uAUrtcytrZwgHhw7280fN0";
+    inherit hashedPassword;
     extraGroups = [
       "wheel"
       "lp"
