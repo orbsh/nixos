@@ -29,7 +29,9 @@
         vivaldiBase =
           if srcPath != null
           then prev.vivaldi.overrideAttrs (old: {
-            src = srcPath;
+            src = prev.runCommandLocal "vivaldi-src.deb" {} ''
+              ln -s ${srcPath} $out
+            '';
           })
           else prev.vivaldi;
       in {

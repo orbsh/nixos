@@ -1,9 +1,10 @@
-{ inputs, pkgs, lib, ... }: {
+{ inputs, pkgs, lib, user, ... }: {
   # ── Nix 自身配置 ────────────────────────────────────────
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
     auto-optimise-store = true;
     keep-failed = false;          # 不保留构建失败的临时目录
+    trusted-users = [ "root" user ];  # 允许这些用户指定 substituters 等受限设置
     substituters = [
       "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
       "https://mirrors.ustc.edu.cn/nix-channels/store"

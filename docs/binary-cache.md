@@ -23,15 +23,40 @@
 - 暴露：`/nix/store`
 - 认证：无（仅局域网信任环境使用）
 
+## 前提：trusted-users
+
+`modules/system/units/nix.nix` 已配置 `trusted-users = [ "root" user ]`，允许普通用户通过 `--option extra-substituters` 指定额外缓存源。
+
 ## 客户端配置
 
-目标机器的 `substituters` 加上：
+### 为什么使用命令行参数
 
-```
-http://<控制机IP>:5100
+配置中的 `substituters` 只有在 `switch` 后才生效，但 `switch` 构建时就需要用它加速。这是自举问题（bootstrap problem）。
+
+因此使用命令行参数，在构建时临时指定 harmonia 地址。
+
+### SSH 隧道访问远程 harmonia
+
+如果 harmonia 不在本地网络，可通过 SSH 隧道转发：
+
+```bash
+# 在客户端执行，将远程 5100 端口映射到本地 5101
+ssh <harmonia-host> -NvTR 5101:localhost:5100
 ```
 
-`trusted-public-keys` 已包含，无需额外配置。
+### 构建时指定 harmonia 缓存
+
+```bash
+# 使用命令行参数临时指定 harmonia 为首选缓存
+sudo nixos-rebuild switch --flake .#<host> \
+  --option substituters 'http://localhost:5101 https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store https://cache.nixos.org' \
+  --option extra-trusted-public-keys 'harmonia-local:bF/+RpECJWbbE8W7/hu1jWRlkQqu/+cXoVrWFENmqXY='
+```
+
+**关键点：**
+- `--option substituters` 替换整个列表，harmonia 放首位优先级最高
+- `--option extra-substituters` 追加到末尾，优先级最低
+- `extra-trusted-public-keys` 追加公钥（已在全局配置中，可省略）
 
 ## S3 / MinIO 缓存（可选）
 
