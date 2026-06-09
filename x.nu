@@ -17,7 +17,7 @@ export def build [
 ] {
     mut args = []
     if ($harmonia | is-not-empty) {
-        $args ++= [--option extra-substituters ($harmonia | str join ' ')]
+        $args ++= [-- --option extra-substituters ($harmonia | str join ' ')]
     }
     nh os build $"($ROOT)#($host)" ...$args
 }
