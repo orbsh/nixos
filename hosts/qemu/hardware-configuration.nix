@@ -6,6 +6,15 @@
 {
   imports = [ ];
 
+  boot.loader = {
+    systemd-boot = {
+      enable = true;
+      configurationLimit = 5;
+    };
+    efi.canTouchEfiVariables = true;
+    timeout = 3;
+  };
+
   boot.initrd.availableKernelModules = [
     "ata_piix"    # IDE controller (QEMU default chipset)
     "ahci"        # SATA controller
