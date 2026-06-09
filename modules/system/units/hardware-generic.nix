@@ -26,5 +26,5 @@
   zramSwap.enable = true;
 
   # 快速启动，不等待用户选择
-  boot.loader.timeout = 5;
+  boot.loader.timeout = lib.mkDefault 5;
 }

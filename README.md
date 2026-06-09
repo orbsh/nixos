@@ -81,7 +81,7 @@ hosts/workstations/default.nix
         │     ├── units/container.nix    (podman)
         │     └── units/media.nix        (媒体编解码器)
         ├── system/units/hardware-generic.nix  (通用硬件配置)
-        ├── system/virt.nix              (libvirtd/virt-manager)
+        ├── services/virt.nix              (libvirtd/virt-manager)
         ├── desktop/full.nix             (完整桌面预设)
         │     ├── units/cosmic.nix
         │     ├── units/greetd.nix
@@ -101,9 +101,10 @@ hosts/workstations/default.nix
         │     ├── units/zed.nix
         │     └── hyprland.enable = true
         ├── dev/fullstack.nix            (Python, Rust, JS, Haskell, K8s, WASM 开发工具)
-        ├── flake-srv/hermes-system.nix  (Hermes Agent)
-        ├── flake-srv/harmonia.nix       (本地二进制缓存 :5100)
-        ├── podman/full.nix              (Podman 全家桶)
+        ├── services/hermes-system.nix (Hermes Agent)
+        ├── services/harmonia.nix      (本地二进制缓存 :5100)
+        ├── services/ladder.nix        (Podman 代理链)
+        ├── services/podman-apps.nix   (Podman 应用全家桶)
         └── home/desktop.nix             (Home Manager)
               ├── units/common.nix
               ├── units/shell.nix        (nushell 配置, developMode = true → 本地 symlink)

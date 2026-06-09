@@ -2,9 +2,9 @@
 { pkgs, user, ... }: {
   imports = [
     ../system/core.nix
-    ../system/virt.nix
+    ../services/virt.nix
     ../dev/server.nix
-    ../flake-srv/harmonia.nix
+    ../services/harmonia.nix
   ];
 
   home-manager.users.${user} = {

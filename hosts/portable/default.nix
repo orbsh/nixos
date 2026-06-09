@@ -8,7 +8,7 @@
       ./disk.nix
       ./hardware-configuration.nix
       ../../modules/presets/portable.nix
-      ../../modules/flake-srv/harmonia.nix
+      ../../modules/services/harmonia.nix
     ];
   };
 }

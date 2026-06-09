@@ -2,14 +2,15 @@
   imports = [
     # 核心系统预设 (sys, base, nix, users, network, extra, container)
     ../system/core.nix
-    ../system/virt.nix               # libvirtd/virt-manager 虚拟机支持
+    ../services/virt.nix               # libvirtd/virt-manager 虚拟机支持
 
     ../desktop/full.nix
 
     ../dev/fullstack.nix
-    ../flake-srv/hermes-system.nix  # Hermes Agent: systemd 守护 + 全局 CLI 包裹
-    ../flake-srv/harmonia.nix     # 本地二进制缓存
-    ../podman/full.nix            # Podman 全家桶
+    ../services/hermes-system.nix  # Hermes Agent: systemd 守护 + 全局 CLI 包裹
+    ../services/harmonia.nix     # 本地二进制缓存
+    ../services/ladder.nix       # Podman 代理链
+    ../services/podman-apps.nix  # Podman 应用全家桶
   ];
 
   # ── SSD 寿命优化：临时构建缓存移入内存 ───────────

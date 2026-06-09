@@ -2,10 +2,10 @@
   imports = [
     # 核心系统预设
     ../system/core.nix
-    # ../system/virt.nix
+    # ../services/virt.nix
 
     ../desktop/base.nix
-    ../podman/ladder.nix
+    ../services/ladder.nix
   ];
 
   # 用户环境配置 (Desktop)
