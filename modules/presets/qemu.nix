@@ -9,7 +9,7 @@
     # ── 核心系统预设 (sys, base, nix, users, network, extra, container) ──
     ../system/core.nix
 
-    # 桌面环境 (QEMU 定制：最小预设，裁剪掉 hyprland/apps)
+    # 桌面环境 (QEMU 最小预设：Hyprland + 基础组件)
     ../desktop/mini.nix
 
     # 开发工具
@@ -25,6 +25,17 @@
 
   # QEMU/KVM guest: SPICE agent for clipboard sharing and auto-resolution
   services.spice-vdagentd.enable = true;
+
+  # ── 自动登录（免密码）─────────────────────────────────
+  # 用户无密码 + greetd 自动进入 Hyprland
+  users.users.${user} = {
+    initialPassword = "";
+  };
+
+  services.greetd.settings.initial_session = {
+    command = "${pkgs.hyprland}/bin/Hyprland";
+    user = user;
+  };
 
   # Use stable kernel for maximum guest compatibility
   boot.kernelPackages = lib.mkForce pkgs.linuxPackages;

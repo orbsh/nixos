@@ -5,10 +5,24 @@ def cmpl-hosts [] {
     nix flake show --json | from json | get nixosConfigurations | columns
 }
 
-export def switch [host: string@cmpl-hosts = 'workstations_orbit'] {
+export def switch [
+    host: string@cmpl-hosts = 'workstations_orbit'
+    --remote: string
+] {
     cd $ROOT
     $env.NIXOS_LABEL = (git log -1 --pretty=format:"%s" | sed 's/ /_/g')
-    sudo -E nixos-rebuild switch --flake $".#($host)"
+    mut args = [
+        switch
+        --flake $".#($host)"
+    ]
+    if ($remote | is-not-empty) {
+        # 远程：本机只做评估+构建，不需要 root；SSH 以当前用户运行，直接读 ~/.ssh/config
+        $args ++= [--target-host $remote --use-remote-sudo]
+        nixos-rebuild ...$args
+    } else {
+        # 本机：激活需要 root
+        sudo -E nixos-rebuild ...$args
+    }
 }
 
 export def build [
