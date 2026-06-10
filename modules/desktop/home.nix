@@ -3,8 +3,8 @@
 { config, pkgs, lib, user, ... }: {
   home-manager.users.${user} = {
     imports = [
-      ./home-terminals.nix
-      ./home-xdg.nix
+      ./units/home-terminals.nix
+      ./units/home-xdg.nix
     ];
   };
 }

@@ -7,6 +7,7 @@
     # ../services/virt.nix
 
     ../desktop/base.nix
+    ../desktop/home.nix
     ../services/ladder.nix
   ];
 

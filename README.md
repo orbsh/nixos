@@ -25,7 +25,7 @@ flake.nix 扫描 hosts/ 目录
   ├── 域定义包含 nodes 属性 → K8s 集群模式 → k8s-libs.nix 展开节点
   └── 域定义不包含 nodes → 单机模式 → 直接构建
         └── nixos-builder.nix 统一构建所有节点
-              ├── baseModules（所有节点共享：core.nix + disko + home-manager）
+              ├── baseModules（所有节点共享：disko + home-manager 集成）
               ├── networkModule（有 ip 时配置 eth0）
               ├── hostnameModule（有 hostname 时设置）
               ├── nodeConfigModule（节点自定义配置）
@@ -40,9 +40,9 @@ flake.nix 扫描 hosts/ 目录
 
 | 预设 | 用途 | 包含组件 | Hyprland |
 |------|------|---------|----------|
-| `desktop/mini.nix` | QEMU 虚拟机 | cosmic, greetd, 输入法, 字体, 无障碍 | ❌ |
-| `desktop/base.nix` | 便携系统 | mini 全部 + apps-core + hyprland | ✅ |
-| `desktop/full.nix` | 完整工作站 | base 全部 + apps-extra, apps-im, laptop, zed | ✅ |
+| `desktop/mini.nix` | QEMU 虚拟机 | apps-core, hyprland, greetd, 输入法, 字体, 无障碍, eww | ✅ |
+| `desktop/base.nix` | 便携系统 | mini + cosmic + apps-core + hyprland + eww | ✅ |
+| `desktop/full.nix` | 完整工作站 | base + apps-extra, apps-im, laptop, zed, rime | ✅ |
 
 **设计原则**：每个预设自包含，不互相 import，改一个不影响其他。
 
@@ -59,9 +59,14 @@ flake.nix 扫描 hosts/ 目录
 | `apps-extra.nix` | 额外应用（办公、阅读、创作工具） |
 | `apps-im.nix` | 即时通讯应用 |
 | `hyprland.nix` | Hyprland 合成器 + 辅助工具链（waybar, wofi, grim 等） |
+| `eww.nix` | Eww Wayland 状态栏（替代 waybar） |
 | `laptop.nix` | 笔记本电源管理 |
 | `zed.nix` | Zed 编辑器 |
+| `rime.nix` | Rime 输入法（NixOS 级模块） |
 | `vivaldi.nix` | Vivaldi 浏览器 + Wayland 缩放修复 |
+| `home-desktop.nix` | 桌面 HM 聚合（home-terminals + home-xdg） |
+| `home-terminals.nix` | 终端配置（ghostty + alacritty + zellij） |
+| `home-xdg.nix` | XDG 配置（mimeApps + userDirs + BROWSER） |
 
 ---
 
@@ -71,15 +76,8 @@ flake.nix 扫描 hosts/ 目录
 ```
 hosts/workstations/default.nix
   └── presets/workstation-base.nix
-        ├── system/core.nix
-        │     ├── units/sys.nix          (bootloader, kernel, NetworkManager, pipewire, keymap)
-        │     ├── units/base.nix         (系统包: git, curl, nushell, zellij 等)
-        │     ├── units/nix.nix          (nix 配置, substituters)
-        │     ├── units/users.nix        (用户配置)
-        │     ├── units/network.nix      (网络配置)
-        │     ├── units/extra.nix        (额外系统工具)
-        │     ├── units/container.nix    (podman)
-        │     └── units/media.nix        (媒体编解码器)
+        ├── system/core.nix              (核心系统: sys, base, nix, users, network, extra, container, media)
+        ├── system/home.nix              (Home Manager 聚合: home-base, home-shell, home-editors, home-git)
         ├── system/units/hardware-generic.nix  (通用硬件配置)
         ├── services/virt.nix              (libvirtd/virt-manager)
         ├── desktop/full.nix             (完整桌面预设)
@@ -100,20 +98,12 @@ hosts/workstations/default.nix
         │     ├── units/laptop.nix
         │     ├── units/zed.nix
         │     └── hyprland.enable = true
+        ├── desktop/home.nix             (桌面 Home Manager: home-terminals, home-xdg)
         ├── dev/fullstack.nix            (Python, Rust, JS, Haskell, K8s, WASM 开发工具)
         ├── services/hermes-system.nix (Hermes Agent)
         ├── services/harmonia.nix      (本地二进制缓存 :5100)
         ├── services/ladder.nix        (Podman 代理链)
-        ├── services/podman-apps.nix   (Podman 应用全家桶)
-        └── home/desktop.nix             (Home Manager)
-              ├── units/common.nix
-              ├── units/shell.nix        (nushell 配置, developMode = true → 本地 symlink)
-              ├── units/editors.nix      (helix, neovim)
-              ├── units/terminals.nix
-              ├── units/git.nix
-              ├── units/xdg.nix
-              ├── units/rime.nix
-              └── programs.home-manager.enable = true
+        └── services/podman-apps.nix   (Podman 应用全家桶)
 
 ```
 
@@ -127,6 +117,7 @@ hosts/workstations/default.nix
 hosts/portable/default.nix
   ├── presets/portable.nix
   │     ├── system/core.nix              (同上)
+  │     ├── system/home.nix              (Home Manager 聚合)
   │     ├── system/units/hardware-generic.nix
   │     ├── desktop/base.nix             (基础桌面预设)
   │     │     ├── units/cosmic.nix
@@ -137,10 +128,8 @@ hosts/portable/default.nix
   │     │     ├── units/apps-core.nix
   │     │     ├── units/hyprland.nix
   │     │     └── hyprland.enable = true
-  │     ├── podman/ladder.nix            (Podman 代理)
-  │     └── home/desktop.nix             (Home Manager，同 workstation)
-  │           ├── units/shell.nix        (nushell 配置, developMode = false → flake input symlink)
-  │           └── ...
+  │     ├── desktop/home.nix             (桌面 Home Manager)
+  │     └── podman/ladder.nix            (Podman 代理)
   └── flake-srv/harmonia.nix             (本地二进制缓存 :5100，节点级单独引入)
 ```
 
@@ -161,6 +150,7 @@ hosts/qemu/default.nix
   └── presets/qemu.nix
         ├── disko.nixosModules.disko
         ├── system/core.nix              (同上)
+        ├── system/home.nix              (Home Manager 聚合)
         ├── desktop/mini.nix             (最小桌面预设)
         │     ├── units/cosmic.nix
         │     ├── units/greetd.nix
@@ -168,8 +158,8 @@ hosts/qemu/default.nix
         │     ├── units/fonts.nix
         │     └── units/accessibility.nix
         │     (无 hyprland，无 apps)
-        └── home/desktop.nix             (Home Manager)
-              └── ...
+        ├── desktop/home.nix             (桌面 Home Manager)
+        └── dev/server.nix               (开发工具)
 ```
 
 **特殊配置**：
@@ -185,16 +175,11 @@ hosts/qemu/default.nix
 hosts/server/default.nix
   └── presets/server.nix
         ├── system/core.nix              (同上)
+        ├── system/home.nix              (Home Manager 聚合: home-base, home-shell, home-editors, home-git)
         ├── system/units/hardware-generic.nix
         ├── system/virt.nix
         ├── dev/server.nix               (服务器开发工具)
-        ├── flake-srv/harmonia.nix       (本地二进制缓存 :5100)
-        └── home/headless.nix            (Home Manager)
-              ├── units/common.nix
-              ├── units/shell.nix        (nushell, developMode = false)
-              ├── units/editors.nix      (helix)
-              ├── units/git.nix
-              └── programs.home-manager.enable = true
+        └── flake-srv/harmonia.nix       (本地二进制缓存 :5100)
 ```
 
 **特点**：无桌面环境，无图形界面，headless 模式。
@@ -224,10 +209,10 @@ hosts/k8s-dev/default.nix
   └── nodes.dxserver
         ├── presets/server.nix           (自动注入)
         │     ├── system/core.nix
+        │     ├── system/home.nix        (Home Manager 聚合)
         │     ├── system/units/hardware-generic.nix
         │     ├── system/virt.nix
-        │     ├── dev/server.nix
-        │     └── home/headless.nix
+        │     └── dev/server.nix
         ├── k8s-role: combo            (control + worker 合一)
         ├── runtime: containerd
         ├── server/hardware/disk.nix
@@ -244,10 +229,10 @@ hosts/k8s-dev/default.nix
 modules/iso/default.nix          ← ISO 入口（不依赖 installation-cd-minimal）
   ├── iso-image.nix               ← NixOS 最小 ISO 构建器
   ├── system/units/nix.nix        ← Nix 生态工具（nh, nixos-anywhere, cachix 等）
-  └── home/units/                 ← 用户配置（editors, git, common）
-        ├── editors.nix            ← Helix 主题 + LSP + 快捷键
-        ├── git.nix               ← Git 配置（用户名/邮箱）
-        └── common.nix            ← 通用用户配置
+  └── units/                      ← 用户配置（内联 HM 模块）
+        ├── home-editors.nix       ← Helix 主题 + LSP + 快捷键
+        ├── home-git.nix          ← Git 配置（用户名/邮箱）
+        └── home-base.nix         ← 通用用户配置
 ```
 
 **设计原则**：
@@ -285,22 +270,21 @@ nixos/
 │   └── k8s-large-cluster/        # K8s 大集群
 └── modules/
     ├── system/                   # 系统级模块
-    │   ├── core.nix              # 核心预设（所有节点默认加载）
-    │   └── units/                # 系统单元
+    │   ├── core.nix              # 核心预设（sys, base, nix, users, network, extra, container, media）
+    │   ├── home.nix              # Home Manager 聚合（home-base, home-shell, home-editors, home-git）
+    │   ├── assets/               # 共享资源（zellij 配置等）
+    │   └── units/                # 系统单元 + HM 单元（home-*.nix）
     ├── desktop/                  # 桌面预设
     │   ├── mini.nix              # 最小桌面（QEMU）
     │   ├── base.nix              # 基础桌面（portable）
     │   ├── full.nix              # 完整桌面（workstation）
-    │   └── units/                # 桌面组件单元
+    │   ├── home.nix              # 桌面 Home Manager（home-terminals, home-xdg）
+    │   └── units/                # 桌面组件单元 + HM 单元（home-terminals, home-xdg）
     ├── presets/                    # 系统预设
     │   ├── workstation-base.nix  # 工作站基座
     │   ├── server.nix            # 服务器基座
     │   ├── portable.nix          # 便携系统基座
     │   └── qemu.nix              # QEMU 虚拟机基座
-    ├── home/                     # Home Manager 配置
-    │   ├── desktop.nix           # 桌面用户环境
-    │   ├── headless.nix          # 无头用户环境
-    │   └── units/                # Home Manager 单元
     ├── overlay/                  # 包覆盖（仅 workstations 域）
     │   └── nushell.nix           # nushell 0.113.0 官方 musl 二进制
     ├── dev/                      # 开发工具模块

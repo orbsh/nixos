@@ -9,7 +9,6 @@
     ./units/fonts.nix
     ./units/accessibility.nix
     ./units/eww.nix
-    ./units/home-desktop.nix
   ];
 
   wayland.windowManager.hyprland.enable = true;

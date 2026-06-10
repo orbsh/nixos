@@ -10,7 +10,6 @@
     ./units/greetd.nix
     ./units/fonts.nix
     ./units/eww.nix
-    ./units/home-desktop.nix
     ./units/hyprland.nix
     ./units/input-method.nix
     ./units/laptop.nix
