@@ -21,7 +21,12 @@
     "sdhci_pci"    # 内置 SD 卡读卡器控制器
   ];
 
-  boot.initrd.systemd.enable = true;
+  # 注意：portable 作为 USB 移动系统盘，必须禁用 systemd initrd。
+  # 原因：USB 设备枚举慢，systemd initrd 的 udev 事件驱动机制可能错过设备就绪信号，
+  # 导致 .device unit 超时，阻塞所有依赖 initrd-root-fs.target 的服务。
+  # stage-1 init 的阻塞等待机制天然适配慢速 USB 设备。
+  # （commit 44da8c8 曾启用此项导致启动失败，详见 ADR-010）
+  boot.initrd.systemd.enable = false;
 
   # 初始 RAM 磁盘所需的内核模块
   boot.initrd.kernelModules = [ "dm-snapshot" ];
