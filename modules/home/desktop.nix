@@ -3,10 +3,9 @@
     ./units/common.nix
     ./units/shell.nix
     ./units/editors.nix
-    ./units/terminals.nix
     ./units/git.nix
+    ./units/terminals.nix
     ./units/xdg.nix
-    ./units/eww.nix
   ];
 
   home = {

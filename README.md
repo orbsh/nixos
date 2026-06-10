@@ -113,7 +113,6 @@ hosts/workstations/default.nix
               ├── units/git.nix
               ├── units/xdg.nix
               ├── units/rime.nix
-              ├── units/eww.nix
               └── programs.home-manager.enable = true
 
 ```

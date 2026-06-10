@@ -164,7 +164,7 @@ in {
     };
 
     environment.systemPackages = with pkgs; [
-      waybar wofi mako
+      wofi mako
       grim slurp swappy
       hyprpaper cliphist
       wlogout swaylock-effects
@@ -176,7 +176,6 @@ in {
     home-manager.users.${user} = {
       xdg.configFile."hypr/hyprland.conf".text = ''
         # ── 1. 自动启动守护进程 (Exec-once) ───────────────────
-        exec-once = waybar
         exec-once = mako
         exec-once = hyprpaper
         exec-once = nm-applet --indicator

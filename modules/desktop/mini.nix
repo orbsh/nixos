@@ -8,6 +8,7 @@
     ./units/input-method.nix
     ./units/fonts.nix
     ./units/accessibility.nix
+    ./units/eww.nix
   ];
 
   wayland.windowManager.hyprland.enable = true;

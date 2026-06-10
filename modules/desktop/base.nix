@@ -9,6 +9,7 @@
     ./units/accessibility.nix
     ./units/apps-core.nix
     ./units/hyprland.nix
+    ./units/eww.nix
   ];
 
   # Hyprland 合成器 + 完整辅助工具链

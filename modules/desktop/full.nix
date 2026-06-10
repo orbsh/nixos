@@ -9,6 +9,7 @@
     ./units/cosmic.nix
     ./units/greetd.nix
     ./units/fonts.nix
+    ./units/eww.nix
     ./units/hyprland.nix
     ./units/input-method.nix
     ./units/laptop.nix
