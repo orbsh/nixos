@@ -210,17 +210,19 @@ export module qemu {
         ]
 
         # 4. 核心分流：有 ISO 时从 CDROM 启动，无 ISO 时从硬盘启动
+        #    bootindex 是设备层属性，需将 drive 后端与设备分开定义
         if ($iso | is-not-empty) {
             let iso_path = $"($ROOT)/result/iso/($iso)"
             $args ++= [
-                -drive $"file=($cow),if=virtio,format=qcow2"
-                -drive $"file=($iso_path),media=cdrom"
-                -boot d
+                -drive $"file=($cow),if=none,id=disk0,format=qcow2"
+                -device "virtio-blk-pci,drive=disk0"
+                -drive $"file=($iso_path),if=none,id=cd0,media=cdrom,readonly=on"
+                -device "ide-cd,drive=cd0,bootindex=0"
             ]
         } else {
             $args ++= [
-                -drive $"file=($cow),if=virtio,format=qcow2"
-                -boot c
+                -drive $"file=($cow),if=none,id=disk0,format=qcow2"
+                -device "virtio-blk-pci,drive=disk0,bootindex=0"
             ]
         }
 

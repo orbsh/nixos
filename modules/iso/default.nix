@@ -66,13 +66,8 @@ in {
     };
   };
 
-  # ── 引导：GRUB EFI + BIOS 双支持 ────────────────
-  boot.loader.grub = {
-    enable = true;
-    device = "nodev";
-    efiSupport = true;
-    efiInstallAsRemovable = true;
-  };
+  # 注意：iso-image.nix 内部已处理所有引导（BIOS: syslinux，EFI: 内嵌 GRUB EFI 二进制）
+  # 不要设置 boot.loader.grub —— iso-image.nix 用 mkImageMediaOverride (priority 60) 强制关闭它
 
   # ── 内核 ────────────────────────────────────────
   boot.kernelPackages = pkgs.linuxPackages_latest;
@@ -80,10 +75,9 @@ in {
   # ── ISO 构建参数 ────────────────────────────────
   isoImage.volumeID = "NIXOS_AW";
   image.fileName = "nixos-anywhere.iso";
-  isoImage.squashfsCompression = "zstd -Xcompression-level 22";
+  isoImage.squashfsCompression = "zstd -Xcompression-level 8";
   isoImage.makeUsbBootable = true;
   isoImage.makeEfiBootable = true;
-  isoImage.efiSplashImage = null;
 
   # ── 文件系统 ────────────────────────────────────
   boot.supportedFilesystems = [ "btrfs" "xfs" "vfat" "ntfs" ];
