@@ -20,6 +20,9 @@
     peazip        # 压缩包管理（支持 200+ 格式）
     yt-dlp        # 视频/音频下载器
 
+    # 浏览器
+    firefox
+
     # 以下按需取消注释：
     # lapce
     # bruno           # API 客户端

@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, user, ... }:
 
 let
   cfg = config.wayland.windowManager.hyprland;
@@ -173,60 +173,77 @@ in {
       switcher-pkg        # 🌟 自动注入 Alt+Tab 高级切换器包
     ];
 
-    environment.etc = {
-      "hypr/apps.yaml".source = ../assets/hypr/apps.yaml;
+    home-manager.users.${user} = {
+      xdg.configFile."hypr/hyprland.conf".text = ''
+        # ── 1. 自动启动守护进程 (Exec-once) ───────────────────
+        exec-once = waybar
+        exec-once = mako
+        exec-once = hyprpaper
+        exec-once = nm-applet --indicator
+
+        # 自启 Alt+Tab 后台服务 (按照最近聚焦 MRU 机制排序)
+        exec-once = ${switcher-bin} init --show-title --init-sort-type "recently-focused" &
+
+        # 剪贴板历史自启
+        exec-once = wl-paste --type text --watch cliphist store
+        exec-once = wl-paste --type image --watch cliphist store
+
+        # ── 2. 基础窗口与显示器配置 ──────────────────────────
+        monitor=,preferred,auto,1
+
+        # ── 2.1 通用布局 ──────────────────────────────────
+        general {
+            gaps_in = 1
+            gaps_out = 2
+            border_size = 2
+            col.active_border = rgba(f5a962ff)
+            col.inactive_border = rgba(595959aa)
+        }
+
+        # ── 2.2 装饰：圆角 + 阴影 ────────────────────────────
+        decoration {
+            rounding = 10
+            shadow {
+                enabled = true
+                range = 12
+                offset = 3 3
+                render_power = 3
+                color = rgba(00000044)
+            }
+        }
+
+        # ── 3. F1-F12 智能快捷键绑定 ──────────────────────────
+        bind = , F1,  exec, hypr-toggle 1
+        bind = , F2,  exec, hypr-toggle 2
+        bind = , F3,  exec, hypr-toggle 3
+        bind = , F4,  exec, hypr-toggle 4
+        bind = , F5,  exec, hypr-toggle 5
+        bind = , F6,  exec, hypr-toggle 6
+        bind = , F7,  exec, hypr-toggle 7
+        bind = , F8,  exec, hypr-toggle 8
+        bind = , F9,  exec, hypr-toggle 9
+        bind = , F10, exec, hypr-toggle 10
+        bind = , F11, exec, hypr-toggle 11
+        bind = , F12, exec, hypr-toggle 12
+
+        # ── 4. 🌟 完美的 Alt+Tab 现代切换状态机绑定 ───────────────
+        # 按下 Alt+Tab：呼出切换菜单，并在窗口列表内前向循环
+        bind = ALT, TAB, exec, ${switcher-bin} gui --mod-key alt --key tab
+
+        # 按下 Alt+Shift+Tab：在菜单内反向循环窗口
+        bind = ALT SHIFT, TAB, exec, ${switcher-bin} gui --mod-key alt --key tab --reverse-key shift
+
+        # 核心释放判定：松开左 Alt 键瞬间，瞬间跳转到选中的窗口并完全关闭 GUI
+        bindr = ALT, ALT_L, exec, ${switcher-bin} close
+
+        # ── 5. 其他基础功能快捷键 ───────────────────────────
+        bind = SUPER, q, exec, flameshot gui || grim -g "$(slurp)" - | swappy -f -
+
+        # ─ 6. 窗口规则 ──────────────────────────────────
+        windowrule = match:class ^(mpv)$, float on, size 1280 720, center on
+      '';
+
+      xdg.configFile."hypr/apps.yaml".source = ../assets/hypr/apps.yaml;
     };
-
-    environment.etc."hypr/hyprland.conf".text = ''
-      # ── 1. 自动启动守护进程 (Exec-once) ───────────────────
-      exec-once = waybar
-      exec-once = mako
-      exec-once = hyprpaper
-      exec-once = nm-applet --indicator
-
-      # 自启 Alt+Tab 后台服务 (按照最近聚焦 MRU 机制排序)
-      exec-once = ${switcher-bin} init --show-title --init-sort-type "recently-focused" &
-
-      # 剪贴板历史自启
-      exec-once = wl-paste --type text --watch cliphist store
-      exec-once = wl-paste --type image --watch cliphist store
-
-      # ── 2. 基础窗口与显示器配置 ──────────────────────────
-      monitor=,preferred,auto,1
-
-      # ── 3. F1-F12 智能快捷键绑定 ──────────────────────────
-      bind = , F1,  exec, hypr-toggle 1
-      bind = , F2,  exec, hypr-toggle 2
-      bind = , F3,  exec, hypr-toggle 3
-      bind = , F4,  exec, hypr-toggle 4
-      bind = , F5,  exec, hypr-toggle 5
-      bind = , F6,  exec, hypr-toggle 6
-      bind = , F7,  exec, hypr-toggle 7
-      bind = , F8,  exec, hypr-toggle 8
-      bind = , F9,  exec, hypr-toggle 9
-      bind = , F10, exec, hypr-toggle 10
-      bind = , F11, exec, hypr-toggle 11
-      bind = , F12, exec, hypr-toggle 12
-
-      # ── 4. 🌟 完美的 Alt+Tab 现代切换状态机绑定 ───────────────
-      # 按下 Alt+Tab：呼出切换菜单，并在窗口列表内前向循环
-      bind = ALT, TAB, exec, ${switcher-bin} gui --mod-key alt --key tab
-
-      # 按下 Alt+Shift+Tab：在菜单内反向循环窗口
-      bind = ALT SHIFT, TAB, exec, ${switcher-bin} gui --mod-key alt --key tab --reverse-key shift
-
-      # 核心释放判定：松开左 Alt 键瞬间，瞬间跳转到选中的窗口并完全关闭 GUI
-      bindr = ALT, ALT_L, exec, ${switcher-bin} close
-
-      # ── 5. 其他基础功能快捷键 ───────────────────────────
-      bind = SUPER CTRL, s, togglesplit
-      bind = SUPER, q, exec, flameshot gui || grim -g "$(slurp)" - | swappy -f -
-
-      source = ~/.config/hypr/user-hyprland.conf
-
-      windowrulev2 = float, class:^(mpv)$
-      windowrulev2 = size 1280 720, class:^(mpv)$
-      windowrulev2 = center, class:^(mpv)$
-    '';
   };
 }

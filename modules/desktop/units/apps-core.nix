@@ -19,7 +19,6 @@
     ffmpeg
 
     # 浏览器
-    firefox
     chromium
     qutebrowser
 
@@ -32,6 +31,9 @@
 
     # 桌面通知
     libnotify
+
+    # 剪贴板
+    wl-clipboard
   ];
 
   # programs.gparted.enable removed in newer nixpkgs; gparted still in environment.systemPackages
