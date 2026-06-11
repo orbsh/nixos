@@ -208,7 +208,7 @@ in {
         '';
 
         # ── Custom rime.lua ──
-        xdg.dataFile."fcitx5/rime/rime.lua".source = ../../../data/rime-lua/rime.lua;
+        xdg.dataFile."fcitx5/rime/rime.lua".source = ../assets/rime/rime.lua;
       };
     }
 
