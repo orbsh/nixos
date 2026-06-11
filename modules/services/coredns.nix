@@ -188,6 +188,10 @@ in {
     # 宿主机 CoreDNS 监听在 0.0.0.0:53，系统级解析通过 127.0.0.1
     networking.nameservers = [ "127.0.0.1" ];
 
+    # ── 禁用 NetworkManager 的 DNS 管理 ──────────────────
+    # 防止 DHCP 获取的 DNS 覆盖 networking.nameservers
+    networking.networkmanager.dns = "none";
+
     # ── 关闭内置 DNS 解析服务（避免端口冲突）───────────
     services.resolved.enable = lib.mkIf cfg.disableSystemdResolved false;
 

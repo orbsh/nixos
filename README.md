@@ -42,6 +42,8 @@ flake.nix 扫描 hosts/ 目录
 
 ---
 
+
+
 ## 🖥 桌面预设层级
 
 三个独立预设，互不依赖：
@@ -115,7 +117,7 @@ hosts/workstations/default.nix
 
 ```
 
-**nushell 配置**：`developMode = true` → symlink 到 `~/Configuration/nushell`
+**nushell 配置**：`developMode = true` → symlink 到 `~/Configuration/nushell`（详见 [ADR-003](docs/adr/003-nushell-version-develop-mode.md)）
 
 ---
 
@@ -145,7 +147,7 @@ hosts/portable/default.nix
 - 无 `dev/fullstack.nix`（无开发工具链）
 - 无 `podman/full.nix`（仅 ladder 代理）
 - 使用 `base.nix` 而非 `full.nix`（无 apps-extra/apps-im/laptop）
-- nushell `developMode = false` → 通过 flake input 部署
+- nushell `developMode = false` → 通过 flake input 部署（详见 [ADR-003](docs/adr/003-nushell-version-develop-mode.md)）
 - 启用 `udisks2`（可移动设备自动挂载）
 - 启用 `getty.autologinUser`（自动登录）
 
@@ -310,7 +312,7 @@ nixos/
 
 ## 🔀 Overlay 策略
 
-本项目采用**选项驱动 overlay 架构**：模块内聚在 `modules/*/units/` 中，host 文件只设选项值。
+本项目采用**选项驱动 overlay 架构**：模块内聚在 `modules/*/units/` 中，host 文件只设选项值。详见 [ADR-002: Overlay by Domain](docs/adr/002-overlay-by-domain.md)。
 
 ### 核心原则
 
@@ -347,20 +349,20 @@ nixos/
 nix build .#iso.config.system.build.isoImage
 
 # 重建工作站
-sudo nixos-rebuild switch --flake .#workstations_orbit --impure
+sudo nixos-rebuild switch --flake .#workstations_orbit
 
 # 重建便携系统（在宿主机上）
 use x.nu portable
 portable switch
 
 # 重建 K8s 节点
-sudo nixos-rebuild switch --flake .#k8s-dev_dxserver --impure
+sudo nixos-rebuild switch --flake .#k8s-dev_dxserver
 
 # 重建 QEMU
-sudo nixos-rebuild switch --flake .#qemu --impure
+sudo nixos-rebuild switch --flake .#qemu
 ```
 
-> **`--impure` 说明**：本配置使用本地路径引用（Vivaldi deb 包、Rime 数据等），需要 `--impure` 标志。
+> **禁止 `--impure`**：本配置通过 `nix store add-file` 管理大体积外部文件（Vivaldi deb 包、Rime 数据等），保持 Nix purity。详见 [ADR-001: 大体积外部文件的源管理策略](docs/adr/001-large-external-files.md)。
 
 ---
 
@@ -373,3 +375,43 @@ sudo nixos-rebuild switch --flake .#qemu --impure
 | `flake.nix` | `user = "master"` → 你的用户名 |
 | `flake.nix` | `email = "nash@iffy.me"` → 你的邮箱 |
 | `flake.nix` | `sshPublicKey` → 你的 SSH 公钥（全局唯一） |
+
+---
+
+## 📎 附录：网络与 DNS 配置
+
+### 网络配置
+
+| 场景 | 配置方式 | 模块位置 |
+|------|----------|----------|
+| **Workstation/Portable** | NetworkManager + DHCP | `system/units/sys.nix` |
+| **K8s 静态 IP** | `nixos-builder.nix` networkModule | 通过 `nodeAttrs.ip` 配置 |
+| **K8s DHCP** | NetworkManager | `nodeAttrs.useDHCP = true` |
+
+**关键点**：
+- 静态 IP 节点通过 `nixos-builder.nix` 的 `networkModule` 配置 eth0
+- `useDHCP = false` 时禁用 DHCP，使用静态 IP
+- NetworkManager 默认启用（`system/units/sys.nix`）
+
+### DNS 架构
+
+采用分层解析 + 全局公共 DNS 策略，支持有/无宿主机 CoreDNS 两种场景自动适配。详见 [ADR-012: K8s DNS 架构](docs/adr/012-k8s-dns-architecture.md)。
+
+#### DNS 链路（无宿主机 CoreDNS）
+
+```
+Pod 查询外部域名
+  → kube-dns ClusterIP (10.0.0.254)
+  → 集群内 CoreDNS pod
+  → Corefile: forward . 223.5.5.5 119.29.29.29 1.1.1.1
+  → 公共 DNS
+```
+
+#### 配置位置
+
+| 配置项 | 文件 | 说明 |
+|--------|------|------|
+| 公共 DNS 列表 | `flake.nix` | `commonArgs.publicDnsServers` |
+| 宿主机 CoreDNS | `modules/services/coredns.nix` | 引入即启用 |
+| kubelet resolv.conf | `modules/k8s/k8s-common.nix` | 条件判断 |
+| CoreDNS Corefile | `modules/k8s/assets/patch-coredns.sh` | 运行时 patch |
