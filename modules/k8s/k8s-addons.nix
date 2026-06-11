@@ -6,6 +6,7 @@ let
   cfg = config.services.kubernetes.addons;
   kubectl = "${pkgs.kubectl}/bin/kubectl";
   ip = "${pkgs.iproute2}/bin/ip";
+  jq = "${pkgs.jq}/bin/jq";
   kubeconfig = "/etc/kubernetes/cluster-admin.kubeconfig";
   apiServerIP = config.services.kubernetes.masterAddress;
   podCIDR = config.services.kubernetes.podCIDR;
@@ -35,7 +36,7 @@ let
     then "@CNI0_IP@"  # 占位符，运行时替换为 cni0IP
     else publicDnsServersStr;  # 公共 DNS
   patchCoreDNSScript = pkgs.writeShellScript "patch-coredns.sh" (
-    builtins.replaceStrings [ "@KUBECTL@" "@KUBECONFIG@" "@IP@" "@FORWARD_TARGET@" ] [ kubectl kubeconfig ip forwardTarget ]
+    builtins.replaceStrings [ "@KUBECTL@" "@KUBECONFIG@" "@IP@" "@JQ@" "@FORWARD_TARGET@" ] [ kubectl kubeconfig ip jq forwardTarget ]
       (builtins.readFile "${assets}/patch-coredns.sh")
   );
 

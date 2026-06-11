@@ -210,7 +210,7 @@ k8s-libs.nix → expandCluster → buildNode
   ├── clusterModules             ← 域级共享模块（如 registries-gen）
   ├── runtimeModules             ← crio / containerd
   ├── k8s 配置模块               (kubernetes, apiserver SANs, cert sync 等)
-  └── node.imports               ← 节点特有导入（硬件、wireguard、coredns 等）
+  └── node.imports               ← 节点特有导入（硬件、wireguard 等）
 ```
 
 **k8s-dev/dxserver 示例**：
@@ -228,7 +228,7 @@ hosts/k8s-dev/default.nix
         ├── server/hardware/disk.nix
         ├── server/hardware/hardware-configuration.nix
         ├── server/hardware/wireguard.nix
-        └── modules/k8s/coredns.nix    (内网 DNS)
+        └── modules/services/coredns.nix    (内网 DNS)
 ```
 
 ---
@@ -396,6 +396,17 @@ sudo nixos-rebuild switch --flake .#qemu
 ### DNS 架构
 
 采用分层解析 + 全局公共 DNS 策略，支持有/无宿主机 CoreDNS 两种场景自动适配。详见 [ADR-012: K8s DNS 架构](docs/adr/012-k8s-dns-architecture.md)。
+
+#### DNS 链路（有宿主机 CoreDNS）
+
+```
+Pod 查询外部域名
+  → kube-dns ClusterIP (10.0.0.254)
+  → 集群内 CoreDNS pod
+  → Corefile: forward . <cni0IP>
+  → 宿主机 CoreDNS（通过 cni0 网桥可达）
+  → 宿主机 CoreDNS forward 到上游公共 DNS
+```
 
 #### DNS 链路（无宿主机 CoreDNS）
 

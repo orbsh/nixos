@@ -71,4 +71,4 @@ EOF
 )
 
 @KUBECTL@ --kubeconfig=@KUBECONFIG@ patch configmap coredns -n kube-system \
-  --type merge -p "{\"data\":{\"Corefile\":$(echo "$COREFILE" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')}}"
+  --type merge -p "{\"data\":{\"Corefile\":$(printf '%s\n' "$COREFILE" | @JQ@ -Rs .)}}"
