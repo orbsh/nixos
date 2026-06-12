@@ -4,7 +4,8 @@
   imports = [
     ./units/home-base.nix
     ./units/home-shell.nix
-    ./units/home-editors.nix
+    ./units/home-nvim.nix
+    ./units/home-helix.nix
     ./units/home-git.nix
   ];
 }

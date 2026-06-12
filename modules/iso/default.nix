@@ -17,7 +17,8 @@ in {
     ../system/units/nix.nix
 
     # ── Home Manager 用户配置 ────
-    ../system/units/home-editors.nix
+    ../system/units/home-nvim.nix
+    ../system/units/home-helix.nix
     ../system/units/home-git.nix
 
     # (overlay 目录已移除，不再加载)
