@@ -14,7 +14,6 @@
     ./units/input-method.nix
     ./units/laptop.nix
     ./units/rime.nix
-    ./units/zed.nix
   ];
 
   # Hyprland 合成器 + 完整辅助工具链

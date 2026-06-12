@@ -1,5 +1,10 @@
 { pkgs, lib, ... }: {
 
+  # ── 终端复用器 ────────────────────────────────────────────────
+  home.packages = with pkgs; [
+    zellij  # 终端复用（Ghostty 启动时自动 attach）
+  ];
+
   # ── Ghostty ───────────────────────────────────────────────────
   # home-manager 25.05 已有 programs.ghostty
   programs.ghostty = {

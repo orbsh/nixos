@@ -10,6 +10,7 @@
     ./units/net-tools.nix
     ./units/k8s.nix
     ./units/wasm.nix
+    ./units/zed.nix
     # 服务端（按需：容器化/独立部署场景取消注释）
     # ./units/mysql-server.nix
     # ./units/postgresql-server.nix

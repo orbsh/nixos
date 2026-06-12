@@ -1,10 +1,6 @@
 { pkgs, ... }:
 
 {
-  imports = [
-    ./zed.nix              # 编辑器：Zed + IME 修复
-  ];
-
   environment.systemPackages = with pkgs; [
     # Shell & 终端
     ghostty
