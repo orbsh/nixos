@@ -4,6 +4,7 @@
     nodejs
 
     # JS/TS 全局工具链（LSP 服务器）
+    typescript-language-server
     vscode-langservers-extracted  # JSON/HTML/CSS 语言服务器
     yaml-language-server          # YAML 语言服务器
   ];

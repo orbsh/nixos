@@ -80,15 +80,6 @@
           }
         ];
       };
-      # 额外的 LSP 和格式化工具
-      extraPackages = with pkgs; [
-        rust-analyzer
-        typescript-language-server
-        vscode-langservers-extracted  # html/css/json/eslint
-        taplo                                       # TOML
-        nil                                         # Nix LSP
-        nufmt                                       # nushell 格式化
-      ];
     };
   };
 }

@@ -79,11 +79,11 @@
     },
     "my-nvim-config": {
       "locked": {
-        "lastModified": 1781253284,
-        "narHash": "sha256-+X2VNb0TngufA6ryctrRb1iM4d/FeNllYCT+bacMwdI=",
+        "lastModified": 1781259220,
+        "narHash": "sha256-Rz2u/pHJwcVXLESi/ZxIH+A83ffW5z8T3R4vqNXncdQ=",
         "owner": "fj0r",
         "repo": "nvim-lua",
-        "rev": "c6671f95b33d65da2223e8942f201fcad31d49f2",
+        "rev": "f4e37327a18f47c9df7064f770d13bb57ae0a0b1",
         "type": "github"
       },
       "original": {

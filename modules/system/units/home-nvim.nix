@@ -34,9 +34,12 @@ in
 
         # 非开发模式：activation script 初始化 lazy.nvim 插件
         home.activation.lazyNvimSync = lib.mkIf (!cfg.developMode) (
-          config.lib.dag.entryAfter ["writeBoundary"] ''
+          config.lib.dag.entryAfter ["linkGeneration"] ''
             NVIM_CONFIG="$HOME/.config/nvim"
             NVIM_DATA="$HOME/.local/share/nvim"
+
+            # 确保 git 在 PATH 中（nvim init.lua 需要）
+            export PATH="${pkgs.git}/bin:$PATH"
 
             # 检查配置是否有变化
             MARKER="$NVIM_DATA/.lazy-sync-marker"
