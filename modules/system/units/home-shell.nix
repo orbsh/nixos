@@ -1,4 +1,4 @@
-{ config, pkgs, lib, nushellSrc, nushellGitUrl, nushellLocalPath, user, ... }:
+{ config, pkgs, lib, nushellSrc, nushellLocalPath, user, ... }:
 
 let
   cfg = config.programs.nushell;

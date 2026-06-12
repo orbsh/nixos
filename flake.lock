@@ -77,6 +77,21 @@
         "type": "github"
       }
     },
+    "my-nvim-config": {
+      "locked": {
+        "lastModified": 1781253284,
+        "narHash": "sha256-+X2VNb0TngufA6ryctrRb1iM4d/FeNllYCT+bacMwdI=",
+        "owner": "fj0r",
+        "repo": "nvim-lua",
+        "rev": "c6671f95b33d65da2223e8942f201fcad31d49f2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "fj0r",
+        "repo": "nvim-lua",
+        "type": "github"
+      }
+    },
     "nix-vm-test": {
       "inputs": {
         "nixpkgs": [
@@ -205,6 +220,7 @@
         "disko": "disko",
         "home-manager": "home-manager",
         "my-nushell-config": "my-nushell-config",
+        "my-nvim-config": "my-nvim-config",
         "nix2container": "nix2container",
         "nixos-anywhere": "nixos-anywhere",
         "nixpkgs": "nixpkgs"

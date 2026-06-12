@@ -29,9 +29,14 @@
       url = "github:fj0r/nushell";
       flake = true;
     };
+
+    my-nvim-config = {
+      url = "github:fj0r/nvim-lua";
+      flake = true;
+    };
   };
 
-  outputs = { self, nixpkgs, nixos-anywhere, nix2container, disko, home-manager, my-nushell-config, ... }@inputs:
+  outputs = { self, nixpkgs, nixos-anywhere, nix2container, disko, home-manager, my-nushell-config, my-nvim-config, ... }@inputs:
   let
     # ── 统一变量定义 ─────────────────────────────────────
     user = "master";
@@ -48,8 +53,9 @@
       inherit inputs dataDir user email sshPublicKey hashedPassword;
       self = ./.;  # flake 根目录路径
       nushellSrc = my-nushell-config.outPath;
-      nushellGitUrl = "https://github.com/${my-nushell-config.owner}/${my-nushell-config.repo}.git";
       nushellLocalPath = "/home/${user}/Configuration/nushell";
+      nvimSrc = my-nvim-config.outPath;
+      nvimLocalPath = "/home/${user}/Configuration/nvim";
       # 公共 DNS（地理位置相关：中国大陆）
       publicDnsServers = [ "223.5.5.5" "119.29.29.29" "1.1.1.1" ];
     };
@@ -96,8 +102,9 @@
       specialArgs = {
         inherit inputs self user email sshPublicKey hashedPassword;
         nushellSrc = my-nushell-config.outPath;
-        nushellGitUrl = "https://github.com/${my-nushell-config.owner}/${my-nushell-config.repo}.git";
         nushellLocalPath = "/home/${user}/Configuration/nushell";
+        nvimSrc = my-nvim-config.outPath;
+        nvimLocalPath = "/home/${user}/Configuration/nvim";
       };
       modules = [
         { nixpkgs.hostPlatform = "x86_64-linux"; }

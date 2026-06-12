@@ -2,7 +2,8 @@
   imports = [
     # 核心系统预设 + Home Manager 配置
     ../system/core.nix
-    ../system/home.nix
+    ../system/home.nix           # 基础 HM（nvim、git、shell）
+    ../system/home-extra.nix     # 工作站扩展（helix 等）
 
     ../services/virt.nix               # libvirtd/virt-manager 虚拟机支持
 
@@ -23,6 +24,7 @@
 
   # 工作站开发模式：符号链接 + git clone
   programs.nushell.developMode = lib.mkForce true;
+  programs.neovim.developMode = lib.mkForce true;
 
   # 主机名应由具体节点定义，而非基座
   # networking.hostName = "workstation";

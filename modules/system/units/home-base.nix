@@ -23,8 +23,6 @@
 
     # 环境变量（全环境通用）
     home.sessionVariables = {
-      EDITOR  = "hx";
-      VISUAL  = "hx";
       PAGER   = "glow";
     };
   };

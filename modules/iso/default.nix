@@ -1,4 +1,4 @@
-{ pkgs, lib, inputs, self, user, email, sshPublicKey, hashedPassword, nushellSrc, nushellGitUrl, nushellLocalPath, ... }:
+{ pkgs, lib, inputs, self, user, email, sshPublicKey, hashedPassword, nushellSrc, nushellLocalPath, ... }:
 
 let
   # ── Nushell 配置（复制到 store，避免 symlink 导致 xorriso 报错） ─
@@ -41,7 +41,7 @@ in {
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
-    extraSpecialArgs = { inherit user email nushellGitUrl nushellLocalPath; };
+    extraSpecialArgs = { inherit user email nushellLocalPath; };
     users.${user} = {
       home = {
         username = "${user}";
