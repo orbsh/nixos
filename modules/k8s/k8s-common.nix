@@ -269,7 +269,6 @@
   environment.systemPackages = with pkgs; [
     kubectl
     kubernetes-helm
-    istioctl
     yq-go
   ];
 

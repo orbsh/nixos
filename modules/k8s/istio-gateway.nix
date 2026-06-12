@@ -25,6 +25,9 @@ in {
     # ── Istio Gateway + Gateway API CRDs ─────────────────────
     # 使用 istioctl 部署 Istio（含 Gateway 配置）、Gateway API CRDs 和 Gateway 资源
 
+    # ── CLI 工具 ─────────────────────────────────────────────
+    environment.systemPackages = [ pkgs.istioctl ];
+
     # ── Istio 安装（使用 IstioOperator）───────────────────────
     systemd.services.deploy-istio = {
       description = "Install Istio service mesh via IstioOperator";
