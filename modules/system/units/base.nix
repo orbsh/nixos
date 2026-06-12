@@ -62,14 +62,12 @@
   # 基础 CLI 工具（所有主机通用）
   environment.systemPackages = with pkgs; [
     # ── 网络与传输 ──
-    git curl wget rsync socat netcat-openbsd minio-client  # minio-client: mc
-
+    git curl wget rsync socat netcat-openbsd
     # ── 文件与系统工具 ──
     util-linux  # mount, fdisk, lsblk 等
     jq tree file unzip fd ripgrep bind dust  # bind: dig, nslookup
 
     # ── 终端与编辑器 ──
     nushell  # 现代 Shell
-    helix  # 编辑器：系统级提供二进制，用户配置由 home-manager 管理
   ];
 }

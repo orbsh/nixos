@@ -8,5 +8,6 @@
   environment.systemPackages = with pkgs; [
     nil      # Nix LSP
     nufmt    # nushell 格式化
+    minio-client  # minio-client: mc
   ];
 }

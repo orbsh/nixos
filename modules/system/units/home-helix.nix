@@ -1,4 +1,7 @@
 { config, pkgs, user, ... }: {
+  environment.systemPackages = with pkgs; [
+    helix
+  ]
   home-manager.users.${user} = {
     # ── Helix ─────────────────────────────────────────────────────
     programs.helix = {
