@@ -12,7 +12,7 @@
     settings = {
       frame = "none";
       font = {
-        normal = ["MonaspiceAr NFM"];
+        normal = ["MonaspiceAr NFM" "Noto Sans Mono CJK SC"];
         size = 21;
         features = {
           "MonaspiceAr NFM" = ["+ss01" "+ss02" "+ss03" "+ss04" "+ss05" "+ss06" "+ss07" "+ss08" "+calt" "+dlig"];
