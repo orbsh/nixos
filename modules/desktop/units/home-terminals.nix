@@ -6,6 +6,24 @@
     neovide  # Neovim GUI（亚像素渲染 + 物理微动画）
   ];
 
+  # ── Neovide ────────────────────────────────────────────────────
+  programs.neovide = {
+    enable = true;
+    settings = {
+      frame = "none";
+      font = {
+        normal = ["MonaspiceAr NFM"];
+        size = 21;
+        features = {
+          "MonaspiceAr NFM" = ["+ss01" "+ss02" "+ss03" "+ss04" "+ss05" "+ss06" "+ss07" "+ss08" "+calt" "+dlig"];
+        };
+      };
+      box-drawing = {
+        mode = "native";
+      };
+    };
+  };
+
   # ── Ghostty ───────────────────────────────────────────────────
   # home-manager 25.05 已有 programs.ghostty
   programs.ghostty = {
