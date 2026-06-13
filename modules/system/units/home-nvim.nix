@@ -15,6 +15,8 @@ in
           neovim
           ripgrep
           fd
+          lua-language-server
+          tree-sitter
         ];
 
         # 设置默认编辑器

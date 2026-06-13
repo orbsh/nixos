@@ -1,10 +1,8 @@
 { pkgs, ... }: {
-  # NixOS 的 rustup 包已适配 NixOS，无需额外配置
-  # 使用方式：rustup toolchain install stable（会自动使用 NixOS 兼容的二进制）
   environment.systemPackages = with pkgs; [
-    rustup
-    cargo
+    # 不用 rustup：其 rust-analyzer wrapper 会遮蔽 nixpkgs 的二进制，导致无限递归
     rustc
+    cargo
     rustfmt
     clippy
     rust-analyzer
