@@ -49,11 +49,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1781365335,
-        "narHash": "sha256-zqDBhXMzfbdlO7F2bGHe7MOtB3xngd/+4ieMHDC+ZXo=",
+        "lastModified": 1781477932,
+        "narHash": "sha256-7EZqIpytCiWoVsUQIRytWr2H0esy2xuntQHjG4Hb/48=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "5b6f5733726a1b2ccafb5dec6ac4ca7299fad66c",
+        "rev": "ed8263e7d7813ec8f447e78e5dcd7f94f333f1d5",
         "type": "github"
       },
       "original": {
@@ -64,11 +64,11 @@
     },
     "my-nushell-config": {
       "locked": {
-        "lastModified": 1781340937,
-        "narHash": "sha256-kYPIAHY5w3vQvs+6+qlNnfiz1Pz0nXwmWm4Qc30Jun8=",
+        "lastModified": 1781488866,
+        "narHash": "sha256-erGirheG7DEdEKkkmNxz0Fby6egMDELyawVYVPcysKE=",
         "owner": "fj0r",
         "repo": "nushell",
-        "rev": "2c198f1203d013e008181350ae211c888aa4e413",
+        "rev": "176e8bf15bc11ac85d011cce1cb95ef961f5b2fb",
         "type": "github"
       },
       "original": {
@@ -79,11 +79,11 @@
     },
     "my-nvim-config": {
       "locked": {
-        "lastModified": 1781368767,
-        "narHash": "sha256-uHPCom2sv3uKAcLsEAnawcXNu/kIrd2xrmTNHJTiepI=",
+        "lastModified": 1781488143,
+        "narHash": "sha256-Etf60H42+ab0guxDQkV6LmfooWQAZGMqEdyTsZ39FgY=",
         "owner": "fj0r",
         "repo": "nvim-lua",
-        "rev": "1f6fc1bf83393d8d301d621f81de28ac8768ebc5",
+        "rev": "a608943df767aff704e32bff760dbc3c550e08cc",
         "type": "github"
       },
       "original": {

@@ -17,8 +17,8 @@
       ./orbit/hardware.nix
       ./orbit/disk.nix
       ./orbit/wireguard.nix
-      ./vivaldi.nix
       ./wanxiang.nix
+      #./vivaldi.nix
       # ./nushell.nix
       (import ../../libs/registries-gen.nix {
         inherit lib;

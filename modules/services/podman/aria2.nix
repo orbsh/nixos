@@ -1,32 +1,32 @@
 { dataDir, user, ... }: {
   virtualisation.oci-containers.containers = {
-    qbittorrent = {
-      image = "superng6/qbittorrentee:latest";
+    aria2 = {
+      image = "p3terx/aria2-pro";
       environment = {
         "PUID" = "1000";
         "PGID" = "1000";
         "UMASK" = "002";
         "TZ" = "Etc/UTC";
-        "QBT_WEBUI_PORT" = "8181";
-        "QBT_TORRENTING_PORT" = "6881";
+        "LISTEN_PORT" = "6888";
+        "RPC_SECRET" = "aria2-secret-token-change-me";
       };
       volumes = [
-        "/home/${user}/data/qbittorrent/data:/config"
-        "/home/${user}/Downloads/qbittorrent:/downloads"
+        "/home/${user}/data/aria2:/config"
+        "/home/${user}/Downloads/aria2:/downloads"
       ];
       ports = [
-        "8181:8080"    # Web UI
-        "6881:6881"    # Torrenting (TCP)
-        "6881:6881/udp" # Torrenting (UDP)
+        "6800:6800"    # RPC
+        "6888:6888"    # BT listen (TCP)
+        "6888:6888/udp" # BT listen (UDP)
       ];
       autoStart = true;
     };
   };
 
-  systemd.services.podman-qbittorrent = {
+  systemd.services.podman-aria2 = {
     preStart = ''
-      mkdir -p /home/${user}/data/qbittorrent
-      mkdir -p /home/${user}/Downloads/qbittorrent
+      mkdir -p /home/${user}/data/aria2
+      mkdir -p /home/${user}/Downloads/aria2
     '';
 
     after = [ "podman-app-network.target" ];
