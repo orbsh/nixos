@@ -7,8 +7,6 @@
       httpx fastapi uvicorn websockets
       # Async
       aiofile aiostream
-      # Dev
-      ty debugpy pytest
       # CLI
       ipython typer
       # Utils
@@ -22,5 +20,10 @@
   ] ++ lib.optionals config.programs.developMode [
     pyrefly  # Python LSP (type checker)
     ruff     # Python linter & formatter
+    (python3.withPackages (ps: with ps; [
+      ty
+      debugpy  # Debugger
+      pytest   # Testing
+    ]))
   ];
 }
