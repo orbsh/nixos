@@ -41,9 +41,4 @@
       builtins.elem (pkg.pname or "") [
         "freefilesync"
       ];
-
-  environment.variables = {
-    EDITOR = "hx";
-    VISUAL = "hx";
-  };
 }
