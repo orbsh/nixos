@@ -26,8 +26,10 @@
         registriesData = import ./registries.nix;
       })
     ];
-  };
 
+    # 用户级环境变量（仅对 orbit 节点的 master 用户生效）
+    home-manager.users.${user}.home.sessionVariables.PREFER_ALT = "1";
+  };
   # 成员 1：Alice
   "team-alice" = {
     user = "alice";
