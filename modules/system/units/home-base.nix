@@ -2,10 +2,6 @@
 # 由 system/home.nix 导入，覆盖 server / k8s / workstation / portable / qemu
 { config, pkgs, lib, inputs, user, ... }: {
   home-manager.users.${user} = {
-    # ── Home State Version ─────────────────────────────────
-    # Set once on initial install, never change unless doing a major version upgrade.
-    home.stateVersion = "26.05";
-
     home = {
       username = "${user}";
       homeDirectory = "/home/${user}";

@@ -58,6 +58,9 @@
       nvimLocalPath = "/home/${user}/Configuration/nvim";
       # 公共 DNS（地理位置相关：中国大陆）
       publicDnsServers = [ "223.5.5.5" "119.29.29.29" "1.1.1.1" ];
+      # 全局 stateVersion（NixOS + Home Manager 可独立演进）
+      systemStateVersion = "26.05";
+      homeStateVersion = "26.05";
     };
 
     # ── 通用构建器 ─────────────────────────────────────
@@ -105,6 +108,8 @@
         nushellLocalPath = "/home/${user}/Configuration/nushell";
         nvimSrc = my-nvim-config.outPath;
         nvimLocalPath = "/home/${user}/Configuration/nvim";
+        systemStateVersion = commonArgs.systemStateVersion;
+        homeStateVersion = commonArgs.homeStateVersion;
       };
       modules = [
         { nixpkgs.hostPlatform = "x86_64-linux"; }

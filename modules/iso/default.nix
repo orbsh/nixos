@@ -1,4 +1,4 @@
-{ pkgs, lib, inputs, self, user, email, sshPublicKey, hashedPassword, nushellSrc, nushellLocalPath, ... }:
+{ pkgs, lib, inputs, self, user, email, sshPublicKey, hashedPassword, nushellSrc, nushellLocalPath, systemStateVersion, homeStateVersion, ... }:
 
 let
   # ── Nushell 配置（复制到 store，避免 symlink 导致 xorriso 报错） ─
@@ -46,7 +46,7 @@ in {
       home = {
         username = "${user}";
         homeDirectory = "/home/${user}";
-        stateVersion = "26.05";
+        stateVersion = homeStateVersion;
       };
       programs.home-manager.enable = true;
       home.enableNixpkgsReleaseCheck = false;
@@ -131,5 +131,5 @@ in {
   };
 
   # ── 系统版本 ────────────────────────────────────
-  system.stateVersion = "26.05";
+  system.stateVersion = systemStateVersion;
 }

@@ -5,11 +5,6 @@
   };
 
   config = {
-    # ── System State Version ─────────────────────────────────
-    # Set once on initial install, never change unless doing a major version upgrade.
-    # All hosts inherit this value from base.nix.
-    system.stateVersion = "26.05";
-
     # 全局允许非自由软件
     nixpkgs.config.allowUnfree = true;
 

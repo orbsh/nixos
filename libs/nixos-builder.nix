@@ -15,6 +15,7 @@ let
   # ── 基础模块栈 ───────────────────────────────────────
   baseModules = [
     { nixpkgs.hostPlatform = "x86_64-linux"; }
+    { system.stateVersion = commonArgs.systemStateVersion; }
 
     commonArgs.inputs.disko.nixosModules.disko
 
@@ -30,6 +31,7 @@ let
         # 关闭 nixpkgs 版本不匹配警告（unstable 滚动更新，版本号永远不一致）
         sharedModules = [
           { home.enableNixpkgsReleaseCheck = false; }
+          { home.stateVersion = commonArgs.homeStateVersion; }
         ];
       };
     }
