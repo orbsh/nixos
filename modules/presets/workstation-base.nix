@@ -23,8 +23,7 @@
   boot.tmp.tmpfsSize = "50%";  # 分配最大 50% 物理内存给临时盘
 
   # 工作站开发模式：符号链接 + git clone
-  programs.nushell.developMode = lib.mkForce true;
-  programs.neovim.developMode = lib.mkForce true;
+  programs.developMode = lib.mkForce true;
 
   # 主机名应由具体节点定义，而非基座
   # networking.hostName = "workstation";

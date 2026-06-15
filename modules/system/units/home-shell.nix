@@ -1,12 +1,9 @@
 { config, pkgs, lib, nushellSrc, nushellLocalPath, user, ... }:
 
 let
-  cfg = config.programs.nushell;
+  developMode = config.programs.developMode;
 in
 {
-  options.programs.nushell.developMode = lib.mkEnableOption
-    "Use symlink + git clone for nushell config (for development)";
-
   config.home-manager.users.${user} = {
     imports = [
       ({ config, lib, ... }: {
@@ -25,7 +22,7 @@ in
           fi
         '';
 
-        home.file.".config/nushell" = if cfg.developMode then {
+        home.file.".config/nushell" = if developMode then {
           # 工作站开发模式：单符号链接指向本地开发目录（out-of-store）
           source = config.lib.file.mkOutOfStoreSymlink nushellLocalPath;
           force = true;

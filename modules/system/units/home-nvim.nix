@@ -1,12 +1,9 @@
 { config, pkgs, lib, nvimSrc, nvimLocalPath, user, ... }:
 
 let
-  cfg = config.programs.neovim;
+  developMode = config.programs.developMode;
 in
 {
-  options.programs.neovim.developMode = lib.mkEnableOption
-    "Use symlink for nvim config (for development)";
-
   config.home-manager.users.${user} = {
     imports = [
       ({ config, lib, ... }: {
@@ -15,15 +12,16 @@ in
           neovim
           ripgrep
           fd
-          lua-language-server
           tree-sitter
+        ] ++ lib.optionals developMode [
+          lua-language-server
         ];
 
         # 设置默认编辑器
         home.sessionVariables.EDITOR = "nvim";
         home.sessionVariables.VISUAL = "nvim";
 
-        home.file.".config/nvim" = if cfg.developMode then {
+        home.file.".config/nvim" = if developMode then {
           # 工作站开发模式：符号链接指向本地开发目录
           source = config.lib.file.mkOutOfStoreSymlink nvimLocalPath;
           force = true;
@@ -35,7 +33,7 @@ in
         };
 
         # 非开发模式：activation script 初始化 lazy.nvim 插件
-        home.activation.lazyNvimSync = lib.mkIf (!cfg.developMode) (
+        home.activation.lazyNvimSync = lib.mkIf (!developMode) (
           config.lib.dag.entryAfter ["linkGeneration"] ''
             NVIM_CONFIG="$HOME/.config/nvim"
             NVIM_DATA="$HOME/.local/share/nvim"
