@@ -284,6 +284,7 @@
   # 使用 systemd path 监控证书文件变化
   systemd.services.generate-kubeconfig = {
     description = "Generate kubeconfig when certificates are updated";
+    wantedBy = [ "multi-user.target" ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = false;

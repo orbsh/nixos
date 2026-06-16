@@ -1,40 +1,40 @@
 #!/usr/bin/env bash
-# 生成一次性 kubeconfig 文件
-# 用法: sudo generate-kubeconfig.sh [输出路径] [集群名称] [API Server地址]
-# 默认值:
-#   输出路径: ~/.kube/config
-#   集群名称: kubernetes
-#   API Server: https://172.178.5.123:6443 (从当前节点读取)
-
+# Generate inline kubeconfig file
+# Usage: sudo generate-kubeconfig.sh [output_path] [cluster_name] [apiserver_url]
+# Defaults:
+#   output_path: ~/.kube/config
+#   cluster_name: kubernetes
+#   apiserver: https://172.178.5.123:6443 (read from current node)
+#
 set -euo pipefail
 
-SECRETS_DIR=*** 设置默认值
+SECRETS_DIR="/var/lib/kubernetes/secrets"
 OUTPUT_PATH="${1:-$HOME/.kube/config}"
 CLUSTER_NAME="${2:-kubernetes}"
 
-# 从 kubernetes 配置中读取 API Server 地址，如果未提供第三个参数
+# Read API Server address from kubernetes config if not provided as 3rd arg
 if [ $# -ge 3 ]; then
     APISERVER="$3"
 else
-    # 尝试从运行中的 kube-apiserver 读取，或使用默认值
+    # Try to read from running kube-apiserver, or use default
     APISERVER="https://localhost:6443"
 fi
 
-# 检查证书文件是否存在
+# Check if certificate files exist
 if [ ! -f "$SECRETS_DIR/cluster-admin.pem" ] || [ ! -f "$SECRETS_DIR/cluster-admin-key.pem" ]; then
-    echo "错误: 证书文件不存在，请确保 Kubernetes 已正确初始化"
+    echo "Error: certificate files not found, please ensure Kubernetes is properly initialized"
     exit 1
 fi
 
-# 创建输出目录
+# Create output directory
 mkdir -p "$(dirname "$OUTPUT_PATH")"
 
-# 读取证书和私钥
+# Read certificates and private key
 CA_CERT=$(sudo cat "$SECRETS_DIR/ca.pem")
 CLIENT_CERT=$(sudo cat "$SECRETS_DIR/cluster-admin.pem")
 CLIENT_KEY=$(sudo cat "$SECRETS_DIR/cluster-admin-key.pem")
 
-# 生成 kubeconfig
+# Generate kubeconfig
 cat > "$OUTPUT_PATH" <<EOF
 apiVersion: v1
 kind: Config
@@ -56,13 +56,13 @@ users:
     client-key-data: $(echo "$CLIENT_KEY" | base64 -w 0)
 EOF
 
-# 设置权限（仅所有者可读写）
+# Set permissions (readable/writable by owner only)
 chmod 600 "$OUTPUT_PATH"
 
-echo "✓ kubeconfig 已生成: $OUTPUT_PATH"
-echo "  集群名称: $CLUSTER_NAME"
+echo "kubeconfig generated: $OUTPUT_PATH"
+echo "  Cluster name: $CLUSTER_NAME"
 echo "  API Server: $APISERVER"
-echo "⚠ 警告: 此文件包含私钥，请妥善保管"
-echo "  - 不要提交到 git"
-echo "  - 不要上传到公共位置"
-echo "  - 使用后可手动删除: rm $OUTPUT_PATH"
+echo "WARNING: This file contains private keys, keep it secure"
+echo "  - Do not commit to git"
+echo "  - Do not upload to public locations"
+echo "  - Delete manually after use: rm $OUTPUT_PATH"
