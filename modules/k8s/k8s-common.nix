@@ -272,6 +272,43 @@
     yq-go
   ];
 
+  # ── 用户组权限 ─────────────────────────────────────────
+  # 将所有正常用户添加到 kubernetes 组，以便读取集群证书
+  users.groups.kubernetes = {};
+  users.groups.kubernetes.members = lib.attrNames (
+    lib.filterAttrs (name: user: user.isNormalUser or false) config.users.users
+  );
+
+  # 修复证书文件权限，让 kubernetes 组可以读取
+  # NixOS kubernetes 模块硬编码私钥权限为 0600，组成员无法读取
+  systemd.services.fix-k8s-cert-permissions = {
+    description = "Fix Kubernetes certificate permissions for group access";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "certmgr.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      set -euo pipefail
+      SECRETS_DIR="/var/lib/kubernetes/secrets"
+
+      # 等待证书文件生成
+      for i in $(seq 1 30); do
+        if [ -f "$SECRETS_DIR/cluster-admin.pem" ]; then
+          break
+        fi
+        sleep 2
+      done
+
+      # 修改私钥文件权限，让 kubernetes 组可以读取
+      if [ -d "$SECRETS_DIR" ]; then
+        find "$SECRETS_DIR" -name "*-key.pem" -exec chmod 640 {} \;
+        echo "[fix-k8s-cert-permissions] Fixed permissions for private keys"
+      fi
+    '';
+  };
+
   # ── 禁用 NixOS 自动 flannel（改由 k8s-addons.nix 声明式部署） ──
   # 不设置此项则 NixOS 会生成 11-flannel.conf 创建 mynet 网桥
   services.kubernetes.flannel.enable = lib.mkForce false;

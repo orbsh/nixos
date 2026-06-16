@@ -5,6 +5,7 @@
     ./envoy-gateway.nix
     # ./istio-gateway.nix
     ./cert-manager.nix
+    ./k8s-cfssl-hostname-fix.nix
   ];
 
   # ── 控制平面组件 ───────────────────────────────────────
