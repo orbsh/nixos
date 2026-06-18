@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Generate inline kubeconfig file
-# Usage: sudo generate-kubeconfig.sh [output_path] [cluster_name] [apiserver_url]
+# Usage: generate-kubeconfig.sh [output_path] [cluster_name] [apiserver_url]
 # Defaults:
 #   output_path: ~/.kube/config
 #   cluster_name: kubernetes
@@ -30,9 +30,9 @@ fi
 mkdir -p "$(dirname "$OUTPUT_PATH")"
 
 # Read certificates and private key
-CA_CERT=$(sudo cat "$SECRETS_DIR/ca.pem")
-CLIENT_CERT=$(sudo cat "$SECRETS_DIR/cluster-admin.pem")
-CLIENT_KEY=$(sudo cat "$SECRETS_DIR/cluster-admin-key.pem")
+CA_CERT=$(cat "$SECRETS_DIR/ca.pem")
+CLIENT_CERT=$(cat "$SECRETS_DIR/cluster-admin.pem")
+CLIENT_KEY=$(cat "$SECRETS_DIR/cluster-admin-key.pem")
 
 # Generate kubeconfig
 cat > "$OUTPUT_PATH" <<EOF
