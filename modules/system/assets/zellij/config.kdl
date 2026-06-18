@@ -1,5 +1,6 @@
 default_shell "nu"
 simplified_ui true
+show_startup_tips false
 theme "gruvbox-dark"
 pane_frames false
 compact_bar true

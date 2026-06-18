@@ -19,8 +19,16 @@
   # ── Pop Launcher Plugins (HM) ──────────────────────────
   home-manager.users.${user} = {
     xdg.dataFile = {
-      "pop-launcher/plugins/cwdhist/main.py".source = ../assets/pop-launcher/cwdhist/main.py;
+      "pop-launcher/plugins/cwdhist/main.py" = {
+        source = ../assets/pop-launcher/cwdhist/main.py;
+        executable = true;
+      };
       "pop-launcher/plugins/cwdhist/plugin.ron".source = ../assets/pop-launcher/cwdhist/plugin.ron;
+      "pop-launcher/plugins/zellij/main.py" = {
+        source = ../assets/pop-launcher/zellij/main.py;
+        executable = true;
+      };
+      "pop-launcher/plugins/zellij/plugin.ron".source = ../assets/pop-launcher/zellij/plugin.ron;
     };
   };
 }
