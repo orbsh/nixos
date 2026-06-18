@@ -6,32 +6,17 @@ let
   targetFile = "${targetDir}/wallpaper.jpg";
 in
 {
-  # 1. 关闭 NixOS 默认的 regreet 管理，完全接管配置
-  programs.regreet.enable = false;
+  # 1. 启用 COSMIC Greeter
+  services.displayManager.cosmic-greeter.enable = true;
 
-  # 2. 部署自定义配置文件到 /etc/greetd
-  environment.etc."greetd/regreet.toml".source = ../assets/greetd/config.toml;
-  environment.etc."greetd/style.css".source = ../assets/greetd/style.css;
-
-  # 3. Greetd 设置
-  services.greetd = {
-    enable = true;
-    settings = {
-      default_session = {
-        command = "${pkgs.cage}/bin/cage -s -- ${pkgs.regreet}/bin/regreet --config /etc/greetd/regreet.toml --style /etc/greetd/style.css";
-        user = "greeter";
-      };
-    };
-  };
-
-  # 4. 禁用 Keyring
+  # 2. 禁用 Keyring
   services.gnome.gnome-keyring.enable = false;
 
-  # 5. 壁纸服务
-  systemd.services.greetd-wallpaper-rotator = {
+  # 3. 壁纸服务
+  systemd.services.cosmic-greeter-wallpaper-rotator = {
     description = "Randomly pick a login wallpaper";
-    wantedBy = [ "greetd.service" ];
-    before = [ "greetd.service" ];
+    wantedBy = [ "cosmic-greeter.service" ];
+    before = [ "cosmic-greeter.service" ];
     script = ''
       mkdir -p ${targetDir}
       img=$(${pkgs.fd}/bin/fd . ${userWallpaperDir} -d 1 -t f -e jpg -e jpeg -e png | shuf -n 1)
