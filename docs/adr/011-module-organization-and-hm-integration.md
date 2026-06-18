@@ -77,6 +77,8 @@ imports = [
 }
 ```
 
+**组件归属判断**：当组件理论上可被多个项目依赖但实际只与特定生态配合时，按实际使用场景归属。例如 pop-launcher 虽可配合 pop-shell/cosmic-launcher/onagre，但实际只与 cosmic-launcher 使用，因此其插件配置合并到 `cosmic.nix`。
+
 ### 理由
 
 1. **归属内聚** — terminals/xdg 是桌面专属，放在 `desktop/` 比放在独立 `home/` 更合理

@@ -1,4 +1,4 @@
-{ pkgs, lib, dataDir, ... }: {
+{ pkgs, lib, dataDir, user, ... }: {
   # ── COSMIC Desktop Environment ─────────────────────────
   services.desktopManager.cosmic.enable = true;
 
@@ -14,5 +14,13 @@
   xdg.portal = {
     enable = true;
     extraPortals = [ pkgs.xdg-desktop-portal-cosmic ];
+  };
+
+  # ── Pop Launcher Plugins (HM) ──────────────────────────
+  home-manager.users.${user} = {
+    xdg.dataFile = {
+      "pop-launcher/plugins/cwdhist/main.py".source = ../assets/pop-launcher/cwdhist/main.py;
+      "pop-launcher/plugins/cwdhist/plugin.ron".source = ../assets/pop-launcher/cwdhist/plugin.ron;
+    };
   };
 }

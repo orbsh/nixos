@@ -1,0 +1,10 @@
+(
+    name: "cwdhist",
+    description: "Open Neovide in recent work directory",
+    bin: (path: "main.py"),
+    icon: Name("folder"),
+    query: (
+        regex: "^  .*",
+        help: "  "
+    )
+)
