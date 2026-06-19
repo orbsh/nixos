@@ -45,16 +45,36 @@ boot.initrd.systemd.enable = false;
 
 ### 后果
 
+nixpkgs 中 `boot.initrd.systemd.enable` 默认值为 `true`。仅 portable 显式设为 `false`。
+
 | 主机类型 | systemd initrd | 理由 |
 |----------|---------------|------|
-| workstations | ❌ 未启用 | 无需，默认 stage-1 即可 |
-| server | ❌ 未启用 | 固定磁盘，无需 |
+| workstations | ✅ 默认 `true` | 固定 NVMe/SATA 磁盘，无问题 |
+| server | ✅ 默认 `true` | 固定磁盘，无问题 |
 | portable | ❌ 显式 `false` | USB 移动设备枚举慢，stage-1 更可靠 |
-| qemu | ❌ 未启用 | 虚拟磁盘，无需 |
-| k8s 集群 | ❌ 未启用 | 固定磁盘，无需 |
+| qemu | ✅ 默认 `true` | 虚拟磁盘，无问题 |
+| k8s 集群 | ✅ 默认 `true` | 固定磁盘，无问题 |
 
 ### 理由
 
 1. **场景适配** — USB 移动设备枚举慢，stage-1 init 的阻塞等待天然适配
-2. **已验证** — 禁用后 portable 可正常启动，其他 hosts 均未启用 systemd initrd
+2. **已验证** — 禁用后 portable 可正常启动，其他 hosts 均未显式覆盖
 3. **风险最低** — stage-1 init 逻辑简单，不引入额外的 unit 依赖链复杂性
+
+### 关于 scripted initrd deprecation warning（2026-06 补充）
+
+NixOS 26.05 起，`boot.initrd.systemd.enable = false` 会触发 deprecation warning（26.11 移除 scripted initrd）。
+
+**决策：保持现状，忽略 warning。**
+
+| 因素 | 评估 |
+|------|------|
+| 稳定性 | portable 是维护/救援用途，稳定性优先于消除 warning |
+| 修复成本 | 需物理接入测试（USB 盘无法远程修复），成本高 |
+| 时间线 | 26.11（约 2026-11）才真正移除，还有 5 个月缓冲 |
+| 替代方案 | 可尝试 `x-systemd.device-timeout` 延长等待，但需实测验证 |
+
+**触发条件**：当以下任一条件满足时，重新评估迁移到 systemd initrd：
+1. NixOS 26.11 发布，scripted initrd 被移除
+2. 上游提供 USB 设备枚举的可靠解决方案
+3. portable 的 USB 硬件升级（枚举速度不再成为瓶颈）
