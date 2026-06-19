@@ -3,6 +3,7 @@
 { pkgs, ... }: {
   imports = [
     ./units/apps-core.nix
+    # ./units/cosmic.nix
     ./units/hyprland.nix
     ./units/greetd.nix
     ./units/input-method.nix

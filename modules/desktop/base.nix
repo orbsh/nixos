@@ -2,13 +2,15 @@
 # 含 Hyprland + 核心应用
 { pkgs, lib, config, ... }: {
   imports = [
+    ./units/apps-core.nix
+    ./units/apps-extra.nix
     ./units/cosmic.nix
+    ./units/hyprland.nix
     ./units/greetd.nix
     ./units/input-method.nix
+    ./units/rime.nix
     ./units/fonts.nix
     ./units/accessibility.nix
-    ./units/apps-core.nix
-    ./units/hyprland.nix
     ./units/eww.nix
   ];
 
