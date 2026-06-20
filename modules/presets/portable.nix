@@ -1,6 +1,5 @@
 { pkgs, lib, user, ... }: {
   imports = [
-    # 核心系统预设 + Home Manager 配置
     ../system/core.nix
     ../system/home.nix
 
@@ -9,8 +8,13 @@
     ../desktop/base.nix
     ../desktop/home.nix
     ../services/ladder.nix
+
+    # 救援环境工具集（含 jcode AI agent）
+    ../dev/rescue.nix
   ];
 
+  # 移动硬盘不能修改 EFI 变量，否则在宿主机安装时会写到宿主机的 EFI
+  boot.loader.efi.canTouchEfiVariables = lib.mkForce false;
 
   # udisks2 用于自动挂载可移动设备
   services.udisks2.enable = true;

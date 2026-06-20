@@ -15,8 +15,8 @@ class ZellijPlugin(PopLauncherPlugin):
     icon = "utilities-terminal"
 
     def __init__(self):
-        # zellij plugin uses "zz " prefix trigger (with trailing space)
-        super().__init__(trigger="z ")
+        # zellij plugin uses "e " prefix trigger (with trailing space)
+        super().__init__(trigger="  ")
 
     def _list_sessions(self) -> list[str]:
         """List all zellij sessions."""
@@ -62,7 +62,7 @@ class ZellijPlugin(PopLauncherPlugin):
                 "description": "Create new session" if is_new else "Attach to session",
                 "category": "Sessions",
                 "keywords": ["zellij", "session"],
-                "icon": {"Name": "folder-new" if is_new else "utilities-terminal"},
+                "icon": {"Name": "list-add" if is_new else "utilities-terminal"},
                 "_name": name,
                 "_is_new": is_new,
             })

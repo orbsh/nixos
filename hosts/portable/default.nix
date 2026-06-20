@@ -9,6 +9,7 @@
       ./hardware-configuration.nix
       ../../modules/presets/portable.nix
       ../../modules/services/harmonia.nix
+      ../../modules/services/hermes-system.nix
     ];
   };
 }
