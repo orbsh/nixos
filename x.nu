@@ -38,7 +38,7 @@ export def build [
 
 export def update [] {
     cd $ROOT
-    sudo nix flake update
+    sudo -E nix flake update
 }
 
 export def check [] {
