@@ -45,7 +45,7 @@ imports = [ ./units/home-base.nix ./units/home-shell.nix ... ];
 #### 3. Presets 显式导入
 
 ```nix
-# presets/workstation-base.nix
+# presets/workstation.nix
 imports = [
   ../system/core.nix     # 系统模块
   ../system/home.nix     # 通用 HM

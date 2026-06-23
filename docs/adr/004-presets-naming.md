@@ -5,7 +5,7 @@
 
 ### 问题
 
-`modules/roles/` 目录（workstation-base.nix、server.nix 等）与 K8s 节点的 `role = "combo"`（control/worker/combo）同名但含义不同，容易混淆。
+`modules/roles/` 目录（workstation.nix、server.nix 等）与 K8s 节点的 `role = "combo"`（control/worker/combo）同名但含义不同，容易混淆。
 
 ### 备选方案
 

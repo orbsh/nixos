@@ -9,7 +9,7 @@
 ```
 flake.nix              ← Flake 入口，自动发现 hosts/ 下的域
   └── hosts/<domain>/  ← 域定义（workstations/k8s-dev/portable/qemu/server...）
-        └── presets/<preset>.nix  ← 系统预设（workstation-base/server/portable/qemu）
+        └── presets/<preset>.nix  ← 系统预设（workstation/server/portable/qemu）
               └── desktop/<preset>.nix  ← 桌面预设（mini/base/full）
                     └── desktop/units/*.nix  ← 桌面组件单元
 ```
@@ -85,7 +85,7 @@ flake.nix 扫描 hosts/ 目录
 
 ```
 hosts/workstations/default.nix
-  └── presets/workstation-base.nix
+  └── presets/workstation.nix
         ├── system/core.nix              (核心系统: sys, base, nix, users, network, extra, container, media)
         ├── system/home.nix              (Home Manager 聚合: home-base, home-shell, home-editors, home-git)
         ├── system/units/hardware-generic.nix  (通用硬件配置)
@@ -293,7 +293,7 @@ nixos/
     │   ├── home.nix              # 桌面 Home Manager（home-terminals, home-xdg）
     │   └── units/                # 桌面组件单元 + HM 单元（home-terminals, home-xdg）
     ├── presets/                    # 系统预设
-    │   ├── workstation-base.nix  # 工作站基座
+    │   ├── workstation.nix  # 工作站基座
     │   ├── server.nix            # 服务器基座
     │   ├── portable.nix          # 便携系统基座
     │   └── qemu.nix              # QEMU 虚拟机基座

@@ -29,7 +29,7 @@ tmpfs 是"用多少，吃多少"的动态分配：
 
 #### Workstations — 开启 tmpfs（已实施）
 
-工作站内存通常充沛，且频繁进行本地 Nix 构建。在 `modules/presets/workstation-base.nix` 中配置：
+工作站内存通常充沛，且频繁进行本地 Nix 构建。在 `modules/presets/workstation.nix` 中配置：
 
 ```nix
 boot.tmp.useTmpfs = true;

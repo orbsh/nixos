@@ -4,7 +4,7 @@
 {
   # 域级 imports：自动应用到所有成员节点
   imports = [
-    ../../modules/presets/workstation-base.nix
+    ../../modules/presets/workstation.nix
     # ./harmonia-cache.nix  # 本地 harmonia 缓存加速
   ];
 
