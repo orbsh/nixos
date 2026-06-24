@@ -12,6 +12,7 @@
     ./units/wasm.nix
     ./units/zed.nix
     ./units/jcode.nix
+    ./units/emacs.nix
     # 服务端（按需：容器化/独立部署场景取消注释）
     # ./units/mysql-server.nix
     # ./units/postgresql-server.nix

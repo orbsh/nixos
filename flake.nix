@@ -30,13 +30,18 @@
       flake = true;
     };
 
+    my-emacs-config = {
+      url = "github:fj0r/emacs";
+      flake = true;
+    };
+
     my-nvim-config = {
       url = "github:fj0r/nvim-lua";
       flake = true;
     };
   };
 
-  outputs = { self, nixpkgs, nixos-anywhere, nix2container, disko, home-manager, my-nushell-config, my-nvim-config, ... }@inputs:
+  outputs = { self, nixpkgs, nixos-anywhere, nix2container, disko, home-manager, my-nushell-config, my-nvim-config, my-emacs-config, ... }@inputs:
   let
     # ── 统一变量定义 ─────────────────────────────────────
     user = "master";
@@ -56,6 +61,8 @@
       nushellLocalPath = "/home/${user}/Configuration/nushell";
       nvimSrc = my-nvim-config.outPath;
       nvimLocalPath = "/home/${user}/Configuration/nvim";
+      emacsLocalPath = "/home/${user}/Configuration/emacs";
+      emacsSrc = my-emacs-config.outPath;
       # 公共 DNS（地理位置相关：中国大陆）
       publicDnsServers = [ "223.5.5.5" "119.29.29.29" "1.1.1.1" ];
       # 全局 stateVersion（NixOS + Home Manager 可独立演进）
@@ -108,6 +115,8 @@
         nushellLocalPath = "/home/${user}/Configuration/nushell";
         nvimSrc = my-nvim-config.outPath;
         nvimLocalPath = "/home/${user}/Configuration/nvim";
+        emacsLocalPath = "/home/${user}/Configuration/emacs";
+        emacsSrc = my-emacs-config.outPath;
         systemStateVersion = commonArgs.systemStateVersion;
         homeStateVersion = commonArgs.homeStateVersion;
       };
