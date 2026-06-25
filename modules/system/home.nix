@@ -6,5 +6,6 @@
     ./units/home-shell.nix
     ./units/home-nvim.nix
     ./units/home-git.nix
+    ./units/lsp-bridge.nix
   ];
 }

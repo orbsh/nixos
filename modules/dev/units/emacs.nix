@@ -6,17 +6,22 @@ in
 {
   config.home-manager.users.${user} = {
     imports = [
-      ({ config, lib, ... }: {
+      ({ config, lib, ... }: let
+        # Emacs Python 后端依赖（lsp-bridge 等需要）
+        emacsWithPythonDeps = pkgs.python3.withPackages (ps: with ps; [
+          epc orjson sexpdata six setuptools paramiko
+          rapidfuzz watchdog packaging
+        ]);
+      in {
         home.packages = with pkgs; [
-          emacs-nox
-          emacsPackages.boon
+          emacs-pgtk
           emacsPackages.vterm
           ripgrep
           fd
           tree-sitter
+          emacsWithPythonDeps
         ] ++ lib.optionals developMode [
           clang-tools
-          python3
           typescript-language-server
         ];
 
@@ -74,7 +79,7 @@ in
             fi
 
             $DRY_RUN_CMD echo "emacs: syncing packages..."
-            $DRY_RUN_CMD ${pkgs.emacs-nox}/bin/emacs --batch \
+            $DRY_RUN_CMD ${pkgs.emacs-pgtk}/bin/emacs --batch \
               --eval "(require 'package)" \
               --eval "(package-initialize)" \
               --eval "(package-refresh-contents)" \
