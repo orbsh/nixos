@@ -10,8 +10,8 @@
   # Gateway API CRD 文件 (experimental)
   gatewayApiCrdFile = ./assets/gateway-api-experimental.yaml;
 
-  # Envoy Gateway 安装文件 (v1.8.0) — 本地管理，避免构建时下载
-  envoyGatewayRawFile = ./assets/envoy-gateway-v1.8.0.yaml;
+  # Envoy Gateway 安装文件 (v1.8.1) — 本地管理，避免构建时下载
+  envoyGatewayRawFile = ./assets/envoy-gateway-v1.8.1.yaml;
 
   # 过滤掉 Gateway API CRD（已由 deploy-gateway-api-crds-eg 部署），避免版本冲突
   envoyGatewayInstallFile = pkgs.runCommand "envoy-gateway-filtered.yaml" {
@@ -55,15 +55,8 @@
   };
 
   # Generate YAML snippet for certificateRefs from option
-  certRefsYaml = ''
-            - name: tls-envoy-gateway
-              kind: Secret
-              group: ""
-  '' + lib.concatMapStrings (cert: ''
-            - name: ${cert}
-              kind: Secret
-              group: ""
-  '') config.services.envoyGateway.appCerts;
+  certRefsYaml = "        - name: tls-envoy-gateway\n          kind: Secret\n          group: \"\"\n"
+    + lib.concatMapStrings (cert: "        - name: ${cert}\n          kind: Secret\n          group: \"\"\n") config.services.envoyGateway.appCerts;
 
   # Envoy Gateway 资源清单 (GatewayClass + EnvoyProxy + Gateway)
   envoyGatewayManifest = pkgs.writeText "envoy-gateways.yaml" (

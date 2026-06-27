@@ -24,7 +24,7 @@ spec:
                   containers:
                   - name: envoy
                     imagePullPolicy: IfNotPresent
-                    image: docker.lizzie.fun/envoyproxy/envoy:distroless-v1.38.0
+                    image: envoyproxy/envoy:distroless-v1.38.3
       envoyService:
         type: NodePort
         externalTrafficPolicy: Local

@@ -50,10 +50,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1782423922,
-        "narHash": "sha256-qPNd6lUohHP5gcJhqQ7rLV87RwIx0xYR2A4Frb9Zjc4=",
+        "lastModified": 1782522538,
+        "narHash": "sha256-CvOaUvJ+mXlxU3m2cPWKcOAhtKETsPUYhq+Xa5ewBp4=",
         "ref": "refs/heads/master",
-        "rev": "5d320ab301cfaaca7d32514f13815d19d109f5f4",
+        "rev": "8d8a6cc50ddc60748791a14ee1163c865ec57635",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/nix-community/home-manager"
@@ -66,10 +66,10 @@
     },
     "my-emacs-config": {
       "locked": {
-        "lastModified": 1782364601,
-        "narHash": "sha256-gjnWxxFrhJsG+r1xnnKfoYi+Bzsg2EODOytVXbh6UXo=",
+        "lastModified": 1782545812,
+        "narHash": "sha256-BAora7DQWUAiPRfp69rul/08vg75o3hiBKdVaNhCr2o=",
         "ref": "refs/heads/main",
-        "rev": "9330ae836425a85add4422ad9ec17521726123bb",
+        "rev": "d1a0720c8005ab6e6ef33b5920fcfa90a8bb5899",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/fj0r/emacs"
@@ -98,10 +98,10 @@
     },
     "my-nvim-config": {
       "locked": {
-        "lastModified": 1782203428,
-        "narHash": "sha256-7ZkBGv7U4VG78w3DME12cXtcCClica4tSOygZidm72c=",
+        "lastModified": 1782551649,
+        "narHash": "sha256-Iw2RqJXQyarKX3tOXika5QUb21z56WJwRpfYMTyYNXg=",
         "ref": "refs/heads/main",
-        "rev": "e0fffdd53c9e488f571596d55c7d4dda127014bb",
+        "rev": "baf8771767dd1cacfee0ea6516e0014bd1150e52",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/fj0r/nvim-lua"
