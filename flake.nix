@@ -3,40 +3,40 @@
 
   inputs = {
     # 切换稳定版：github:NixOS/nixpkgs/nixos-25.05
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "git+https://github.com/NixOS/nixpkgs?shallow=1&ref=nixos-unstable";
 
     nixos-anywhere = {
-      url = "github:nix-community/nixos-anywhere";
+      url = "git+https://github.com/nix-community/nixos-anywhere?shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
     nix2container = {
-      url = "github:nlewo/nix2container";
+      url = "git+https://github.com/nlewo/nix2container?shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
     disko = {
-      url = "github:nix-community/disko";
+      url = "git+https://github.com/nix-community/disko?shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
     home-manager = {
-      url = "github:nix-community/home-manager";
+      url = "git+https://github.com/nix-community/home-manager?shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
     my-nushell-config = {
-      url = "github:fj0r/nushell";
+      url = "git+https://github.com/fj0r/nushell?shallow=1";
       flake = true;
     };
 
     my-emacs-config = {
-      url = "github:fj0r/emacs";
+      url = "git+https://github.com/fj0r/emacs?shallow=1";
       flake = true;
     };
 
     my-nvim-config = {
-      url = "github:fj0r/nvim-lua";
+      url = "git+https://github.com/fj0r/nvim-lua?shallow=1";
       flake = true;
     };
   };
