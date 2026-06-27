@@ -65,6 +65,18 @@
       emacsSrc = my-emacs-config.outPath;
       # 公共 DNS（地理位置相关：中国大陆）
       publicDnsServers = [ "223.5.5.5" "119.29.29.29" "1.1.1.1" ];
+      # Nix substituter（全局，根据网络状况调整）
+      nixSubstituters = {
+        substituters = [
+          "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
+          "https://mirrors.ustc.edu.cn/nix-channels/store"
+          #"https://cache.nixos.org"
+        ];
+        trusted-public-keys = [
+          "harmonia-local:bF/+RpECJWbbE8W7/hu1jWRlkQqu/+cXoVrWFENmqXY="
+          "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+        ];
+      };
       # 全局 stateVersion（NixOS + Home Manager 可独立演进）
       systemStateVersion = "26.05";
       homeStateVersion = "26.05";

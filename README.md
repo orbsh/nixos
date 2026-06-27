@@ -428,3 +428,15 @@ Pod 查询外部域名
 | 宿主机 CoreDNS | `modules/services/coredns.nix` | 引入即启用 |
 | kubelet resolv.conf | `modules/k8s/k8s-common.nix` | 条件判断 |
 | CoreDNS Corefile | `modules/k8s/assets/patch-coredns.sh` | 运行时 patch |
+
+### Nix Substituter 配置
+
+全局可变配置（substituters、公共 DNS）统一在 `flake.nix` 的 `commonArgs` 中定义，模块通过函数参数消费。详见 [ADR-017: 全局可变配置归属 flake.nix](docs/adr/017-global-config-in-flake.md)。
+
+#### 配置位置
+
+| 配置项 | 文件 | 说明 |
+|--------|------|------|
+| substituters + trusted-public-keys | `flake.nix` | `commonArgs.nixSubstituters` |
+| nix.settings 消费 | `modules/system/units/nix.nix` | 通过函数参数注入 |
+| 本地 Harmonia 缓存追加 | `hosts/workstations/harmonia-cache.nix` | NixOS 模块系统自动合并 |

@@ -1,19 +1,12 @@
-{ inputs, pkgs, lib, user, ... }: {
+{ inputs, pkgs, lib, user, nixSubstituters, ... }: {
   # ── Nix 自身配置 ────────────────────────────────────────
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
     auto-optimise-store = true;
     keep-failed = false;          # 不保留构建失败的临时目录
     trusted-users = [ "root" user ];  # 允许这些用户指定 substituters 等受限设置
-    substituters = [
-      "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
-      "https://mirrors.ustc.edu.cn/nix-channels/store"
-      "https://cache.nixos.org"
-    ];
-    trusted-public-keys = [
-      "harmonia-local:bF/+RpECJWbbE8W7/hu1jWRlkQqu/+cXoVrWFENmqXY="
-      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
-    ];
+    substituters = nixSubstituters.substituters;
+    trusted-public-keys = nixSubstituters.trusted-public-keys;
     builders-use-substitutes = true;
   };
 
