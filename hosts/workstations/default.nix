@@ -18,8 +18,9 @@
       ./orbit/disk.nix
       ./orbit/wireguard.nix
       ./wanxiang.nix
+      ./wechat.nix
       #./vivaldi.nix
-      # ./nushell.nix
+      #./nushell.nix
       ./surreal.nix
       (import ../../libs/registries-gen.nix {
         inherit lib;

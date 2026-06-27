@@ -15,9 +15,12 @@ let
     '';
   };
 in {
+  imports = [
+    ./wechat.nix
+  ];
+
   environment.systemPackages = with pkgs; [
     telegram-desktop
-    wechat
     feishu-wayland
   ];
 
