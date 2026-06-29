@@ -10,6 +10,11 @@
     };
   };
 
+  # app-net 桥接接口的 DNS 放行（与 podman0 默认桥接一致）
+  networking.firewall.extraCommands = ''
+    iptables -A nixos-fw -i podman1 -p udp --dport 53 -j nixos-fw-accept
+  '';
+
   # 网络初始化服务
   systemd.services.podman-network-init = {
     description = "Create podman custom network (app-net)";

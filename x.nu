@@ -36,7 +36,7 @@ export def build [
     nh os build $"($ROOT)#($host)" ...$args
 }
 
-export def update [] {
+export def sync [] {
     cd $ROOT
     sudo -E nix flake update
 }
@@ -131,10 +131,26 @@ export module utils {
         cat $file | hash sha256 | decode hex | encode base64
     }
 
-    export def add-file [file: path] {
+    export def gcroot [
+      gcroot
+      file: path
+    ] {
         let h = nix store add-file $file
+        sudo ln -sf $h /nix/var/nix/gcroots/auto/($gcroot)
         let p = nix hash path $h
         $'url = "file://($h)";(char newline)narHash = "($p)";'
+    }
+
+    def cmpl-link [] {
+        ls -l /nix/var/nix/gcroots/auto
+        | select name target
+        | where {|x| $x.target | str starts-with '/nix/store' }
+        | update target {|x| $x.target | str substring 44.. }
+        | rename value description
+    }
+
+    export def ungcroot [link: path@cmpl-link] {
+        sudo rm -f $link
     }
 }
 
