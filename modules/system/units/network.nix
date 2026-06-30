@@ -10,5 +10,6 @@
   environment.systemPackages = with pkgs; [
     netcat
     openresolv
+    nftables
   ];
 }
