@@ -137,7 +137,9 @@ export module utils {
     ] {
         let h = nix store add-file $file
         sudo ln -sf $h /nix/var/nix/gcroots/auto/($gcroot)
-        let p = nix hash path $h
+        # fetchTree 用 prefetch 后的新 store path 的 NAR hash
+        let prefetched = (nix store prefetch-file $"file://($h)" --json | from json).storePath
+        let p = nix hash path $prefetched
         $'url = "file://($h)";(char newline)narHash = "($p)";'
     }
 

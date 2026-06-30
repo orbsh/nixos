@@ -50,10 +50,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1782657028,
-        "narHash": "sha256-PHTCpYZCMzJYS3phhywqRAZphKVr2zjvlGYa+H20ZZ4=",
+        "lastModified": 1782749631,
+        "narHash": "sha256-slFTUgDy0KTPA4LBAmC/9SngDq8GCPdX+ZR0yQHHN1E=",
         "ref": "refs/heads/master",
-        "rev": "4ad9aaae70c9aaab504127f926c0fa9cfbc2b365",
+        "rev": "5d72a29fc36ac21adae6ae35568fe5ee6700850f",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/nix-community/home-manager"
@@ -98,10 +98,10 @@
     },
     "my-nvim-config": {
       "locked": {
-        "lastModified": 1782551649,
-        "narHash": "sha256-Iw2RqJXQyarKX3tOXika5QUb21z56WJwRpfYMTyYNXg=",
+        "lastModified": 1782781657,
+        "narHash": "sha256-L2hg1fgynwIk8Xg2Jp03oRAFgmS3haQU+aXGvdAcvnc=",
         "ref": "refs/heads/main",
-        "rev": "baf8771767dd1cacfee0ea6516e0014bd1150e52",
+        "rev": "7d960b186f75fe76e3be08da20a8576f81a4f174",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/fj0r/nvim-lua"
