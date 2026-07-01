@@ -19,6 +19,7 @@
     # 工具
     peazip        # 压缩包管理（支持 200+ 格式）
     yt-dlp        # 视频/音频下载器
+    ddgr          # DuckDuckGo 命令行搜索
 
     # 浏览器
     firefox
