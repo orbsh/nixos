@@ -1,6 +1,9 @@
 (defpoll swap_usage :interval "2s" :initial 0
   "awk '/SwapTotal/{t=$2} /SwapFree/{f=$2} END{if(t>0) printf \"%d\", (t-f)/t*100; else print 0}' /proc/meminfo")
 
+(defpoll non_reclaimable :interval "5s" :initial 0
+  "awk '/^Active\\(anon\\)/{a+=$2} /^Inactive\\(anon\\)/{a+=$2} /^Unevictable:/{a+=$2} /^SUnreclaim:/{a+=$2} /^PageTables:/{a+=$2} /^MemTotal:/{t=$2} END{printf \"%d\", a/t*100}' /proc/meminfo")
+
 (defpoll net_down :interval "2s" :initial 0
   "bash scripts/get_net.sh down wlan0")
 

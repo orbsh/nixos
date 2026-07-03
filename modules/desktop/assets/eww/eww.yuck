@@ -40,14 +40,19 @@
       )
 
       (box :orientation "v" :class "chart-box"
-        :tooltip "RAM:${round(EWW_RAM.used_mem_perc, 0)}% SWAP:${swap_usage}%"
+        :tooltip "HARD:${non_reclaimable}% SOFT:${round(EWW_RAM.used_mem_perc, 0)}% SWAP:${swap_usage}%"
         (overlay
           (graph :class "swap-graph"
                  :value swap_usage
                  :thickness 1
                  :time-range "30s")
-          (graph :class "mem-graph"
+          (graph :class "mem-graph-dim"
                  :value {round(EWW_RAM.used_mem_perc, 0)}
+                 :thickness 1
+                 :time-range "30s"
+                 :dynamic false)
+          (graph :class "mem-graph-hard"
+                 :value non_reclaimable
                  :thickness 1
                  :time-range "30s"
                  :dynamic false)

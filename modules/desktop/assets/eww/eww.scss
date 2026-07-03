@@ -3,7 +3,7 @@
 // Neutral / Greyscale
 $black: rgba(60, 60, 60, 1.0); // Deep Charcoal (Text/Icons)
 $white: rgba(235, 235, 235, 1.0); // Soft Pearl (Main BG)
-$gray: rgba(122, 122, 122, 1.0); // Muted Shadow (Unplugged/Secondary)
+$gray: rgba(122, 122, 122, 0.5); // Muted Shadow (Unplugged/Secondary)
 
 // Functional Colors
 $red: rgba(186, 134, 126, 1.0); // Rose Terracotta (Critical/Upload)
@@ -97,22 +97,27 @@ scale {
 
 .cpu-graph {
   color: $yellow;
-  background-color: rgba($yellow, 0.5);
+  background-color: rgba($yellow, 0.3);
 }
 
 .gpu-graph {
   color: $magenta;
-  background-color: rgba($magenta, 0.5);
+  background-color: rgba($magenta, 0.2);
 }
 
-.mem-graph {
-  color: $blue;
-  background-color: rgba($blue, 0.5);
+.mem-graph-hard {
+  color: $magenta;
+  background-color: rgba($magenta, 0.3);
+}
+
+.mem-graph-dim {
+  color: $cyan;
+  background-color: rgba($cyan, 0.2);
 }
 
 .swap-graph {
-  color: $cyan;
-  background-color: rgba($cyan, 0.5);
+  color: $gray;
+  background-color: rgba($gray, 0.1);
 }
 
 .net-down {
