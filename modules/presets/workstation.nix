@@ -15,7 +15,19 @@
     ../services/harmonia.nix     # 本地二进制缓存
     ../services/ladder.nix       # Podman 代理链
     ../services/podman-apps.nix  # Podman 应用全家桶
+    ../services/numa.nix         # 本地 DNS + 反向代理（workstation 专用，server 用 CoreDNS）
   ];
+
+  # ── Numa 本地 DNS ──────────────────────────────────────
+  services.numa = {
+    enable = true;
+    tld = "numa";
+    useDynamicConfig = true;  # 允许 REST API 动态更新配置
+    src = {
+      url = "file:///nix/store/l45bva8grxhv8pziwjq5c0cgm5rz31hq-numa-linux-x86_64.tar.gz";
+      narHash = "sha256-mOSJdpZlZmTc7PU50ACL2lvDtywdMrOL7g8lvSqtUx0=";
+    };
+  };
 
   # ── SSD 寿命优化：临时构建缓存移入内存 ───────────
   # 避免 nixos-rebuild 在 /tmp 产生数 GB 高频临时写入磨损 SSD
