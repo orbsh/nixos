@@ -50,10 +50,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1783358420,
-        "narHash": "sha256-UEyBpf+XmQe8laXfDzIlo11Er7E0rKrLS8jeMnMj0Ds=",
+        "lastModified": 1783618078,
+        "narHash": "sha256-F43DGcBoIO8xOZFAfodg3jy0VghB9NGdb6xbTYAIx1A=",
         "ref": "refs/heads/master",
-        "rev": "0d33882bd46c1f9ef62276700f5e5f2bd6ff6604",
+        "rev": "144f4e36d0186195037da9fce80a727108978070",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/nix-community/home-manager"
@@ -82,10 +82,10 @@
     },
     "my-nushell-config": {
       "locked": {
-        "lastModified": 1783322076,
-        "narHash": "sha256-OVs1HEEvgY/EfYtpnZnzipiIs0DzT3DyjowV4Dvitso=",
+        "lastModified": 1783502377,
+        "narHash": "sha256-+evYeJd1g/DDR5tbGwdMWrko4GAJyOnI1bClQpSFqsk=",
         "ref": "refs/heads/main",
-        "rev": "a0318ce92642a131b42768cfa1744b248041e06e",
+        "rev": "bb08648baef4ab8619ea8d947ca95151da1f5f54",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/fj0r/nushell"

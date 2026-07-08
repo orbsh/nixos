@@ -19,7 +19,7 @@
 
     port = lib.mkOption {
       type = lib.types.port;
-      default = 8000;
+      default = 18000;
       description = "SurrealDB 监听端口";
     };
 
