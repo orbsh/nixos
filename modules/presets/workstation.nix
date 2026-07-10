@@ -37,7 +37,7 @@
   # 工作站开发模式：符号链接 + git clone
   programs.developMode = lib.mkForce true;
 
-  # nix-ld：允许运行非 Nix 预编译二进制（如 jcode、Chrome、Steam）
+  # nix-ld：允许运行非 Nix 预编译二进制（如 Chrome、Steam）
   programs.nix-ld.enable = true;
 
   # 主机名应由具体节点定义，而非基座

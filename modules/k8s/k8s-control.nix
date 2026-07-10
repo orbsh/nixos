@@ -15,6 +15,12 @@
   # etcd 由 roles = ["master"] 自动启用，但此处显式开启以确保
   services.etcd.enable = true;
 
+  # ── certmgr 配置 ──────────────────────────────────────
+  # 延长检查间隔到 24h，证书有效期为 1 年，无需频繁检查
+  # 避免 certmgr 误判 "DNS name has changed" 导致每 30 分钟重启 apiserver
+  services.certmgr.renewInterval = "24h";
+  services.certmgr.validMin = "168h";  # 7 天（原值 72h）
+
   # ── 防火墙：控制平面端口 ───────────────────────────────
   services.kubernetes.firewallPorts =
     [ 80 443 2379 2380 ]
