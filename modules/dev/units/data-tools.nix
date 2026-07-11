@@ -8,7 +8,7 @@
 
     # Data Science Python 库 (polars, lancedb)
     (pkgs.python3.withPackages (ps: with ps; [
-      polars lancedb
+      polars #lancedb
     ]))
   ];
 }

@@ -50,10 +50,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1783618078,
-        "narHash": "sha256-F43DGcBoIO8xOZFAfodg3jy0VghB9NGdb6xbTYAIx1A=",
+        "lastModified": 1783744526,
+        "narHash": "sha256-yYVxW+uIbCx0Nt870fbErQbz+b2+3Gwpppe+JbIU+Co=",
         "ref": "refs/heads/master",
-        "rev": "144f4e36d0186195037da9fce80a727108978070",
+        "rev": "2afec152df4e284d264f8489d16004c264aebf4c",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/nix-community/home-manager"
@@ -82,10 +82,10 @@
     },
     "my-nushell-config": {
       "locked": {
-        "lastModified": 1783502377,
-        "narHash": "sha256-+evYeJd1g/DDR5tbGwdMWrko4GAJyOnI1bClQpSFqsk=",
+        "lastModified": 1783748058,
+        "narHash": "sha256-/dJgRQOCiS4NVI0lJleyInj79F/IHpvm8ptisqaVGfM=",
         "ref": "refs/heads/main",
-        "rev": "bb08648baef4ab8619ea8d947ca95151da1f5f54",
+        "rev": "abdb97acd6a1666470576d2dcb47dc4d38127631",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/fj0r/nushell"
@@ -98,10 +98,10 @@
     },
     "my-nvim-config": {
       "locked": {
-        "lastModified": 1782781657,
-        "narHash": "sha256-L2hg1fgynwIk8Xg2Jp03oRAFgmS3haQU+aXGvdAcvnc=",
+        "lastModified": 1783747472,
+        "narHash": "sha256-rJDBS6Fpch+oWa+y0U5wSLprWJi6d9DzARnrnCebljE=",
         "ref": "refs/heads/main",
-        "rev": "7d960b186f75fe76e3be08da20a8576f81a4f174",
+        "rev": "90bf02fb97e93f15819010ecba64f044274df57a",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/fj0r/nvim-lua"
@@ -223,10 +223,10 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1783224372,
-        "narHash": "sha256-8i/87eeoqiGE4yOTjwSA3Eh/ziJRQEmd/unYU+K27sk=",
+        "lastModified": 1783522502,
+        "narHash": "sha256-iffAls3iaNTyJC2faYcUXSI+Gp02cDjYl+MygxKl2GI=",
         "ref": "nixos-unstable",
-        "rev": "d407951447dcd00442e97087bf374aad70c04cea",
+        "rev": "0bb7ec54c8483066ec9d7720e780a5caa71f8612",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/NixOS/nixpkgs"
