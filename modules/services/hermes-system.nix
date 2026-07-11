@@ -5,6 +5,11 @@
 let
   srcDir = "/home/${user}/world/hermes-agent";
 
+  # 固定 Python 3.13：hermes-agent 的 pyproject.toml 要求 >=3.11,<3.14，
+  # 而 pkgs.python3 在 NixOS channel 更新后指向 3.14，会导致 pip install 失败。
+  # 当 Rust-backed 依赖（如 pydantic-core）有 cp314 wheel 后可在 pyproject.toml 提高上限并切回 pkgs.python3。
+  python = pkgs.python313;
+
   # 全局依赖库：修复 Python 虚拟环境下各类大模型动态库（C-extensions）缺失造成的 ELF 报错
   runtimeLibs = [
     pkgs.stdenv.cc.cc.lib
@@ -18,7 +23,7 @@ let
     #!/usr/bin/env bash
     if [ ! -d "${srcDir}/.venv" ]; then
       echo "检测到未初始化的环境，正在构建 NixOS 专用的独立 Python venv..."
-      ${pkgs.python3}/bin/python -m venv ${srcDir}/.venv
+      ${python}/bin/python -m venv ${srcDir}/.venv
       ${srcDir}/.venv/bin/python -m ensurepip --upgrade 2>/dev/null || true
     fi
 
@@ -32,7 +37,7 @@ let
 in {
   # 注册全局命令与库
   environment.systemPackages = [
-    pkgs.python3
+    python
     pkgs.git
     pkgs.stdenv.cc.cc.lib
     hermes-cli
@@ -41,7 +46,7 @@ in {
   # 服务公共的基础环境配置项（作为共享模板，不直接实例化）
   systemd.services.hermes-base-env = {
     after = [ "network.target" ];
-    path = with pkgs; [ bash coreutils python3 python3Packages.pip git stdenv.cc.cc nodejs ];
+    path = with pkgs; [ bash coreutils python313 python313Packages.pip git stdenv.cc.cc nodejs ];
     serviceConfig = {
       Type = "simple";
       User = user;
@@ -56,7 +61,7 @@ in {
         set -e
         cd ${srcDir}
         if [ ! -d ".venv" ]; then
-          ${pkgs.python3}/bin/python -m venv .venv
+          ${python}/bin/python -m venv .venv
         fi
         .venv/bin/python -m ensurepip --upgrade 2>/dev/null || true
         export LD_LIBRARY_PATH="${ldLibraryPath}:$LD_LIBRARY_PATH"
@@ -86,7 +91,7 @@ in {
         rm -f ${srcDir}/*.pid ${srcDir}/.hermes*.pid ${srcDir}/gateway/*.pid 2>/dev/null || true
         # 运行基础初始化（venv + pip install）
         if [ ! -d ".venv" ]; then
-          ${pkgs.python3}/bin/python -m venv .venv
+          ${python}/bin/python -m venv .venv
         fi
         .venv/bin/python -m ensurepip --upgrade 2>/dev/null || true
         export LD_LIBRARY_PATH="${ldLibraryPath}:$LD_LIBRARY_PATH"
