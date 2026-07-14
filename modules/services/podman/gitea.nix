@@ -1,7 +1,7 @@
 { pkgs, dataDir, user, ... }: {
   virtualisation.oci-containers.containers = {
     gitea = {
-      image = "gitea/gitea:1.26";
+      image = "gitea/gitea:1.27";
       volumes = [
         "${dataDir}/gitea/data:/data"
       ];
