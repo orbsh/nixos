@@ -26,17 +26,17 @@
     };
 
     my-nushell-config = {
-      url = "git+https://github.com/fj0r/nushell?shallow=1";
+      url = "git+https://github.com/orbsh/nushell?shallow=1";
       flake = true;
     };
 
     my-emacs-config = {
-      url = "git+https://github.com/fj0r/emacs?shallow=1";
+      url = "git+https://github.com/orbsh/emacs?shallow=1";
       flake = true;
     };
 
     my-nvim-config = {
-      url = "git+https://github.com/fj0r/nvim-lua?shallow=1";
+      url = "git+https://github.com/orbsh/nvim-lua?shallow=1";
       flake = true;
     };
   };

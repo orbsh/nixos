@@ -1,7 +1,7 @@
 { pkgs, dataDir, user, ... }: {
   virtualisation.oci-containers.containers = {
     mihomo = {
-      image = "ghcr.io/fj0r/xy:mihomo";
+      image = "ghcr.io/orbsh/xy:mihomo";
       volumes = [ "${dataDir}/ladder/mihomo:/data" ];
       ports = [
         "7890:7890"

@@ -72,28 +72,28 @@
         "rev": "d1a0720c8005ab6e6ef33b5920fcfa90a8bb5899",
         "shallow": true,
         "type": "git",
-        "url": "https://github.com/fj0r/emacs"
+        "url": "https://github.com/orbsh/emacs"
       },
       "original": {
         "shallow": true,
         "type": "git",
-        "url": "https://github.com/fj0r/emacs"
+        "url": "https://github.com/orbsh/emacs"
       }
     },
     "my-nushell-config": {
       "locked": {
-        "lastModified": 1784183469,
-        "narHash": "sha256-ISTWujzOwaO6KnGpCzyt4cruLUNl62srebE93kCqvpw=",
+        "lastModified": 1784196658,
+        "narHash": "sha256-0ffiwwrT50Qwg3BskNBGVh5mlrcjRMoRmwXuXAMG+/0=",
         "ref": "refs/heads/main",
-        "rev": "6ed6a8504414816c735885dc82de3a4df5fc5c29",
+        "rev": "1b9cdcbfebd34c503d1e3db472c12e46793d6bc7",
         "shallow": true,
         "type": "git",
-        "url": "https://github.com/fj0r/nushell"
+        "url": "https://github.com/orbsh/nushell"
       },
       "original": {
         "shallow": true,
         "type": "git",
-        "url": "https://github.com/fj0r/nushell"
+        "url": "https://github.com/orbsh/nushell"
       }
     },
     "my-nvim-config": {
@@ -104,12 +104,12 @@
         "rev": "90bf02fb97e93f15819010ecba64f044274df57a",
         "shallow": true,
         "type": "git",
-        "url": "https://github.com/fj0r/nvim-lua"
+        "url": "https://github.com/orbsh/nvim-lua"
       },
       "original": {
         "shallow": true,
         "type": "git",
-        "url": "https://github.com/fj0r/nvim-lua"
+        "url": "https://github.com/orbsh/nvim-lua"
       }
     },
     "nix-vm-test": {

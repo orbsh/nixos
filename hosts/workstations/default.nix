@@ -17,6 +17,7 @@
       ./orbit/hardware.nix
       ./orbit/disk.nix
       ./orbit/wireguard.nix
+      ./orbit/wifi-mt7925.nix
       ./wanxiang.nix
       ./wechat.nix
       #./vivaldi.nix
