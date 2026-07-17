@@ -18,7 +18,6 @@ in
           emacsPackages.vterm
           ripgrep
           fd
-          tree-sitter
           emacsWithPythonDeps
         ] ++ lib.optionals developMode [
           clang-tools

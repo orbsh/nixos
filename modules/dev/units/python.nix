@@ -24,6 +24,8 @@
       ty
       debugpy  # Debugger
       pytest   # Testing
+      tree-sitter
+      tree-sitter-language-pack
     ]))
   ];
 }

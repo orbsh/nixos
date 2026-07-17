@@ -12,7 +12,6 @@ in
           neovim
           ripgrep
           fd
-          tree-sitter
         ] ++ lib.optionals developMode [
           lua-language-server
         ];
