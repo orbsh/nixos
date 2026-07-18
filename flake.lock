@@ -50,10 +50,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1784351324,
-        "narHash": "sha256-By+kuRJZRqs2TuXgtR8vJ8cTKWXw33YG/Yollu5cO1U=",
+        "lastModified": 1784489491,
+        "narHash": "sha256-j9maqjx1T8+ljAVntAdSI5hSGCm77QNZz64JF1rJNu0=",
         "ref": "refs/heads/master",
-        "rev": "460108009ca1ff69ca2ff19079ca2c838d6e3080",
+        "rev": "3139deb8cafbe73b39b24451255b2fdd3426077e",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/nix-community/home-manager"
@@ -98,10 +98,10 @@
     },
     "my-nvim-config": {
       "locked": {
-        "lastModified": 1783747472,
-        "narHash": "sha256-rJDBS6Fpch+oWa+y0U5wSLprWJi6d9DzARnrnCebljE=",
+        "lastModified": 1784515169,
+        "narHash": "sha256-0uXe9hEovafmxaOnbfgPp0CSoXeGgMWPo06k5aoyICg=",
         "ref": "refs/heads/main",
-        "rev": "90bf02fb97e93f15819010ecba64f044274df57a",
+        "rev": "1500d3fec99d6d9adacbe14ed690b9de74a2fbf6",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/orbsh/nvim-lua"
@@ -223,10 +223,10 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1784120854,
-        "narHash": "sha256-KesHgItiZPgGX740axSiQLcIQ8D24MDqNpkKYWIek8k=",
+        "lastModified": 1784356753,
+        "narHash": "sha256-12KrbMiWLcf8m7pCvAtZh1ZrgF85ZXDXvfR/fWTKy84=",
         "ref": "nixos-unstable",
-        "rev": "753cc8a3a87467296ddd1fa93f0cc3e81120ee46",
+        "rev": "61b7c44c4073f0b827768aff0049561b5110ea5a",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/NixOS/nixpkgs"

@@ -5,9 +5,8 @@
 let
   srcDir = "/home/${user}/world/hermes-agent";
 
-  # 固定 Python 3.13：hermes-agent 的 pyproject.toml 要求 >=3.11,<3.14，
-  # 而 pkgs.python3 在 NixOS channel 更新后指向 3.14，会导致 pip install 失败。
-  # 当 Rust-backed 依赖（如 pydantic-core）有 cp314 wheel 后可在 pyproject.toml 提高上限并切回 pkgs.python3。
+  # pyproject.toml 要求 >=3.11,<3.14，固定 python313；
+  # 当 pyproject.toml 提高上限后可切回 pkgs.python3
   python = pkgs.python313;
 
   # 全局依赖库：修复 Python 虚拟环境下各类大模型动态库（C-extensions）缺失造成的 ELF 报错

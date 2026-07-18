@@ -12,6 +12,7 @@ in
           neovim
           ripgrep
           fd
+          tree-sitter  # tree-sitter-manager.nvim 需要
         ] ++ lib.optionals developMode [
           lua-language-server
         ];
