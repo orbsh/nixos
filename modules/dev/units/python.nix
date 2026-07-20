@@ -18,10 +18,9 @@
       zstandard
     ]))
   ] ++ lib.optionals config.programs.developMode [
-    pyrefly  # Python LSP (type checker)
     ruff     # Python linter & formatter
+    ty       # Python type checker
     (python3.withPackages (ps: with ps; [
-      ty
       debugpy  # Debugger
       pytest   # Testing
       tree-sitter
