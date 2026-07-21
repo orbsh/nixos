@@ -20,7 +20,7 @@ in {
   ];
 
   environment.systemPackages = with pkgs; [
-    telegram-desktop
+    #telegram-desktop
     feishu-wayland
   ];
 
