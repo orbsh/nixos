@@ -11,7 +11,6 @@
     ./units/k8s.nix
     ./units/wasm.nix
     ./units/zed.nix
-    ./units/jcode.nix
     ./units/openinterpreter.nix
     # ./units/emacs.nix  # 默认禁用，需在 host 定义中显式引入
     # 服务端（按需：容器化/独立部署场景取消注释）
