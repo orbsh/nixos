@@ -42,6 +42,12 @@
   };
   services.blueman.enable = true; # GTK 蓝牙管理器
 
+  # ── 蓝牙 USB autosuspend 修复 ───────────────────────────
+  # 休眠恢复后 xhci_hcd 无法重新枚举蓝牙适配器（0489:e111）
+  services.udev.extraRules = ''
+    ACTION=="add", SUBSYSTEM=="usb", DRIVERS=="btusb", ATTR{power/autosuspend}="-1"
+  '';
+
   # ── 温度/风扇管理（可选） ───────────────────────────────
   # services.thermald.enable = true;        # Intel CPU 温控
   # services.auto-cpufreq.enable = true;   # 替代 tlp 的轻量方案

@@ -9,10 +9,11 @@
     ];
 
   # boot.initrd.availableKernelModules = [ "nvme" "xhci_pci" "ahci" "usb_storage" "usbhid" "uas" "sd_mod" ];
-  boot.initrd.availableKernelModules = [ "nvme" "xhci_pci" "thunderbolt" "usbhid" "uas" "sd_mod" "sdhci_pci" ];
+  boot.initrd.availableKernelModules = [ "nvme" "xhci_pci" "thunderbolt" "usbhid" "uas" "sd_mod" "sdhci_pci" "btmtk" ];
   boot.initrd.kernelModules = [ ];
   # boot.kernelModules = [ "kvm-intel" ];
   boot.kernelModules = [ "kvm-amd" ];
+  boot.kernelParams = [ "usbcore.autosuspend=-1" ];
   boot.extraModulePackages = [ ];
 
   # fileSystems 和 swapDevices 由 disk.nix 或 existing-disk.nix 管理，此处不重复定义
