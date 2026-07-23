@@ -5,15 +5,15 @@
     version = lib.mkOption {
       type = lib.types.str;
       description = "SurrealDB 版本号";
-      example = "3.1.4";
+      example = "3.2.0";
     };
 
-    src = lib.mkOption {
+    tarball = lib.mkOption {
       type = lib.types.attrsOf lib.types.str;
-      description = "预编译二进制源。格式：{ url = \"file:///nix/store/...\"; narHash = \"sha256-...\"; }";
+      description = "预编译二进制 tarball 源。格式：{ url = \"file:///...\"; sha256 = \"...\"; }";
       example = {
-        url = "file:///nix/store/xxx-surreal-v3.1.4.linux-amd64";
-        narHash = "sha256-...";
+        url = "file:///home/master/pub/Application/Linux/surreal-v3.2.0.linux-amd64.tgz";
+        sha256 = "nAqa4pRE87FEoSYfySMRaw4Qo8utxHjKvJAJs765uzo=";
       };
     };
 
@@ -28,10 +28,9 @@
 
   config = let
     cfg = config.surrealdb.server;
-    srcPath = (builtins.fetchTree {
-      type = "file";
-      inherit (cfg.src) url narHash;
-    }).outPath;
+    srcPath = (builtins.fetchTarball {
+      inherit (cfg.tarball) url sha256;
+    });
   in lib.mkIf cfg.enable {
     nixpkgs.overlays = [
       (final: prev: {
@@ -44,7 +43,7 @@
           buildInputs = [ prev.libgcc.lib ];
           installPhase = ''
             mkdir -p $out/bin
-            cp $src $out/bin/surreal
+            cp $src/surreal $out/bin/surreal
             chmod +x $out/bin/surreal
           '';
         };

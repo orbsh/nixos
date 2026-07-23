@@ -3,10 +3,10 @@
 
   surrealdb.server = {
     enable = true;
-    version = "3.1.5";
-    src = {
-      url = "file:///nix/store/2fd96l0mzl01a7mjhjy73xgvll04f1gp-surreal";
-      narHash = "sha256-6jDBX0C2UpDKR0jxskBfFoiGkXwKo3CQR98YQFNMweg=";
+    version = "3.2.0";
+    tarball = {
+      url = "file:///home/master/pub/Application/Linux/surreal-v3.2.0.linux-amd64.tgz";
+      sha256 = "1j8lwl1j3iqp79byx4f6im0d6pnvk3xq4js14lzk328agqfhvd5z";
     };
   };
 }
