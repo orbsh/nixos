@@ -9,7 +9,6 @@
     ../desktop/home.nix
     ../services/ladder.nix
 
-    # 救援环境工具集（含 jcode AI agent）
     ../dev/rescue.nix
   ];
 
