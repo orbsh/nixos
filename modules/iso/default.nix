@@ -27,7 +27,7 @@ in {
   # ── 基础 CLI 工具（复用 base.nix 的包列表） ────
   environment.systemPackages = with pkgs; [
     # ── 网络与传输 ──
-    git curl wget rsync socat netcat-openbsd minio-client
+    git curl wget rsync socat netcat-openbsd
     # ── 文件与系统工具 ──
     util-linux jq tree file unzip fd ripgrep sd bind dust
     # ── 终端与编辑器 ──
