@@ -5,7 +5,7 @@ let
 
   # 独立启动脚本，避免 bash -c '...' 内联引号与 systemd unit 解析冲突
   startupScript = pkgs.writeShellScript "eww-startup" ''
-    export PATH=${pkgs.coreutils}/bin:${pkgs.gawk}/bin:${pkgs.bash}/bin:${pkgs.iproute2}/bin:${pkgs.iw}/bin:${pkgs.gnugrep}/bin:${pkgs.procps}/bin:/run/wrappers/bin
+    export PATH=${pkgs.eww}/bin:${pkgs.coreutils}/bin:${pkgs.gawk}/bin:${pkgs.bash}/bin:${pkgs.iproute2}/bin:${pkgs.iw}/bin:${pkgs.gnugrep}/bin:${pkgs.procps}/bin:/run/wrappers/bin
 
     # 持续检测 Wayland socket（最多等待 10 秒）
     for i in $(seq 1 50); do
@@ -61,7 +61,7 @@ in
         ExecStart = startupScript;
         Restart = "on-failure";
         Environment = [
-          "PATH=${pkgs.coreutils}/bin:${pkgs.gawk}/bin:${pkgs.bash}/bin:${pkgs.iproute2}/bin:${pkgs.iw}/bin:${pkgs.gnugrep}/bin:${pkgs.procps}/bin:/run/wrappers/bin"
+          "PATH=${pkgs.eww}/bin:${pkgs.coreutils}/bin:${pkgs.gawk}/bin:${pkgs.bash}/bin:${pkgs.iproute2}/bin:${pkgs.iw}/bin:${pkgs.gnugrep}/bin:${pkgs.procps}/bin:/run/wrappers/bin"
           "NO_AT_BRIDGE=1"
           "GDK_BACKEND=wayland"
           "XDG_SESSION_TYPE=wayland"
