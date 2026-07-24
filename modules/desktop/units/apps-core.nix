@@ -13,6 +13,7 @@
     qimgv
     mpv
     ffmpeg
+    imagemagick
 
     # 浏览器
     chromium
