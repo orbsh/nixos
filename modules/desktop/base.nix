@@ -15,7 +15,7 @@
   ];
 
   # Hyprland 合成器 + 完整辅助工具链
-  wayland.windowManager.hyprland.enable = true;
+  wayland.windowManager.hyprland.enable = false;
 
   # ── 合并各模块的 resume 命令 ───────────────────────
   powerManagement.resumeCommands = config.desktop.inputMethod.resumeCommands;

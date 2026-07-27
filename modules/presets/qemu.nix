@@ -23,13 +23,13 @@
   services.spice-vdagentd.enable = true;
 
   # ── 自动登录（免密码）─────────────────────────────────
-  # 用户无密码 + greetd 自动进入 Hyprland
+  # 用户无密码 + greetd 自动进入 COSMIC
   users.users.${user} = {
     initialPassword = "";
   };
 
   services.greetd.settings.initial_session = {
-    command = "${pkgs.hyprland}/bin/Hyprland";
+    command = "${pkgs.cosmic-session}/bin/cosmic-session";
     user = user;
   };
 

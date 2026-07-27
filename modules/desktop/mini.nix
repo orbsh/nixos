@@ -3,7 +3,7 @@
 { pkgs, ... }: {
   imports = [
     ./units/apps-core.nix
-    # ./units/cosmic.nix
+    ./units/cosmic.nix
     ./units/hyprland.nix
     ./units/greetd.nix
     ./units/input-method.nix
@@ -12,5 +12,5 @@
     ./units/eww.nix
   ];
 
-  wayland.windowManager.hyprland.enable = true;
+  wayland.windowManager.hyprland.enable = false;
 }
