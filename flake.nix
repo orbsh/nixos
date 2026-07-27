@@ -70,7 +70,7 @@
         substituters = [
           "https://mirrors.ustc.edu.cn/nix-channels/store"
           "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
-          #"https://cache.nixos.org"
+          "https://cache.nixos.org"
         ];
         trusted-public-keys = [
           "harmonia-local:bF/+RpECJWbbE8W7/hu1jWRlkQqu/+cXoVrWFENmqXY="
