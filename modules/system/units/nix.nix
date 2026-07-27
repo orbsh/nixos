@@ -8,6 +8,9 @@
     substituters = nixSubstituters.substituters;
     trusted-public-keys = nixSubstituters.trusted-public-keys;
     builders-use-substitutes = true;
+    max-substitution-jobs = 8;       # 并发下载（默认 4）
+    narinfo-cache-positive-ttl = 3600;  # narinfo 缓存 1 小时
+    connect-timeout = 5;            # 连接超时 5 秒，快速跳到下一个 substituter
   };
 
   # 每周自动清理未使用的包

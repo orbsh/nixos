@@ -1,7 +1,8 @@
 { pkgs, lib, config, ... }: {
   # 网络抓包与分析工具 (Wireshark 生态)
   environment.systemPackages = [
-    pkgs.termshark  # TUI 版 Wireshark
+    pkgs.termshark   # TUI 版 Wireshark
+    pkgs.mitmproxy   # HTTP/HTTPS 中间人代理，用于调试 API 流量
   ];
 
   # Wireshark GUI + dumpcap capability

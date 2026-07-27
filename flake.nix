@@ -68,8 +68,8 @@
       # Nix substituter（全局，根据网络状况调整）
       nixSubstituters = {
         substituters = [
-          "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
           "https://mirrors.ustc.edu.cn/nix-channels/store"
+          "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
           #"https://cache.nixos.org"
         ];
         trusted-public-keys = [

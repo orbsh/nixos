@@ -11,7 +11,7 @@
     blender
 
     # 阅读
-    calibre
+    # calibre              # 暂时禁用
     onlyoffice-desktopeditors
     zathura         # PDF 阅读
     foliate         # 电子书阅读
