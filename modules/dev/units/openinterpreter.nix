@@ -25,8 +25,10 @@
   config = let
     cfg = config.dev.openinterpreter;
   in {
-    environment.systemPackages = [
-      (pkgs.stdenv.mkDerivation {
+    environment.systemPackages = with pkgs; [
+      bubblewrap  # bwrap：Codex/jcode 沙箱执行所需
+
+      (stdenv.mkDerivation {
         pname = "open-interpreter";
         version = "latest";
 
