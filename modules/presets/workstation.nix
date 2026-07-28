@@ -13,6 +13,7 @@
     ../dev/fullstack.nix
     ../services/hermes-system.nix  # Hermes Agent: systemd 守护 + 全局 CLI 包裹
     ../services/harmonia.nix     # 本地二进制缓存
+    ../services/rustfs.nix
     ../services/ladder.nix       # Podman 代理链
     ../services/podman-apps.nix  # Podman 应用全家桶
     ../services/numa.nix         # 本地 DNS + 反向代理（workstation 专用，server 用 CoreDNS）
