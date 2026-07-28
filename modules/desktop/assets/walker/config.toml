@@ -1,4 +1,5 @@
 terminal = "ghostty"
+theme = "default"
 use_sub_heading = true
 
 [list]

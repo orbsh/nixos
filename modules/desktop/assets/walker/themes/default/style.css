@@ -1,0 +1,90 @@
+/* ~/.config/walker/themes/default/style.css */
+
+#window {
+    /* --- COSMIC DE Dark Theme Palette --- */
+    --cosmic-bg: #1e1e24;          /* Deep Slate Background */
+    --cosmic-surface: #26262e;     /* Inner Box Surface */
+    --cosmic-fg: #f2f2f7;          /* Crisp Primary Text */
+    --cosmic-sub: #a1a1aa;         /* Zinc Muted Subtext */
+
+    /* Pop!_OS / COSMIC Signature Accent (Teal/Cyan) */
+    --cosmic-accent: #3b82f6;      /* Fallback Active Blue */
+    --cosmic-pop-cyan: #00d2ff;    /* Pure Pop Cyan Accent */
+
+    /* Layout properties mirroring cosmic-launcher */
+    --cosmic-radius: 8px;          /* COSMIC default corner radius */
+    --cosmic-border: #373742;      /* Subtle separation border */
+}
+
+/* Outer Window Wrapper */
+#box {
+    background: var(--cosmic-bg);
+    border: 1px solid var(--cosmic-border);
+    border-radius: var(--cosmic-radius);
+    padding: 14px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Wayland hardware shadows */
+}
+
+/* The Search Input Area */
+#input {
+    background: var(--cosmic-surface);
+    color: var(--cosmic-fg);
+    border: 1px solid var(--cosmic-border);
+    border-radius: var(--cosmic-radius);
+    padding: 12px 16px;
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+}
+
+/* Input Focus Glow (Simulating active cosmic typing state) */
+#input:focus {
+    border-color: var(--cosmic-pop-cyan);
+}
+
+/* Individual Candidate Item */
+#item {
+    padding: 10px 14px;
+    margin: 2px 0;
+    border-radius: var(--cosmic-radius);
+    background: transparent;
+    transition: background 0.1s ease;
+}
+
+/* Selected/Hovered State (The classic Pop-Launcher active row) */
+#item:selected {
+    background: var(--cosmic-surface);
+    border-left: 3px solid var(--cosmic-pop-cyan); /* Left indicator bar */
+}
+
+/* Text inside the items */
+#item .label {
+    color: var(--cosmic-fg);
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+#item .sub {
+    color: var(--cosmic-sub);
+    font-size: 0.85rem;
+    margin-top: 2px;
+}
+
+/* Alfred/Mod selection numbers (Alt+1, Alt+2) enabled previously */
+#item .index-label {
+    color: var(--cosmic-pop-cyan);
+    font-size: 0.8rem;
+    font-weight: bold;
+    opacity: 0.7;
+    margin-right: 8px;
+}
+
+/* 为 qutebrowser 的条目重写高亮变量 */
+.qute-item {
+    --accent-color: #8be9fd; /* 换成代表浏览器的青蓝色（Cyan） */
+}
+
+/* 这里的通用选择器会自动继承上面 .qute-item 临时覆盖掉的变量值！ */
+.qute-item:selected {
+    background: rgba(139, 233, 253, 0.15);
+    border-left: 3px solid var(--accent-color);
+}

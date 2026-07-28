@@ -5,31 +5,34 @@ export-env { use qute.nu }
 
 # ── CLI 封装 ────────────────────────────────────────────
 
-# 列出所有条目
-def rbw-list [] {
-    rbw list | lines
-}
-
-# 按域名搜索
+# 按域名搜索，返回 tab 分隔的 name<TAB>user<TAB>folder
 def rbw-search [host: string] {
-    rbw search $host | lines
+    rbw search $host --fields name,user,folder | lines
 }
 
 # 获取密码
-def rbw-password [folder: string, name: string] {
-    let r = rbw get $name $folder | complete
+def rbw-password [name: string, user: string] {
+    let r = if ($user | is-empty) {
+        rbw get $name | complete
+    } else {
+        rbw get $name $user | complete
+    }
     if ($r.exit_code != 0) {
-        $r.stderr | log -t error
+        $r.stderr | qute log -t error
         return null
     }
     $r.stdout | str trim
 }
 
 # 获取 TOTP
-def rbw-totp [folder: string, name: string] {
-    let r = rbw code $name $folder | complete
+def rbw-totp [name: string, user: string] {
+    let r = if ($user | is-empty) {
+        rbw code $name | complete
+    } else {
+        rbw code $name $user | complete
+    }
     if ($r.exit_code != 0) {
-        $r.stderr | log -t error
+        $r.stderr | qute log -t error
         return null
     }
     $r.stdout | str trim
@@ -37,43 +40,31 @@ def rbw-totp [folder: string, name: string] {
 
 # ── 解析逻辑 ─────────────────────────────────────────────
 
-# 解析 rbw 条目格式: folder/name@user → [folder, name, user]
+# 解析 walker 选中的行: name<TAB>user<TAB>folder
 def parse-entry [entry: string] {
-    let p = $entry | split row '/'
-    let p = if ($p | length) > 1 {
-        [$p.0 ($p | range 1.. | str join '/')]
-    } else {
-        ['' $p.0]
-    }
-    let i = $p.1 | split row '@'
-    let i = if ($i | length) > 1 {
-        [($i | range 0..<-1 | str join '@') ($i | last)]
-    } else {
-        ['' $i.0]
-    }
-    [$p.0 $i.0 $i.1]
+    let parts = ($entry | split row "\t")
+    let name = $parts.0
+    let user = if ($parts | length) > 1 { $parts.1 } else { '' }
+    { name: $name, user: $user }
 }
 
 # ── 密码填入模式 ─────────────────────────────────────────
 
 def fill-password [entry: string] {
     let parsed = parse-entry $entry
-    let folder = $parsed.0
-    let name = $parsed.1
-    let user = $parsed.2
 
-    let password = rbw-password $folder $name
+    let password = rbw-password $parsed.name $parsed.user
     if ($password | is-empty) {
-        '未获取到密码' | log -t error
+        '未获取到密码' | qute log -t error
         exit $env.QUTE_EXIT_CODE.FAILURE
     }
 
     # 注入: 用户名 <tab> 密码
-    if ($user | is-not-empty) {
-        $user | qute fake-key-raw
-        '<tab>' | qute fake-key
+    if ($parsed.user | is-not-empty) {
+        $parsed.user | qute insert-text
+        '<Tab>' | qute fake-key
     }
-    $password | qute fake-key-raw
+    $password | qute insert-text
 
     $env.QUTE_EXIT_CODE.SUCCESS
 }
@@ -86,7 +77,7 @@ def select-menu [] {
     let entries = rbw-search $url.host
 
     if ($entries | is-empty) {
-        $"未找到 ($url.host) 的匹配条目" | log -t warning
+        $"未找到 ($url.host) 的匹配条目" | qute log -t warning
         return $env.QUTE_EXIT_CODE.NO_PASS_CANDIDATES
     }
 
@@ -94,7 +85,7 @@ def select-menu [] {
     let selected = ($entries | qute select | str trim)
 
     if ($selected | is-empty) {
-        '用户取消选择' | log
+        '用户取消选择' | qute log
         return $env.QUTE_EXIT_CODE.SUCCESS
     }
 
