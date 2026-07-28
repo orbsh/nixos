@@ -16,6 +16,7 @@
     ./units/laptop.nix
     ./units/networkmanager.nix
     ./units/qutebrowser.nix
+    # ./units/nyxt.nix
   ];
 
   # Hyprland 合成器 + 完整辅助工具链
