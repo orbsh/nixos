@@ -24,10 +24,12 @@ in
         "RUSTFS_CONSOLE_ENABLE=true"
         "RUSTFS_CONSOLE_ADDRESS=:9001"
       ];
-
-      StateDirectory = "rustfs";
-      StateDirectoryMode = "0750";
     };
+
+    # 确保 volume 目录存在
+    preStart = ''
+      mkdir -p ${dataDir}
+    '';
   };
 
   # 防火墙放行
