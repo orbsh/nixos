@@ -59,10 +59,11 @@ def fill-password [entry: string] {
         exit $env.QUTE_EXIT_CODE.FAILURE
     }
 
-    # 注入: 用户名 <tab> 密码
+    # 注入: 用户名 → 聚焦密码框 → 密码
     if ($parsed.user | is-not-empty) {
         $parsed.user | qute insert-text
-        '<Tab>' | qute fake-key
+        # 用 JS 聚焦密码输入框，比 fake-key <Tab> 可靠
+        'var pw = document.querySelector("input[type=password]"); if (pw) pw.focus();' | qute jseval
     }
     $password | qute insert-text
 

@@ -1,90 +1,219 @@
 /* ~/.config/walker/themes/default/style.css */
+/* 基于 walker 默认 CSS，覆盖为 COSMIC 暗色主题 */
 
-#window {
-    /* --- COSMIC DE Dark Theme Palette --- */
-    --cosmic-bg: #1e1e24;          /* Deep Slate Background */
-    --cosmic-surface: #26262e;     /* Inner Box Surface */
-    --cosmic-fg: #f2f2f7;          /* Crisp Primary Text */
-    --cosmic-sub: #a1a1aa;         /* Zinc Muted Subtext */
+@define-color window_bg_color #1e1e24;
+@define-color accent_bg_color #00d2ff;
+@define-color theme_fg_color #f2f2f7;
+@define-color error_bg_color #C34043;
+@define-color error_fg_color #DCD7BA;
 
-    /* Pop!_OS / COSMIC Signature Accent (Teal/Cyan) */
-    --cosmic-accent: #3b82f6;      /* Fallback Active Blue */
-    --cosmic-pop-cyan: #00d2ff;    /* Pure Pop Cyan Accent */
-
-    /* Layout properties mirroring cosmic-launcher */
-    --cosmic-radius: 8px;          /* COSMIC default corner radius */
-    --cosmic-border: #373742;      /* Subtle separation border */
+* {
+  all: unset;
 }
 
-/* Outer Window Wrapper */
-#box {
-    background: var(--cosmic-bg);
-    border: 1px solid var(--cosmic-border);
-    border-radius: var(--cosmic-radius);
-    padding: 14px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Wayland hardware shadows */
+popover {
+  background: lighter(@window_bg_color);
+  border: 1px solid darker(@accent_bg_color);
+  border-radius: 18px;
+  padding: 10px;
 }
 
-/* The Search Input Area */
-#input {
-    background: var(--cosmic-surface);
-    color: var(--cosmic-fg);
-    border: 1px solid var(--cosmic-border);
-    border-radius: var(--cosmic-radius);
-    padding: 12px 16px;
-    font-size: 1.1rem;
-    margin-bottom: 12px;
+.normal-icons {
+  -gtk-icon-size: 16px;
 }
 
-/* Input Focus Glow (Simulating active cosmic typing state) */
-#input:focus {
-    border-color: var(--cosmic-pop-cyan);
+.large-icons {
+  -gtk-icon-size: 32px;
 }
 
-/* Individual Candidate Item */
-#item {
-    padding: 10px 14px;
-    margin: 2px 0;
-    border-radius: var(--cosmic-radius);
-    background: transparent;
-    transition: background 0.1s ease;
+scrollbar {
+  opacity: 0;
 }
 
-/* Selected/Hovered State (The classic Pop-Launcher active row) */
-#item:selected {
-    background: var(--cosmic-surface);
-    border-left: 3px solid var(--cosmic-pop-cyan); /* Left indicator bar */
+.box-wrapper {
+  box-shadow:
+    0 19px 38px rgba(0, 0, 0, 0.3),
+    0 15px 12px rgba(0, 0, 0, 0.22);
+  background: @window_bg_color;
+  padding: 20px;
+  border-radius: 20px;
+  border: 1px solid darker(@accent_bg_color);
 }
 
-/* Text inside the items */
-#item .label {
-    color: var(--cosmic-fg);
-    font-size: 1rem;
-    font-weight: 500;
+.preview-box,
+.elephant-hint,
+.placeholder {
+  color: @theme_fg_color;
 }
 
-#item .sub {
-    color: var(--cosmic-sub);
-    font-size: 0.85rem;
-    margin-top: 2px;
+.box {
 }
 
-/* Alfred/Mod selection numbers (Alt+1, Alt+2) enabled previously */
-#item .index-label {
-    color: var(--cosmic-pop-cyan);
-    font-size: 0.8rem;
-    font-weight: bold;
-    opacity: 0.7;
-    margin-right: 8px;
+.search-container {
+  border-radius: 10px;
 }
 
-/* 为 qutebrowser 的条目重写高亮变量 */
-.qute-item {
-    --accent-color: #8be9fd; /* 换成代表浏览器的青蓝色（Cyan） */
+.input placeholder {
+  opacity: 0.5;
 }
 
-/* 这里的通用选择器会自动继承上面 .qute-item 临时覆盖掉的变量值！ */
-.qute-item:selected {
-    background: rgba(139, 233, 253, 0.15);
-    border-left: 3px solid var(--accent-color);
+.input selection {
+  background: lighter(lighter(lighter(@window_bg_color)));
+}
+
+.input {
+  caret-color: @theme_fg_color;
+  background: lighter(@window_bg_color);
+  padding: 10px;
+  color: @theme_fg_color;
+}
+
+.input:focus,
+.input:active {
+}
+
+.content-container {
+}
+
+.placeholder {
+}
+
+.scroll {
+}
+
+.list {
+  color: @theme_fg_color;
+}
+
+child {
+}
+
+.item-box {
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.item-quick-activation {
+  background: alpha(@accent_bg_color, 0.25);
+  border-radius: 5px;
+  padding: 10px;
+}
+
+/* child:hover .item-box, */
+child:selected .item-box,
+row:selected .item-box {
+  background: alpha(@accent_bg_color, 0.25);
+}
+
+.item-text-box {
+}
+
+.item-subtext {
+  font-size: 12px;
+  opacity: 0.5;
+}
+
+.providerlist .item-subtext {
+  font-size: unset;
+  opacity: 0.75;
+}
+
+.item-image-text {
+  font-size: 28px;
+}
+
+.preview {
+  border: 1px solid alpha(@accent_bg_color, 0.25);
+  /* padding: 10px; */
+  border-radius: 10px;
+  color: @theme_fg_color;
+}
+
+.calc .item-text {
+  font-size: 24px;
+}
+
+.calc .item-subtext {
+}
+
+.symbols .item-image {
+  font-size: 24px;
+}
+
+.todo.done .item-text-box {
+  opacity: 0.25;
+}
+
+.todo.urgent {
+  font-size: 24px;
+}
+
+.todo.active {
+  font-weight: bold;
+}
+
+.bluetooth.disconnected {
+  opacity: 0.5;
+}
+
+.preview .large-icons {
+  -gtk-icon-size: 64px;
+}
+
+.keybinds {
+  padding-top: 10px;
+  border-top: 1px solid lighter(@window_bg_color);
+  font-size: 12px;
+  color: @theme_fg_color;
+}
+
+.global-keybinds {
+}
+
+.item-keybinds {
+}
+
+.keybind {
+}
+
+.keybind-button {
+  opacity: 0.5;
+}
+
+.keybind-button:hover {
+  opacity: 0.75;
+}
+
+.keybind-bind {
+  text-transform: lowercase;
+  opacity: 0.35;
+}
+
+.keybind-label {
+  padding: 2px 4px;
+  border-radius: 4px;
+  border: 1px solid @theme_fg_color;
+}
+
+.error {
+  padding: 10px;
+  background: @error_bg_color;
+  color: @error_fg_color;
+}
+
+:not(.calc).current {
+  font-style: italic;
+}
+
+.preview-content.archlinuxpkgs,
+.preview-content.dnfpackages,
+.preview-content.aptpackages {
+  font-family: monospace;
+}
+
+/* ── qutebrowser 条目高亮覆盖 ────────────────────────── */
+.qute-item child:selected .item-box,
+.qute-item row:selected .item-box {
+  background: alpha(#8be9fd, 0.15);
+  border-left: 3px solid #8be9fd;
 }

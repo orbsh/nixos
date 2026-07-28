@@ -11,7 +11,7 @@ export def log [-t: string] {
 }
 
 export def command [] {
-    $"($in)" | save -a $env.QUTE_FIFO
+    $"($in)(char newline)" | save -a $env.QUTE_FIFO
 }
 
 export def jseval [] {
@@ -26,7 +26,7 @@ export def jseval [] {
         }
     }
     | str join ' '
-    $"jseval ($j)" | save -a $env.QUTE_FIFO
+    $"jseval ($j)(char newline)" | save -a $env.QUTE_FIFO
 }
 
 export def jsesc [x] {
@@ -103,7 +103,7 @@ export def open-tab [name] {
     let f = [$d $name] | path join
     if not ($d | path exists) { mkdir $d }
     $t | save -f $f
-    $"open -t ($f)" | save -a $env.QUTE_FIFO
+    $"open -t ($f)(char newline)" | save -a $env.QUTE_FIFO
 }
 
 export def to-html [title] {
