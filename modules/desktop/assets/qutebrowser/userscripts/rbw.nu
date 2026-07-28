@@ -90,18 +90,15 @@ def select-menu [] {
         return $env.QUTE_EXIT_CODE.NO_PASS_CANDIDATES
     }
 
-    # 构造 prompt-select 命令，选中后回调自身
-    let script = $env.CURRENT_FILE
-    let args = ($entries | each { |e|
-        [$'spawn --userscript ($script) --fill "($e)"' $e]
-    } | flatten)
+    # 使用 walker 过滤选择，选中后直接填充（单进程）
+    let selected = ($entries | qute select | str trim)
 
-    [
-        'prompt-select'
-        '-text'
-        'Select Bitwarden Entry:'
-        ...$args
-    ] | str join ' ' | qute command
+    if ($selected | is-empty) {
+        '用户取消选择' | log
+        return $env.QUTE_EXIT_CODE.SUCCESS
+    }
+
+    fill-password $selected
 }
 
 # ── 主入口 ───────────────────────────────────────────────

@@ -69,6 +69,9 @@ export def insert-text [] {
 export def select [] {
     let t = $in
     match $env.QUTE_SELECTOR {
+        walker => {
+            $t | str join "\n" | walker --dmenu
+        }
         fuzzel => {
             $t  | str join "\n" | fuzzel --dmenu
         }
@@ -138,7 +141,7 @@ export-env {
 
     $env.QUTE_LOG_FILE = [$env.QUTE_DATA_DIR out] | path join
 
-    for c in [fuzzel rofi] {
+    for c in [walker fuzzel rofi] {
         if (which $c | is-not-empty) {
             $env.QUTE_SELECTOR = $c
             break
