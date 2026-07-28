@@ -29,6 +29,11 @@
     };
   };
 
+  # ── Security ─────────────────────────────────────────────
+  security.pki.certificateFiles = [
+    ../system/assets/certs/mitmproxy-ca-cert.pem
+  ];
+
   # ── SSD 寿命优化：临时构建缓存移入内存 ───────────
   # 避免 nixos-rebuild 在 /tmp 产生数 GB 高频临时写入磨损 SSD
   boot.tmp.useTmpfs = true;
