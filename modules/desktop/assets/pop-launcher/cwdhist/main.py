@@ -25,6 +25,21 @@ class CwdHistPlugin(PopLauncherPlugin):
         else:
             self.open_cmd = shlex.split(os.environ.get("NV_OPEN_CMD", "ghostty -e nvim"))
 
+    @property
+    def plugin_ron(self) -> str:
+        # 强制要求必须是严格的空格打头，且后面至少跟一个非空白字符
+        # 这样可以防止你只敲了个空格、还没打字时，系统就疯狂报错或盲搜
+        return f'''(
+    name: "cwdhist",
+    description: "{self.description}",
+    bin: (path: "main.py"),
+    icon: Name("{self.icon}"),
+    query: (
+        regex: "^\\\\s+\\\\S+.*",
+        help: " [dir_name]"
+    )
+)'''
+
     @staticmethod
     def _expand(p: str) -> str:
         return p.replace("~", str(Path.home()), 1) if p.startswith("~") else p

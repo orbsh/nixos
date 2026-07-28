@@ -295,6 +295,7 @@ in {
 
         # ─ 6. 窗口规则 ──────────────────────────────────
         windowrule = match:class ^(mpv)$, float on, size 1280 720, center on
+        windowrule = match:class ^(qutebrowser)$, maximize
       '';
 
       xdg.configFile."hypr/apps.yaml".source = ../assets/hypr/apps.yaml;
