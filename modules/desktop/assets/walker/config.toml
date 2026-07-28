@@ -1,0 +1,12 @@
+terminal = "ghostty"
+use_sub_heading = true
+
+[list]
+max_entries = 50
+
+[font]
+family = "Noto Sans CJK SC"
+size = 14
+
+[keybinds]
+quick_activate = ["alt 1", "alt 2", "alt 3", "alt 4", "alt 5", "alt 6", "alt 7", "alt 8", "alt 9"]

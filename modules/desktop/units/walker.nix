@@ -10,6 +10,6 @@
 
   # ── walker 配置 ────────────────────────────────────────
   home-manager.users.${user} = {
-    xdg.configFile."walker/config.json".source = ../assets/walker/config.json;
+    xdg.configFile."walker/config.toml".source = ../assets/walker/config.toml;
   };
 }
