@@ -62,8 +62,7 @@ export def fake-key [] {
 
 
 export def insert-text [] {
-    let r = $in | str replace -a '"' '\"'
-    $'insert-text "($r)"' | command
+    $'insert-text ($in)' | command
 }
 
 export def select [] {
