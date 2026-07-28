@@ -4,6 +4,30 @@
 # https://github.com/abenz1267/elephant
 { pkgs, lib, config, user, ... }:
 
+let
+  # 启动脚本：等待 Wayland display 就绪后再启动 walker
+  # COSMIC 可能不会及时将 WAYLAND_DISPLAY 导入 systemd 用户环境
+  startupScript = pkgs.writeShellScript "walker-startup" ''
+    export XDG_RUNTIME_DIR=/run/user/$UID
+
+    for i in $(seq 1 50); do
+      wl_display=$(${pkgs.findutils}/bin/find /run/user/$UID -maxdepth 1 -name "wayland-*" -type s 2>/dev/null | head -n 1)
+      if [ -n "$wl_display" ]; then
+        export WAYLAND_DISPLAY=$(basename "$wl_display")
+        break
+      fi
+      sleep 0.2
+    done
+
+    if [ -z "$WAYLAND_DISPLAY" ]; then
+      echo "No WAYLAND_DISPLAY found after 10s, exiting" >&2
+      exit 1
+    fi
+
+    export GSK_RENDERER=gl
+    exec ${pkgs.walker}/bin/walker --gapplication-service
+  '';
+in
 {
   # ── walker + elephant 包 ────────────────────────────────
   environment.systemPackages = [
@@ -16,7 +40,6 @@
     xdg.configFile."walker/config.toml".source = ../assets/walker/config.toml;
     xdg.configFile."walker/themes/default/style.css".source = ../assets/walker/themes/default/style.css;
 
-    # GTK4 Vulkan swapchain 警告，用 GL 渲染器消除
     systemd.user.services.walker = {
       Unit = {
         Description = "Walker daemon";
@@ -25,8 +48,7 @@
       };
       Service = {
         Type = "exec";
-        ExecStart = "${pkgs.walker}/bin/walker --gapplication-service";
-        Environment = [ "GSK_RENDERER=gl" ];
+        ExecStart = startupScript;
         Restart = "on-failure";
         RestartSec = "5s";
       };
