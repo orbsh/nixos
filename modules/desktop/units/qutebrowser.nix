@@ -21,12 +21,6 @@ in {
   # ── qutebrowser 配置文件 ──────────────────────────────────
   home-manager.users.${user} = {
     xdg.configFile."qutebrowser/config.py".source = ../assets/qutebrowser/config.py;
-
-    xdg.configFile."qutebrowser/userscripts/bitwarden".source = ../assets/qutebrowser/userscripts/bitwarden;
-    xdg.configFile."qutebrowser/userscripts/code_select.py".source = ../assets/qutebrowser/userscripts/code_select.py;
-    xdg.configFile."qutebrowser/userscripts/qute.nu".source = ../assets/qutebrowser/userscripts/qute.nu;
-    xdg.configFile."qutebrowser/userscripts/rbw.nu".source = ../assets/qutebrowser/userscripts/rbw.nu;
-    xdg.configFile."qutebrowser/userscripts/tab-manager.py".source = ../assets/qutebrowser/userscripts/tab-manager.py;
-    xdg.configFile."qutebrowser/userscripts/translate.nu".source = ../assets/qutebrowser/userscripts/translate.nu;
+    xdg.configFile."qutebrowser/userscripts".source = ../assets/qutebrowser/userscripts;
   };
 }
