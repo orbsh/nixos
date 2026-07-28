@@ -18,6 +18,7 @@
     ./units/qutebrowser.nix
     # ./units/nyxt.nix
     ./units/rbw.nix
+    ./units/walker.nix
   ];
 
   # Hyprland 合成器 + 完整辅助工具链

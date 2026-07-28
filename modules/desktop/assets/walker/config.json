@@ -1,0 +1,41 @@
+{
+  "mode": "center",
+  "suggestions": true,
+  "terminal": "ghostty",
+  "disable_activation_mode": false,
+  "use_sub_heading": true,
+  "list": {
+    "max_entries": 50
+  },
+  "font": {
+    "family": "Noto Sans CJK SC",
+    "size": 14
+  },
+  "layout": {
+    "anchor": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "width": 400,
+    "height": 200
+  },
+  "modules": [
+    {
+      "name": "applications"
+    },
+    {
+      "name": "runner",
+      "prefix": ""
+    },
+    {
+      "name": "ssh"
+    },
+    {
+      "name": "finder"
+    },
+    {
+      "name": "commands",
+      "prefix": ">"
+    }
+  ]
+}

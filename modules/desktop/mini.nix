@@ -12,6 +12,7 @@
     ./units/eww.nix
     ./units/qutebrowser.nix
     ./units/rbw.nix
+    ./units/walker.nix
   ];
 
   wayland.windowManager.hyprland.enable = false;
