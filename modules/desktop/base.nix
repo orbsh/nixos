@@ -12,6 +12,7 @@
     ./units/fonts.nix
     ./units/accessibility.nix
     ./units/eww.nix
+    ./units/qutebrowser.nix
   ];
 
   # Hyprland 合成器 + 完整辅助工具链

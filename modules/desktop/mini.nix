@@ -10,6 +10,7 @@
     ./units/fonts.nix
     ./units/accessibility.nix
     ./units/eww.nix
+    ./units/qutebrowser.nix
   ];
 
   wayland.windowManager.hyprland.enable = false;

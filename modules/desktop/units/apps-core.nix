@@ -17,7 +17,6 @@
 
     # 浏览器
     chromium
-    qutebrowser
 
     # 文件 & 办公
     freefilesync
