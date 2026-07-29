@@ -1,11 +1,11 @@
 /* ~/.config/walker/themes/default/style.css */
-/* COSMIC 主题：咖啡色暗色配色 */
+/* COSMIC 日间主题：咖啡色明亮配色 */
 
-@define-color window_bg_color #372a2b;
+@define-color window_bg_color #fbf3e2;
 @define-color accent_bg_color #deba6f;
-@define-color theme_fg_color #e2e2e2;
-@define-color error_bg_color #ffa090;
-@define-color error_fg_color #372a2b;
+@define-color theme_fg_color #2c3444;
+@define-color error_bg_color #890418;
+@define-color error_fg_color #fbf3e2;
 
 * {
   all: unset;
@@ -37,7 +37,7 @@ scrollbar {
   background: @window_bg_color;
   padding: 20px;
   border-radius: 20px;
-  border: 1px solid darker(@accent_bg_color);
+  border: 1px solid lighter(@accent_bg_color);
 }
 
 .preview-box,
@@ -50,7 +50,7 @@ scrollbar {
 }
 
 .search-container {
-  border-radius: 10px;
+  border-radius: 2em;
 }
 
 .input placeholder {
@@ -64,12 +64,16 @@ scrollbar {
 .input {
   caret-color: @theme_fg_color;
   background: lighter(@window_bg_color);
+  border-radius: 2em;
+  border: 2px solid @accent_bg_color;
   padding: 10px;
   color: @theme_fg_color;
 }
 
 .input:focus,
 .input:active {
+  background: alpha(@accent_bg_color, 0.15);
+  border: 2px solid @accent_bg_color;
 }
 
 .content-container {
