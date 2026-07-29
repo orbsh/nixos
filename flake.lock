@@ -50,10 +50,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1785119578,
-        "narHash": "sha256-3VMVuOJ6fK+RNOXVmqusqUwQ1sDfPeddNKaM2JR/4Y0=",
+        "lastModified": 1785288465,
+        "narHash": "sha256-nCkxaGRtyNheNTxoc527gjOG0BN2zovsWDQVBeKDMW8=",
         "ref": "refs/heads/master",
-        "rev": "e83dffa86cccb6237fe194d4eeb47f41557749d1",
+        "rev": "36662afed2fa1c9b69bdd03edb92ad572202ca20",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/nix-community/home-manager"
@@ -82,10 +82,10 @@
     },
     "my-nushell-config": {
       "locked": {
-        "lastModified": 1784196658,
-        "narHash": "sha256-0ffiwwrT50Qwg3BskNBGVh5mlrcjRMoRmwXuXAMG+/0=",
+        "lastModified": 1785204870,
+        "narHash": "sha256-dTaa++307cvrpoxhBMStserR960ftVk7BvMTG0TKQ6A=",
         "ref": "refs/heads/main",
-        "rev": "1b9cdcbfebd34c503d1e3db472c12e46793d6bc7",
+        "rev": "8a38bcb0e4c9a7819c4b7e76e5e5153bc64ef3e5",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/orbsh/nushell"
@@ -98,10 +98,10 @@
     },
     "my-nvim-config": {
       "locked": {
-        "lastModified": 1784544578,
-        "narHash": "sha256-xV8ljDGqvUgDMRcXlGJQGnN8N33/iB8Nir4ZY8q+b+c=",
+        "lastModified": 1785142546,
+        "narHash": "sha256-0ny1EKs3T3mSJQzbrZUFRYDB0HBrNFloNmAay6Llx6Q=",
         "ref": "refs/heads/main",
-        "rev": "d240d6b600fa6e4b746734c0400b5ad1d1a64f75",
+        "rev": "570062464af83391b2834859537521fa7ecc734c",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/orbsh/nvim-lua"
