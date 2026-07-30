@@ -22,7 +22,7 @@
     ddgr          # DuckDuckGo 命令行搜索
 
     # 浏览器
-    firefox
+    #firefox
 
     # 以下按需取消注释：
     # lapce
