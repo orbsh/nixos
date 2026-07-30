@@ -1,6 +1,39 @@
 { pkgs, lib, dataDir, user, ... }:
 
 let
+  # ── COSMIC Git overlay 开关 ─────────────────────────
+  # true: 通过 nixos-cosmic 叠加 Git 版 COSMIC（覆盖 nixpkgs 内置版本）
+  # false: 使用 nixpkgs 内置版本
+  # COSMIC 稳定进入 nixpkgs 后设为 false 即可，无需删代码
+  useGitOverlay = false;
+
+  nixosCosmicSrc = builtins.fetchGit {
+    url = "https://github.com/lilyinstarlight/nixos-cosmic";
+    shallow = true;
+  };
+
+  gitOverlay = import (nixosCosmicSrc + "/module.nix");
+
+  # 上游 hash 修正（GitHub 重新生成 tarball 导致 hash 过期）
+  cosmicHashFix = final: prev: {
+    cosmic-edit = prev.cosmic-edit.overrideAttrs (_: {
+      src = final.fetchFromGitHub {
+        owner = "pop-os";
+        repo = "cosmic-edit";
+        rev = "020342119d0ac4d362f7642a97eecade3d766177";
+        hash = "sha256-GN1Zts+v3ARcrkN+ZkMUSGNOAlIhXSYWRtWAyqUfUrY=";
+      };
+    });
+    cosmic-greeter = prev.cosmic-greeter.overrideAttrs (_: {
+      src = final.fetchFromGitHub {
+        owner = "pop-os";
+        repo = "cosmic-greeter";
+        rev = "2d2543094e04ae3167f71a5986626f03663beb79";
+        hash = "sha256-ERytoauws6FDJNXItflOE2MwjxwariiO8RXU1x1chkE=";
+      };
+    });
+  };
+
   # Generate plugin.ron from Python class
   genPluginRon = { pluginPath, className }:
     let
@@ -27,6 +60,10 @@ let
     '';
 in
 {
+  # ── COSMIC Git overlay（可选） ──────────────────────
+  imports = lib.optional useGitOverlay gitOverlay;
+  nixpkgs.overlays = lib.optional useGitOverlay cosmicHashFix;
+
   # ── COSMIC Desktop Environment ─────────────────────────
   services.desktopManager.cosmic.enable = true;
 
