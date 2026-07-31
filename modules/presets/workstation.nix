@@ -8,7 +8,6 @@
     ../services/virt.nix               # libvirtd/virt-manager 虚拟机支持
 
     ../desktop/full.nix
-    ../desktop/home.nix
 
     ../dev/fullstack.nix
     ../services/hermes-system.nix  # Hermes Agent: systemd 守护 + 全局 CLI 包裹

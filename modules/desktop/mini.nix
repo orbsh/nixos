@@ -1,6 +1,6 @@
 # 最小桌面预设：QEMU 虚拟机
 # Hyprland + 基础组件，无 Cosmic/应用
-{ pkgs, ... }: {
+{ pkgs, user, ... }: {
   imports = [
     ./units/apps-core.nix
     ./units/cosmic.nix
@@ -16,4 +16,12 @@
   ];
 
   wayland.windowManager.hyprland.enable = false;
+
+  # ── 桌面 Home Manager 配置 ───────────────────────
+  home-manager.users.${user} = {
+    imports = [
+      ./units/home-terminals.nix
+      ./units/home-xdg.nix
+    ];
+  };
 }

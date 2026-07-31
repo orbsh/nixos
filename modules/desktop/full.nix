@@ -1,6 +1,6 @@
 # 完整桌面预设：工作站
 # 含 Hyprland + 全部应用 + IM + 笔记本优化
-{ pkgs, lib, config, ... }: {
+{ pkgs, lib, config, user, ... }: {
   imports = [
     ./units/apps-core.nix
     ./units/apps-extra.nix
@@ -28,6 +28,14 @@
   environment.systemPackages = with pkgs; [
     wl-clipboard
   ];
+
+  # ── 桌面 Home Manager 配置 ───────────────────────
+  home-manager.users.${user} = {
+    imports = [
+      ./units/home-terminals.nix
+      ./units/home-xdg.nix
+    ];
+  };
 
   # ── 合并各模块的 resume 命令 ───────────────────────
   powerManagement.resumeCommands = config.desktop.inputMethod.resumeCommands;

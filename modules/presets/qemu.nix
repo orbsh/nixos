@@ -12,7 +12,6 @@
 
     # 桌面环境 (QEMU 最小预设：Hyprland + 基础组件)
     ../desktop/mini.nix
-    ../desktop/home.nix
 
     # 开发工具
     ../dev/server.nix
