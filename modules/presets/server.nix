@@ -3,10 +3,10 @@
   imports = [
     # 核心系统预设 + Home Manager 配置
     ../system/core.nix
-    ../system/home.nix
+
+    ../dev/server.nix
 
     ../services/virt.nix
-    ../dev/server.nix
     ../services/harmonia.nix
   ];
 

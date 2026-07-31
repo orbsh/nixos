@@ -1,5 +1,5 @@
 # 所有 host 共享的 Home Manager 基础配置
-# 由 system/home.nix 导入，覆盖 server / k8s / workstation / portable / qemu
+# 由 system/core.nix 导入，覆盖 server / k8s / workstation / portable / qemu
 { config, pkgs, lib, inputs, user, ... }: {
   home-manager.users.${user} = {
     home = {

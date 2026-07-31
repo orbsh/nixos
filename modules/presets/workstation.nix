@@ -2,14 +2,13 @@
   imports = [
     # 核心系统预设 + Home Manager 配置
     ../system/core.nix
-    ../system/home.nix           # 基础 HM（nvim、git、shell）
     ../system/extra.nix          # 工作站扩展
 
-    ../services/virt.nix               # libvirtd/virt-manager 虚拟机支持
+    ../dev/fullstack.nix
 
     ../desktop/full.nix
 
-    ../dev/fullstack.nix
+    ../services/virt.nix               # libvirtd/virt-manager 虚拟机支持
     ../services/hermes-system.nix  # Hermes Agent: systemd 守护 + 全局 CLI 包裹
     ../services/harmonia.nix     # 本地二进制缓存
     ../services/rustfs.nix
