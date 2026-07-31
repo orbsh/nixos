@@ -5,6 +5,7 @@
     ./units/home-base.nix
     ./units/home-shell.nix
     ./units/home-nvim.nix
+    #./units/home-kakoune.nix
     ./units/home-git.nix
     ./units/lsp-bridge.nix
   ];

@@ -82,10 +82,10 @@
     },
     "my-nushell-config": {
       "locked": {
-        "lastModified": 1785204870,
-        "narHash": "sha256-dTaa++307cvrpoxhBMStserR960ftVk7BvMTG0TKQ6A=",
+        "lastModified": 1785401032,
+        "narHash": "sha256-DPcCzvAhmGqipvXD8956mTV5YqdvmAVpBVAW1GB2ou0=",
         "ref": "refs/heads/main",
-        "rev": "8a38bcb0e4c9a7819c4b7e76e5e5153bc64ef3e5",
+        "rev": "7ca28c398f4808165b6a30160774619c8116a862",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/orbsh/nushell"
