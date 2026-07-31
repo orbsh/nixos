@@ -1,6 +1,6 @@
 # NixOS Configuration
 
-> 基于 NixOS unstable 的模块化 Flakes 配置，采用 **域（Domain）→ 预设（Preset）→ 桌面预设（Desktop Preset）** 三层架构。
+> 基于 NixOS unstable 的模块化 Flakes 配置，采用 **域（Domain）→ 预设（Profile）→ 桌面预设（Desktop Preset）** 三层架构。
 
 ---
 
@@ -9,9 +9,9 @@
 ```
 flake.nix              ← Flake 入口，自动发现 hosts/ 下的域
   └── hosts/<domain>/  ← 域定义（workstations/k8s-dev/portable/qemu/server...）
-        └── presets/<preset>.nix  ← 系统预设（workstation/server/portable/qemu）
-              └── desktop/<preset>.nix  ← 桌面预设（mini/base/full）
-                    └── desktop/units/*.nix  ← 桌面组件单元
+        └── profiles/<profile>.nix  ← 系统预设（workstation/server/portable/qemu）
+              └── modules/desktop/<preset>.nix  ← 桌面预设（mini/base/full）
+                    └── modules/desktop/units/*.nix  ← 桌面组件单元
 ```
 
 ### 设计原则
@@ -50,9 +50,9 @@ flake.nix 扫描 hosts/ 目录
 
 | 预设 | 用途 | 包含组件 | Hyprland |
 |------|------|---------|----------|
-| `desktop/mini.nix` | QEMU 虚拟机 | apps-core, hyprland, greetd, 输入法, 字体, 无障碍, eww | ✅ |
-| `desktop/base.nix` | 便携系统 | mini + cosmic + apps-core + hyprland + eww | ✅ |
-| `desktop/full.nix` | 完整工作站 | base + apps-extra, apps-im, laptop, zed, rime | ✅ |
+| `modules/desktop/mini.nix` | QEMU 虚拟机 | apps-core, hyprland, greetd, 输入法, 字体, 无障碍, eww | ✅ |
+| `modules/desktop/base.nix` | 便携系统 | mini + cosmic + apps-core + hyprland + eww | ✅ |
+| `modules/desktop/full.nix` | 完整工作站 | base + apps-extra, apps-im, laptop, zed, rime | ✅ |
 
 **设计原则**：每个预设自包含，不互相 import，改一个不影响其他。
 
@@ -74,7 +74,6 @@ flake.nix 扫描 hosts/ 目录
 | `zed.nix` | Zed 编辑器 |
 | `rime.nix` | Rime 输入法（NixOS 级模块） |
 | `vivaldi.nix` | Vivaldi 浏览器 + Wayland 缩放修复 |
-| `home-desktop.nix` | 桌面 HM 聚合（home-terminals + home-xdg） |
 | `home-terminals.nix` | 终端配置（ghostty + alacritty + zellij） |
 | `home-xdg.nix` | XDG 配置（mimeApps + userDirs + BROWSER） |
 
@@ -85,12 +84,12 @@ flake.nix 扫描 hosts/ 目录
 
 ```
 hosts/workstations/default.nix
-  └── presets/workstation.nix
-        ├── system/core.nix              (核心系统: sys, base, nix, users, network, extra, container, media)
-        ├── system/home.nix              (Home Manager 聚合: home-base, home-shell, home-editors, home-git)
-        ├── system/units/hardware-generic.nix  (通用硬件配置)
-        ├── services/virt.nix              (libvirtd/virt-manager)
-        ├── desktop/full.nix             (完整桌面预设)
+  └── profiles/workstation.nix
+        ├── modules/system/core.nix       (核心系统 + Home Manager: sys, base, nix, users, network, extra, container, home-*)
+        ├── modules/system/extra.nix      (工作站扩展工具)
+        ├── modules/system/units/hardware-generic.nix  (通用硬件配置)
+        ├── modules/dev/fullstack.nix     (Python, Rust, JS, Haskell, K8s, WASM 开发工具)
+        ├── modules/desktop/full.nix      (完整桌面预设)
         │     ├── units/cosmic.nix
         │     ├── units/greetd.nix
         │     ├── units/input-method.nix
@@ -107,13 +106,14 @@ hosts/workstations/default.nix
         │     ├── units/hyprland.nix     (waybar, wofi, grim, slurp, hyprpaper, cliphist 等)
         │     ├── units/laptop.nix
         │     ├── units/zed.nix
+        │     ├── units/home-terminals.nix  (内联桌面 HM: ghostty, alacritty, zellij, neovide)
+        │     ├── units/home-xdg.nix        (内联桌面 HM: mimeApps, userDirs, BROWSER)
         │     └── hyprland.enable = true
-        ├── desktop/home.nix             (桌面 Home Manager: home-terminals, home-xdg)
-        ├── dev/fullstack.nix            (Python, Rust, JS, Haskell, K8s, WASM 开发工具)
-        ├── services/hermes-system.nix (Hermes Agent)
-        ├── services/harmonia.nix      (本地二进制缓存 :5100)
-        ├── services/ladder.nix        (Podman 代理链)
-        └── services/podman-apps.nix   (Podman 应用全家桶)
+        ├── modules/services/virt.nix              (libvirtd/virt-manager)
+        ├── modules/services/hermes-system.nix     (Hermes Agent)
+        ├── modules/services/harmonia.nix          (本地二进制缓存 :5100)
+        ├── modules/services/ladder.nix            (Podman 代理链)
+        └── modules/services/podman-apps.nix      (Podman 应用全家桶)
 
 ```
 
@@ -125,11 +125,10 @@ hosts/workstations/default.nix
 
 ```
 hosts/portable/default.nix
-  ├── presets/portable.nix
-  │     ├── system/core.nix              (同上)
-  │     ├── system/home.nix              (Home Manager 聚合)
-  │     ├── system/units/hardware-generic.nix
-  │     ├── desktop/base.nix             (基础桌面预设)
+  ├── profiles/portable.nix
+  │     ├── modules/system/core.nix       (核心系统 + Home Manager)
+  │     ├── modules/dev/rescue.nix
+  │     ├── modules/desktop/base.nix      (基础桌面预设)
   │     │     ├── units/cosmic.nix
   │     │     ├── units/greetd.nix
   │     │     ├── units/input-method.nix
@@ -137,10 +136,11 @@ hosts/portable/default.nix
   │     │     ├── units/accessibility.nix
   │     │     ├── units/apps-core.nix
   │     │     ├── units/hyprland.nix
+  │     │     ├── units/home-terminals.nix  (内联桌面 HM)
+  │     │     ├── units/home-xdg.nix        (内联桌面 HM)
   │     │     └── hyprland.enable = true
-  │     ├── desktop/home.nix             (桌面 Home Manager)
-  │     └── podman/ladder.nix            (Podman 代理)
-  └── flake-srv/harmonia.nix             (本地二进制缓存 :5100，节点级单独引入)
+  │     └── modules/services/ladder.nix    (Podman 代理)
+  └── modules/services/harmonia.nix         (本地二进制缓存 :5100，节点级单独引入)
 ```
 
 **与 workstation 的区别**：
@@ -157,24 +157,23 @@ hosts/portable/default.nix
 
 ```
 hosts/qemu/default.nix
-  └── presets/qemu.nix
+  └── profiles/qemu.nix
         ├── disko.nixosModules.disko
-        ├── system/core.nix              (同上)
-        ├── system/home.nix              (Home Manager 聚合)
-        ├── desktop/mini.nix             (最小桌面预设)
+        ├── modules/system/core.nix       (核心系统 + Home Manager)
+        ├── modules/desktop/mini.nix      (最小桌面预设)
         │     ├── units/cosmic.nix
         │     ├── units/greetd.nix
         │     ├── units/input-method.nix
         │     ├── units/fonts.nix
-        │     └── units/accessibility.nix
+        │     ├── units/accessibility.nix
+        │     ├── units/home-terminals.nix  (内联桌面 HM)
+        │     └── units/home-xdg.nix        (内联桌面 HM)
         │     (无 hyprland，无 apps)
-        ├── desktop/home.nix             (桌面 Home Manager)
-        └── dev/server.nix               (开发工具)
+        └── modules/dev/server.nix        (开发工具)
 ```
 
 **特殊配置**：
 - `services.spice-vdagentd.enable = true`（SPICE 剪贴板/分辨率自适应）
-- `boot.kernelPackages = pkgs.linuxPackages`（稳定内核，非 latest）
 - 无开发工具，无 Hyprland
 
 ---
@@ -183,13 +182,11 @@ hosts/qemu/default.nix
 
 ```
 hosts/server/default.nix
-  └── presets/server.nix
-        ├── system/core.nix              (同上)
-        ├── system/home.nix              (Home Manager 聚合: home-base, home-shell, home-editors, home-git)
-        ├── system/units/hardware-generic.nix
-        ├── system/virt.nix
-        ├── dev/server.nix               (服务器开发工具)
-        └── flake-srv/harmonia.nix       (本地二进制缓存 :5100)
+  └── profiles/server.nix
+        ├── modules/system/core.nix       (核心系统 + Home Manager)
+        ├── modules/dev/server.nix        (服务器开发工具)
+        ├── modules/services/virt.nix     (libvirtd/virt-manager)
+        └── modules/services/harmonia.nix (本地二进制缓存 :5100)
 ```
 
 **特点**：无桌面环境，无图形界面，headless 模式。
@@ -198,11 +195,11 @@ hosts/server/default.nix
 
 ### 5. K8s 集群（k8s-dev / k8s-small-cluster / k8s-large-cluster）
 
-K8s 节点通过 `k8s-libs.nix` 的 `expandCluster` 函数构建，自动注入：
+K8s 节点通过 `profiles/k8s/k8s-libs.nix` 的 `expandCluster` 函数构建，自动注入：
 
 ```
-k8s-libs.nix → expandCluster → buildNode
-  ├── presets/server.nix           ← 所有 K8s 节点自动继承服务器预设
+profiles/k8s/k8s-libs.nix → expandCluster → buildNode
+  ├── profiles/server.nix           ← 所有 K8s 节点自动继承服务器预设
   ├── k8sRoleModules             ← control / worker / combo 角色模块
   │     ├── control: k8s-control.nix
   │     ├── worker: k8s-worker.nix
@@ -219,12 +216,11 @@ k8s-libs.nix → expandCluster → buildNode
 ```
 hosts/k8s-dev/default.nix
   └── nodes.dxserver
-        ├── presets/server.nix           (自动注入)
-        │     ├── system/core.nix
-        │     ├── system/home.nix        (Home Manager 聚合)
-        │     ├── system/units/hardware-generic.nix
-        │     ├── system/virt.nix
-        │     └── dev/server.nix
+        ├── profiles/server.nix           (自动注入)
+        │     ├── modules/system/core.nix
+        │     ├── modules/dev/server.nix
+        │     ├── modules/services/virt.nix
+        │     └── modules/services/harmonia.nix
         ├── k8s-role: combo            (control + worker 合一)
         ├── runtime: containerd
         ├── server/hardware/disk.nix
@@ -238,13 +234,13 @@ hosts/k8s-dev/default.nix
 ### 6. ISO（nixos-anywhere 专用 Live 镜像）
 
 ```n
-modules/iso/default.nix          ← ISO 入口（不依赖 installation-cd-minimal）
+profiles/iso/default.nix          ← ISO 入口（不依赖 installation-cd-minimal）
   ├── iso-image.nix               ← NixOS 最小 ISO 构建器
-  ├── system/units/nix.nix        ← Nix 生态工具（nh, nixos-anywhere, cachix 等）
-  └── units/                      ← 用户配置（内联 HM 模块）
-        ├── home-editors.nix       ← Helix 主题 + LSP + 快捷键
-        ├── home-git.nix          ← Git 配置（用户名/邮箱）
-        └── home-base.nix         ← 通用用户配置
+  ├── modules/system/units/nix.nix        ← Nix 生态工具（nh, nixos-anywhere, cachix 等）
+  └── 用户配置（内联 HM 模块）
+        ├── modules/system/units/home-nvim.nix   ← Neovim（系统级，HM 模块关闭）
+        ├── modules/system/units/home-helix.nix  ← Helix 主题 + LSP + 快捷键
+        └── modules/system/units/home-git.nix   ← Git 配置（用户名/邮箱）
 ```
 
 **设计原则**：
@@ -278,36 +274,54 @@ nixos/
 │   ├── qemu/                     # QEMU 虚拟机域
 │   ├── server/                   # 独立服务器域
 │   ├── k8s-dev/                  # K8s 开发集群
-│   ├── k8s-small-cluster/        # K8s 小集群
-│   └── k8s-large-cluster/        # K8s 大集群
-└── modules/
-    ├── system/                   # 系统级模块
-    │   ├── core.nix              # 核心预设（sys, base, nix, users, network, extra, container, media）
-    │   ├── home.nix              # Home Manager 聚合（home-base, home-shell, home-editors, home-git）
-    │   ├── assets/               # 共享资源（zellij 配置等）
-    │   └── units/                # 系统单元 + HM 单元（home-*.nix）
-    ├── desktop/                  # 桌面预设
-    │   ├── mini.nix              # 最小桌面（QEMU）
-    │   ├── base.nix              # 基础桌面（portable）
-    │   ├── full.nix              # 完整桌面（workstation）
-    │   ├── home.nix              # 桌面 Home Manager（home-terminals, home-xdg）
-    │   └── units/                # 桌面组件单元 + HM 单元（home-terminals, home-xdg）
-    ├── presets/                    # 系统预设
-    │   ├── workstation.nix  # 工作站基座
-    │   ├── server.nix            # 服务器基座
-    │   ├── portable.nix          # 便携系统基座
-    │   └── qemu.nix              # QEMU 虚拟机基座
-    ├── overlay/                  # 包覆盖（仅 workstations 域）
-    │   └── nushell.nix           # nushell 0.113.0 官方 musl 二进制
-    ├── dev/                      # 开发工具模块
-    │   └── units/
-    │       └── surrealdb-server.nix  # SurrealDB 服务（模块级 overlay 固定版本）
-    ├── podman/                   # Podman 相关模块
-    ├── k8s/                      # Kubernetes 模块
-    ├── flake-srv/                # Flake 服务器模块
-    └── iso/                      # nixos-anywhere 专用 Live ISO（~781MB）
-          ├── default.nix          # ISO 入口（iso-image.nix + GRUB 引导）
-          └── (cache.nix 已删除)
+│   ├── k8s-small/                # K8s 小集群
+│   ├── k8s-nscc/                 # K8s NSCC 集群
+│   └── k8s-large/                # K8s 大集群
+├── modules/                      # 可组合构建块
+│   ├── system/                   # 系统级模块
+│   │   ├── core.nix              # 核心预设（sys, base, nix, users, network, extra, container + Home Manager 聚合）
+│   │   ├── extra.nix             # 工作站扩展工具
+│   │   ├── assets/               # 共享资源（zellij 配置、证书等）
+│   │   └── units/                # 系统单元 + HM 单元（home-*.nix）
+│   ├── desktop/                  # 桌面预设
+│   │   ├── mini.nix              # 最小桌面（QEMU）
+│   │   ├── base.nix              # 基础桌面（portable）
+│   │   ├── full.nix              # 完整桌面（workstation）
+│   │   └── units/                # 桌面组件单元 + HM 单元（home-terminals, home-xdg）
+│   ├── dev/                      # 开发工具模块
+│   │   ├── server.nix            # 服务器开发工具
+│   │   ├── fullstack.nix         # 全栈开发工具
+│   │   ├── rescue.nix            # 救援工具
+│   │   └── units/                # 各语言/工具单元
+│   └── services/                 # 系统服务模块
+│       ├── virt.nix              # 虚拟机
+│       ├── harmonia.nix          # 本地二进制缓存
+│       ├── hermes-system.nix     # Hermes Agent
+│       ├── ladder.nix            # Podman 代理链
+│       ├── numa.nix              # 本地 DNS + 反向代理
+│       ├── rustfs.nix            # RustFS
+│       ├── coredns.nix           # CoreDNS
+│       └── podman/               # Podman 应用（gitea, aria2, mihomo 等）
+└── profiles/                     # 入口（被 flake.nix 或 hosts/ 消费）
+    ├── portable.nix              # 便携系统预设
+    ├── qemu.nix                  # QEMU 虚拟机预设
+    ├── server.nix                # 服务器预设
+    ├── workstation.nix           # 工作站预设
+    ├── iso/                      # nixos-anywhere 专用 Live ISO（~781MB）
+    │   └── default.nix           # ISO 入口（flake.nix 直接消费）
+    └── k8s/                      # Kubernetes 框架
+        ├── k8s-libs.nix          # 集群展开逻辑（flake.nix 直接消费）
+        ├── k8s-common.nix         # CRI-O/Containerd 公共部分
+        ├── k8s-control.nix       # 控制平面
+        ├── k8s-worker.nix        # 工作节点
+        ├── k8s-addons.nix        # 集群组件（flannel, metrics-server 等）
+        ├── k8s-cfssl-hostname-fix.nix
+        ├── cert-manager.nix
+        ├── containerd.nix
+        ├── crio.nix
+        ├── envoy-gateway.nix
+        ├── istio-gateway.nix
+        └── assets/               # K8s 资源清单 + 脚本
 ```
 
 ---
@@ -320,7 +334,7 @@ nixos/
 
 **模块定义逻辑（`modules/`），host 文件只设选项值（`hosts/`）。**
 
-所有 overlay 模块统一放在 `modules/*/units/` 中，由 `<presets>.nix` 统一引入。host 文件只负责设置选项值，不碰逻辑。
+所有 overlay 模块统一放在 `modules/*/units/` 中，由 `profiles/*.nix` 统一引入。host 文件只负责设置选项值，不碰逻辑。
 
 - **未设置选项** → overlay 关闭，用 nixpkgs 默认包
 - **设置了选项** → overlay 开启，替换为自定义包
@@ -426,8 +440,8 @@ Pod 查询外部域名
 |--------|------|------|
 | 公共 DNS 列表 | `flake.nix` | `commonArgs.publicDnsServers` |
 | 宿主机 CoreDNS | `modules/services/coredns.nix` | 引入即启用 |
-| kubelet resolv.conf | `modules/k8s/k8s-common.nix` | 条件判断 |
-| CoreDNS Corefile | `modules/k8s/assets/patch-coredns.sh` | 运行时 patch |
+| kubelet resolv.conf | `profiles/k8s/k8s-common.nix` | 条件判断 |
+| CoreDNS Corefile | `profiles/k8s/assets/patch-coredns.sh` | 运行时 patch |
 
 ### Nix Substituter 配置
 
