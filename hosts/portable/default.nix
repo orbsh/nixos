@@ -7,7 +7,7 @@
       inputs.disko.nixosModules.disko
       ./disk.nix
       ./hardware-configuration.nix
-      ../../modules/presets/portable.nix
+      ../../profiles/portable.nix
       ../../modules/services/harmonia.nix
       ../../modules/services/hermes-system.nix
     ];

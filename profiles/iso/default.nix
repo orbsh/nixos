@@ -14,12 +14,12 @@ in {
     inputs.home-manager.nixosModules.home-manager
 
     # ── Nix 生态工具（nh, nixos-anywhere 等） ────
-    ../system/units/nix.nix
+    ../modules/system/units/nix.nix
 
     # ── Home Manager 用户配置 ────
-    ../system/units/home-nvim.nix
-    ../system/units/home-helix.nix
-    ../system/units/home-git.nix
+    ../modules/system/units/home-nvim.nix
+    ../modules/system/units/home-helix.nix
+    ../modules/system/units/home-git.nix
 
     # (overlay 目录已移除，不再加载)
   ];

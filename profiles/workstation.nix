@@ -1,20 +1,20 @@
 { inputs, user, lib, pkgs, ... }: {
   imports = [
     # 核心系统预设 + Home Manager 配置
-    ../system/core.nix
-    ../system/extra.nix          # 工作站扩展
+    ../modules/system/core.nix
+    ../modules/system/extra.nix          # 工作站扩展
 
-    ../dev/fullstack.nix
+    ../modules/dev/fullstack.nix
 
-    ../desktop/full.nix
+    ../modules/desktop/full.nix
 
-    ../services/virt.nix               # libvirtd/virt-manager 虚拟机支持
-    ../services/hermes-system.nix  # Hermes Agent: systemd 守护 + 全局 CLI 包裹
-    ../services/harmonia.nix     # 本地二进制缓存
-    ../services/rustfs.nix
-    ../services/ladder.nix       # Podman 代理链
-    ../services/podman-apps.nix  # Podman 应用全家桶
-    ../services/numa.nix         # 本地 DNS + 反向代理（workstation 专用，server 用 CoreDNS）
+    ../modules/services/virt.nix               # libvirtd/virt-manager 虚拟机支持
+    ../modules/services/hermes-system.nix  # Hermes Agent: systemd 守护 + 全局 CLI 包裹
+    ../modules/services/harmonia.nix     # 本地二进制缓存
+    ../modules/services/rustfs.nix
+    ../modules/services/ladder.nix       # Podman 代理链
+    ../modules/services/podman-apps.nix  # Podman 应用全家桶
+    ../modules/services/numa.nix         # 本地 DNS + 反向代理（workstation 专用，server 用 CoreDNS）
   ];
 
   # ── Numa 本地 DNS ──────────────────────────────────────
@@ -30,7 +30,7 @@
 
   # ── Security ─────────────────────────────────────────────
   security.pki.certificateFiles = [
-    ../system/assets/certs/mitmproxy-ca-cert.pem
+    ../modules/system/assets/certs/mitmproxy-ca-cert.pem
   ];
 
   # ── SSD 寿命优化：临时构建缓存移入内存 ───────────

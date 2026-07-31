@@ -1,7 +1,7 @@
 # Kubernetes 通用配置（CRI-O / Containerd 公共部分）
 { pkgs, lib, config, cni0IP, user, publicDnsServers, ... }: {
   imports = [
-    ../dev/server.nix
+    ../modules/dev/server.nix
   ];
 
   # ── 声明容器运行时选项（必须由 k8s-libs.nix 显式设置） ──

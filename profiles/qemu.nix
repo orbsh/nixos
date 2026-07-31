@@ -7,13 +7,13 @@
     # ./disk.nix
 
     # ── 核心系统预设 (sys, base, nix, users, network, extra, container) ──
-    ../system/core.nix
+    ../modules/system/core.nix
 
     # 桌面环境 (QEMU 最小预设：Hyprland + 基礎组件)
-    ../desktop/mini.nix
+    ../modules/desktop/mini.nix
 
     # 开发工具
-    ../dev/server.nix
+    ../modules/dev/server.nix
   ];
 
 

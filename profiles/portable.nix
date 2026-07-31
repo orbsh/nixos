@@ -1,13 +1,13 @@
 { pkgs, lib, user, ... }: {
   imports = [
-    ../system/core.nix
+    ../modules/system/core.nix
 
-    ../dev/rescue.nix
+    ../modules/dev/rescue.nix
 
-    ../desktop/base.nix
+    ../modules/desktop/base.nix
 
-    # ../services/virt.nix
-    ../services/ladder.nix
+    # ../modules/services/virt.nix
+    ../modules/services/ladder.nix
   ];
 
   # 移动硬盘不能修改 EFI 变量，否则在宿主机安装时会写到宿主机的 EFI

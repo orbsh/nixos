@@ -7,7 +7,7 @@
       inputs.disko.nixosModules.disko
       ./disk.nix
       ./hardware-configuration.nix
-      ../../modules/presets/qemu.nix
+      ../../profiles/qemu.nix
     ];
   };
 }

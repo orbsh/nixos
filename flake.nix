@@ -86,7 +86,7 @@
     mkNode = import ./libs/nixos-builder.nix { inherit nixpkgs commonArgs homeManagerInput; };
 
     # ── K8s 工具库 ─────────────────────────────────────
-    k8sLib = import ./modules/k8s/k8s-libs.nix { inherit nixpkgs inputs commonArgs; };
+    k8sLib = import ./profiles/k8s/k8s-libs.nix { inherit nixpkgs inputs commonArgs; };
 
     # ── 自动发现逻辑 ─────────────────────────────────────
     domains = builtins.attrNames (builtins.readDir ./hosts);
@@ -134,7 +134,7 @@
       };
       modules = [
         { nixpkgs.hostPlatform = "x86_64-linux"; }
-        ./modules/iso
+        ./profiles/iso
       ];
     };
   };

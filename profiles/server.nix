@@ -2,12 +2,12 @@
 { pkgs, lib, user, ... }: {
   imports = [
     # 核心系统预设 + Home Manager 配置
-    ../system/core.nix
+    ../modules/system/core.nix
 
-    ../dev/server.nix
+    ../modules/dev/server.nix
 
-    ../services/virt.nix
-    ../services/harmonia.nix
+    ../modules/services/virt.nix
+    ../modules/services/harmonia.nix
   ];
 
   # 禁用 home-manager 的 neovim 模块（nixpkgs 25.11 中 neovimUtils.makeVimPackageInfo 已移除）
