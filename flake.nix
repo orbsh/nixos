@@ -25,6 +25,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     my-nushell-config = {
       url = "git+https://github.com/orbsh/nushell?shallow=1";
       flake = true;
@@ -41,7 +46,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, nixos-anywhere, nix2container, disko, home-manager, my-nushell-config, my-nvim-config, my-emacs-config, ... }@inputs:
+  outputs = { self, nixpkgs, nixos-anywhere, nix2container, disko, home-manager, rust-overlay, my-nushell-config, my-nvim-config, my-emacs-config, ... }@inputs:
   let
     # ── 统一变量定义 ─────────────────────────────────────
     user = "master";
