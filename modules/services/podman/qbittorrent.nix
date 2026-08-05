@@ -27,6 +27,15 @@
     preStart = ''
       mkdir -p /home/${user}/data/qbittorrent
       mkdir -p /home/${user}/Downloads/qbittorrent
+
+      # ── 清理 stale 单实例锁 ─────────────────────────────
+      # qBittorrent 用 lockfile + ipc-socket 做单实例检测。
+      # 若上次异常退出（进程被杀/容器重启）会残留引用已不存在 PID 的锁，
+      # 导致下次启动时误判"已有实例"而立即自我退出，陷入崩溃重启循环。
+      # preStart 在容器启动前执行（此时容器必然未运行），删除残留锁安全。
+      rm -f \
+        /home/${user}/data/qbittorrent/data/qBittorrent/config/lockfile \
+        /home/${user}/data/qbittorrent/data/qBittorrent/config/ipc-socket
     '';
 
     after = [ "podman-app-network.target" ];
