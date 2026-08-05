@@ -46,6 +46,19 @@ export def check [] {
     sudo nix flake check
 }
 
+export def build-remote [
+    host:string@cmpl-hosts
+    --target: string
+    --build: string = 'localhost'
+] {
+    mut args = [
+        --flake $".#($host)"
+        --target-host $target
+        --build-host $build
+    ]
+    nixos-rebuild build ...$args
+}
+
 export module mount {
     export def btrfs [
         --root(-r): string = "/dev/disk/by-uuid/3f9631a2-51ab-448a-9ac2-3b475fde7458"
