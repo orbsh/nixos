@@ -24,12 +24,36 @@ let
 
     export WAYLAND_DISPLAY
     export XDG_RUNTIME_DIR=/run/user/$UID
+
+    # ── 清理僵尸 daemon ─────────────────────────────────
+    # 若已有 daemon 但 ping 不通（进程卡死/socket 残留），
+    # 强制结束并清 socket，避免 eww open 连上尸体导致窗口显示但不刷新。
+    if ${pkgs.eww}/bin/eww ping >/dev/null 2>&1; then
+      echo "eww daemon already alive, reusing"
+    else
+      echo "eww daemon unresponsive, cleaning up stale daemon"
+      ${pkgs.procps}/bin/pkill -9 -x eww 2>/dev/null || true
+      rm -f /run/user/$UID/eww-server_* 2>/dev/null || true
+    fi
+
     ${pkgs.eww}/bin/eww daemon
     sleep 1
     ${pkgs.eww}/bin/eww open omni-tray
   '';
+  # 探活脚本：daemon 进程在但 ping 不通 -> 判定卡死，kill 让 systemd 重启
+  watchdogScript = pkgs.writeShellScript "eww-watchdog" ''
+    export PATH=${pkgs.eww}/bin:${pkgs.coreutils}/bin:${pkgs.procps}/bin
+    export XDG_RUNTIME_DIR=/run/user/$UID
+
+    if pgrep -x eww >/dev/null 2>&1 && ! ${pkgs.eww}/bin/eww ping >/dev/null 2>&1; then
+      echo "[eww-watchdog] daemon unresponsive, killing it (systemd Restart relaunches)"
+      ${pkgs.procps}/bin/pkill -9 -x eww 2>/dev/null || true
+      rm -f /run/user/$UID/eww-server_* 2>/dev/null || true
+    fi
+  '';
 in
 {
+
   home-manager.users.${user} = {
     programs.eww = {
       enable = true;
@@ -70,6 +94,33 @@ in
       };
       Install = {
         WantedBy = [ "graphical-session.target" ];
+      };
+    };
+
+    # ── 探活 watchdog：定期 ping，卡死则 kill（systemd 自动重启） ──
+    systemd.user.services.eww-watchdog = {
+      Unit = {
+        Description = "Eww daemon liveness watchdog";
+        After = [ "graphical-session.target" ];
+      };
+      Service = {
+        Type = "oneshot";
+        ExecStart = watchdogScript;
+      };
+    };
+
+    systemd.user.timers.eww-watchdog = {
+      Unit = {
+        Description = "Periodic eww daemon liveness check";
+        After = [ "graphical-session.target" ];
+      };
+      Timer = {
+        OnBootSec = "1m";
+        OnUnitActiveSec = "1m";
+        Unit = "eww-watchdog.service";
+      };
+      Install = {
+        WantedBy = [ "timers.target" ];
       };
     };
 
