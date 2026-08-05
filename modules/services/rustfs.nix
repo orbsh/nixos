@@ -1,7 +1,7 @@
-{ pkgs, lib, config, ... }:
+{ pkgs, lib, config, user, ... }:
 
 let
-  dataDir = "/home/${config.users.users.master.name}/.rustfs-data";
+  dataDir = "/home/${user}/.rustfs-data";
   accessKeyFile = pkgs.writeText "rustfs-access-key" "iguZgGU9KqF2yA0oFGmk";
   secretKeyFile = pkgs.writeText "rustfs-secret-key" "uJKKnwI1sTtqaZIJCx75z9nmK5O3aUNg4Esz1ZQJ";
 in
