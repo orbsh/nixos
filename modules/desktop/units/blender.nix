@@ -62,10 +62,19 @@
     # ── overlay：包装官方 blender，注入扩展目录环境变量（不重编译）──
     nixpkgs.overlays = [
       (final: prev: {
-        blender = pkgs.writeShellScriptBin "blender" ''
-          export BLENDER_SYSTEM_EXTENSIONS=${blenderPluginExt}/share/blender/5.2/extensions
-          exec "${prev.blender}/bin/blender" "$@"
-        '';
+        blender = pkgs.symlinkJoin {
+          name = "blender-with-extensions";
+          # 官方包保留 .desktop 启动器与图标；wrapper 二进制保证 CLI 带扩展环境变量
+          paths = [
+            # 注意：symlinkJoin 排在前面的路径优先，wrapper 须在官方包之前，
+            # 否则 bin/blender 会被官方版本覆盖，丢失 BLENDER_SYSTEM_EXTENSIONS。
+            (pkgs.writeShellScriptBin "blender" ''
+              export BLENDER_SYSTEM_EXTENSIONS=${blenderPluginExt}/share/blender/5.2/extensions
+              exec "${prev.blender}/bin/blender" "$@"
+            '')
+            prev.blender
+          ];
+        };
       })
     ];
 
