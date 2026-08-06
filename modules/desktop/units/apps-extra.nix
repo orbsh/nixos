@@ -1,14 +1,17 @@
 { pkgs, ... }: {
   imports = [
     ./vivaldi.nix          # 浏览器：Vivaldi + Chromium + 缩放修复
+    ./blender.nix          # Blender 插件：System 扩展形式随包注入
   ];
 
   environment.systemPackages = with pkgs; [
 
     # 媒体
     smplayer
-    krita
-    blender
+
+    # 创作
+    # krita
+    # blender
 
     # 阅读
     # calibre              # 暂时禁用
