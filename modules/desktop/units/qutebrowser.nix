@@ -10,7 +10,8 @@ let
     buildInputs = [ pkgs.makeWrapper ];
     postBuild = ''
       wrapProgram $out/bin/qutebrowser \
-        --set QT_QPA_PLATFORM wayland
+        --set QT_QPA_PLATFORM wayland \
+        --set QTWEBENGINE_CHROMIUM_FLAGS '--disable-accelerated-video-decode'
 
       # 覆盖 desktop entry，指向 wrapped binary
       rm -f $out/share/applications/org.qutebrowser.qutebrowser.desktop
