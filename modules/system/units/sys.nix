@@ -9,9 +9,6 @@
   boot.loader.efi.canTouchEfiVariables = lib.mkDefault true;
   boot.loader.timeout = lib.mkDefault 3;
 
-  # ── Kernel ───────────────────────────────────────────────
-  boot.kernelPackages = pkgs.linuxPackages_latest;
-
   # ── Audio ────────────────────────────────────────────────
   services.pipewire = {
     enable = true;

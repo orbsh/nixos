@@ -5,7 +5,8 @@
   hardware.enableAllFirmware = true;
 
   # 使用最新内核以获得更好的硬件驱动支持
-  boot.kernelPackages = lib.mkForce pkgs.linuxPackages_latest;
+  # 内核版本交由各节点/默认 linux 决定（不再全局强制最新）
+  # boot.kernelPackages = lib.mkForce pkgs.linuxPackages_latest;
 
   # ── 文件系统支持 ──────────────────────────────────
   # 需能读写目标机器的各类分区
