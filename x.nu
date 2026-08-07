@@ -38,6 +38,7 @@ export def build [
 
 export def sync [] {
     cd $ROOT
+    toggle proxy http://127.0.0.1:7890
     sudo -E nix flake update
 }
 
