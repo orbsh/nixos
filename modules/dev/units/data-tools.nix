@@ -17,7 +17,9 @@
   #   - INSTALL 列表来自 prepare 钩子，另加社区扩展 sshfs
   #     （社区扩展无法 autoload，需显式 INSTALL ... FROM community）
   home-manager.users.${user} = {
-    home.file.".duckdbrc".text = lib.concatStringsSep "\n" ([
+    home.file.".duckdbrc" = {
+      force = true;
+      text = lib.concatStringsSep "\n" ([
       "SET extension_directory = '${config.home-manager.users.${user}.home.homeDirectory}/.duckdb/extensions';"
       "SET autoinstall_known_extensions = true;"
       "SET autoload_known_extensions = true;"
@@ -33,5 +35,6 @@
       "fts"
       "sshfs FROM community"
     ]);
+    };
   };
 }

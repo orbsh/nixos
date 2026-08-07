@@ -11,6 +11,7 @@
     enable = true;
     settings = {
       frame = "none";
+      multigrid = false;  # 关闭多网格渲染，避免横条闪动伪影
       font = {
         normal = ["MonaspiceAr NFM" "Noto Sans Mono CJK SC"];
         size = 21;
