@@ -24,9 +24,10 @@
   # 触控板/笔记本输入已移至 common/laptop.nix
 
   # ── Keymap (TTY & X11/Wayland) ───────────────────────────
+  # 注意：caps/ctrl 交换已由 kanata（evdev 层）接管，见 ./kanata.nix。
+  # 这里不设 options（避免与 kanata 双重交换）。
   services.xserver.xkb = {
     layout = "us";
-    options = "ctrl:swapcaps";
   };
   console.useXkbConfig = true;
 }

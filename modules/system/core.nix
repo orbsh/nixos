@@ -2,6 +2,7 @@
 { ... }: {
   imports = [
     ./units/sys.nix
+    ./units/kanata.nix
     ./units/base.nix
     ./units/nix.nix
     ./units/users.nix
