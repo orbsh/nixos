@@ -6,9 +6,8 @@
     };
   };
 
-  # 网络诊断与管理工具
+  # 网络配置相关工具（诊断类工具见 extra.nix）
   environment.systemPackages = with pkgs; [
-    netcat
     openresolv
     nftables
   ];

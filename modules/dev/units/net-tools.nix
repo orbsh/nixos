@@ -3,6 +3,7 @@
   environment.systemPackages = [
     pkgs.termshark   # TUI 版 Wireshark
     pkgs.mitmproxy   # HTTP/HTTPS 中间人代理，用于调试 API 流量
+    pkgs.nmap        # 端口扫描与网络探测工具
   ];
 
   # Wireshark GUI + dumpcap capability
