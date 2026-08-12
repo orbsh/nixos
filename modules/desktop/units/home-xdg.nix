@@ -12,7 +12,7 @@ let
   imageViewers = "org.nomacs.ImageLounge.desktop";
 
   # 文本编辑器
-  textEditor = "dev.zed.Zed.desktop";
+  textEditor = "nvim.desktop";
 
   # 浏览器
   browser = "vivaldi-stable.desktop";
