@@ -5,6 +5,7 @@
     ./units/kanata.nix
     ./units/base.nix
     ./units/nix.nix
+    ./units/gc.nix
     ./units/users.nix
     ./units/network.nix
     ./units/extra.nix

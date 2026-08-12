@@ -17,6 +17,10 @@
     ../modules/services/numa.nix         # 本地 DNS + 反向代理（workstation 专用，server 用 CoreDNS）
   ];
 
+  # 工作站更新快：按代 10 + 按时间 14d 双重清理
+  nix.gc.keepGenerations = lib.mkForce 10;
+  nix.gc.deleteOlderThan = lib.mkForce "14d";
+
   # ── Numa 本地 DNS ──────────────────────────────────────
   services.numa = {
     enable = true;

@@ -13,13 +13,6 @@
     connect-timeout = 5;            # 连接超时 5 秒，快速跳到下一个 substituter
   };
 
-  # 每周自动清理未使用的包
-  nix.gc = {
-    automatic = lib.mkDefault true;
-    dates = lib.mkDefault "weekly";
-    options = lib.mkDefault "--delete-older-than 7d";
-  };
-
   # ── direnv（进入目录自动加载 .envrc）──
   programs.direnv = {
     enable = true;
