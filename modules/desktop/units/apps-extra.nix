@@ -1,7 +1,7 @@
 { pkgs, ... }: {
   imports = [
     ./vivaldi.nix          # 浏览器：Vivaldi + Chromium + 缩放修复
-    ./blender.nix          # Blender 插件：System 扩展形式随包注入
+    ./blender.nix          # Blender：官方包，不带插件管理
   ];
 
   environment.systemPackages = with pkgs; [
