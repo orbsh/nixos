@@ -1,7 +1,7 @@
 # CoreDNS 独立 DNS 服务配置
 # 用途：为内网提供域名解析服务（与 K8s 无关）
 # 说明：导入即启用，具体配置由引用方（如 dev.nix）注入
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, publicDnsServers, ... }:
 let
   cfg = config.services.myCoredns;
 
@@ -80,7 +80,7 @@ in {
 
       upstream = lib.mkOption {
         type = lib.types.listOf lib.types.str;
-        default = [ "223.5.5.5" "119.29.29.29" ];
+        default = publicDnsServers;  # 全局统一公共 DNS，见 flake.nix commonArgs
         description = "上游 DNS 服务器";
       };
 

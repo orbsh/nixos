@@ -13,6 +13,14 @@
     connect-timeout = 5;            # 连接超时 5 秒，快速跳到下一个 substituter
   };
 
+  # 只让 cache.nixos.org 走 mihomo 代理；国内镜像直连，私有缓存由 mihomo 规则单独放行
+  nix.envVars = {
+    http_proxy = "http://127.0.0.1:7890";
+    https_proxy = "http://127.0.0.1:7890";
+    all_proxy = "http://127.0.0.1:7890";
+    no_proxy = "mirrors.ustc.edu.cn,mirrors.tuna.tsinghua.edu.cn,localhost,127.0.0.1,::1";
+  };
+
   # ── direnv（进入目录自动加载 .envrc）──
   programs.direnv = {
     enable = true;

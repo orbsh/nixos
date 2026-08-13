@@ -1,7 +1,7 @@
 # Numa: local DNS resolver + reverse proxy for workstation
 # Replaces CoreDNS on workstation (CoreDNS stays on server for K8s)
 # Import only in workstation preset, never on server/k8s
-{ pkgs, lib, config, ... }:
+{ pkgs, lib, config, publicDnsServers, ... }:
 let
   cfg = config.services.numa;
 
@@ -68,7 +68,7 @@ in {
 
     upstreamDns = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [ "223.5.5.5" "119.29.29.29" ];
+      default = publicDnsServers;  # 全局统一公共 DNS，见 flake.nix commonArgs
       description = "Upstream DNS servers";
     };
 
