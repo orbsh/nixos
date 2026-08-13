@@ -13,12 +13,13 @@
     connect-timeout = 5;            # 连接超时 5 秒，快速跳到下一个 substituter
   };
 
-  # 只让 cache.nixos.org 走 mihomo 代理；国内镜像直连，私有缓存由 mihomo 规则单独放行
+  # 代理地址与 no_proxy 白名单统一定义在 flake.nix 的 nixSubstituters，
+  # 这里仅消费：镜像/本地走直连，官网 cache.nixos.org 走代理（下载由 nix-daemon 执行）
   nix.envVars = {
-    http_proxy = "http://127.0.0.1:7890";
-    https_proxy = "http://127.0.0.1:7890";
-    all_proxy = "http://127.0.0.1:7890";
-    no_proxy = "mirrors.ustc.edu.cn,mirrors.tuna.tsinghua.edu.cn,localhost,127.0.0.1,::1";
+    http_proxy = nixSubstituters.proxy;
+    https_proxy = nixSubstituters.proxy;
+    all_proxy = nixSubstituters.proxy;
+    no_proxy = lib.concatStringsSep "," nixSubstituters.noProxy;
   };
 
   # ── direnv（进入目录自动加载 .envrc）──

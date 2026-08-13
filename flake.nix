@@ -72,11 +72,23 @@
       publicDnsServers = [ "223.5.5.5" "119.29.29.29" "1.1.1.1" ];
       # Nix substituter（全局，根据网络状况调整）
       nixSubstituters = {
+        # 代理地址。镜像与本地地址走直连，官网 cache.nixos.org 保持走代理
+        proxy = "http://127.0.0.1:7890";
+        noProxy = [
+          "mirrors.ustc.edu.cn"
+          "mirrors.tuna.tsinghua.edu.cn"
+          "mirrors.sjtug.sjtu.edu.cn"
+          "localhost"
+          "127.0.0.1"
+          "::1"
+        ];
         substituters = [
           "https://mirrors.ustc.edu.cn/nix-channels/store"
           "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
+          "https://mirrors.sjtug.sjtu.edu.cn/nix-channels/store"
           "https://cache.nixos.org"
         ];
+        # 直连白名单：镜像地址（不经代理）+ 本地地址。官网不列入，保持走代理
         trusted-public-keys = [
           "harmonia-local:bF/+RpECJWbbE8W7/hu1jWRlkQqu/+cXoVrWFENmqXY="
           "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
