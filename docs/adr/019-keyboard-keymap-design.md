@@ -1,7 +1,7 @@
 # ADR-019: 键盘键位重映射设计
 
 **日期**: 2026-08-10
-**状态**: 已采纳
+**状态**: 已替代 —— caps 双模 esc/ctrl 部分被 [ADR-021](021-keyboard-ctrlcaps-swap.md) 取代并收敛为纯交换；evdev 层 vs XKB、shift/括号还原等其余决策仍然有效
 **涉及**: `modules/system/units/kanata.nix`, `modules/system/units/sys.nix`, `modules/desktop/units/rime.nix`
 
 ### 问题
