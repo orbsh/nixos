@@ -13,7 +13,7 @@
       pydantic pydantic-graph pydantic-settings
       pyparsing jinja2 boltons decorator shortuuid
       # Logging & Codec
-      structlog python-json-logger pyyaml
+      structlog python-json-logger pyyaml ckdl
       # Compression
       zstandard
     ]))
