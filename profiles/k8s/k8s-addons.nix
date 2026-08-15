@@ -163,6 +163,19 @@ in {
 
   # ── 系统配置 ────────────────────────────────────────────
   config = lib.mkIf cfg.enable {
+    # cni-plugin-flannel v1.9.1-flannel3 tag 被上游迁移，nixpkgs 锁定的 sha256 失效。
+    # 固定到 tag 实际指向的 commit，避免今后再次漂移。
+    nixpkgs.overlays = [
+      (final: prev: {
+        cni-plugin-flannel = prev.cni-plugin-flannel.overrideAttrs (_: {
+          src = prev.cni-plugin-flannel.src.override {
+            rev = "b380f201008e9bed159703846cf10d3c50b4f9ce";
+            sha256 = "sha256-lYn9qDmUn8g3nnD4wQqyzKjd/lPXqoER5nZuY0sVK0s=";
+          };
+        });
+      })
+    ];
+
     # 重建完成后打印 K8s 部署服务启动命令
     system.activationScripts.k8s-addons-reminder = {
       text = ''
