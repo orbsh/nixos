@@ -3,8 +3,8 @@
     uv
     (python3.withPackages (ps: with ps; [
       virtualenv
-      # Web
-      httpx fastapi uvicorn websockets
+      # Web (uvicorn 运行时自动探测 uvloop/httptools/websockets，等于 [standard] extra)
+      httpx fastapi uvicorn websockets uvloop httptools watchfiles python-dotenv
       # Async
       aiofile aiostream
       # CLI

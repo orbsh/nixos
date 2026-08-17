@@ -15,8 +15,8 @@
         # 占位：实际使用前请将 zst 包加入 nix store 并填入真实 narHash
         # nix-store --add-fixed sha256 open-interpreter-package-x86_64-unknown-linux-musl.tar.zst
         # nix hash path /nix/store/xxx-...tar.zst
-        url = "file:///nix/store/wvkpbxkfshvryy3gnl7334ljz8jm9ygm-open-interpreter-package-x86_64-unknown-linux-musl.tar.zst";
-        narHash = "sha256-PX4TBuq4G0rM+R73lq+zkAk8AtSCjM3pAdpkx31UcLU=";
+        url = "file:///nix/store/a8xyjjf0kldf8vn4z025ii7llvwf0q7v-open-interpreter-package-x86_64-unknown-linux-musl.tar.zst";
+        narHash = "sha256-x8JwDlbaMD0fzIAPCUHUaGLQK7eftALquokbubt6ryw=";
       };
       description = "Open Interpreter 预编译包来源（rust 分支 release）";
     };
