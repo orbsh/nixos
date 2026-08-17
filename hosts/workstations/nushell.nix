@@ -1,6 +1,6 @@
 { ... }: {
   nushell.musl.src = {
-    url = "file:///nix/store/ldx9jd65wgiv1xb9cy21l0r1cldd8571-nu-0.114.1-x86_64-unknown-linux-musl.tar.gz";
-    narHash = "sha256-SSKtK3xDZuofmOdDMuNVWyPKyI5g1s1h7HR3vRNNtOA=";
+    url = "file:///nix/store/mckgfsflb7jrawskdhkchlg69qga0wq3-nu-0.115.0-x86_64-unknown-linux-musl.tar.gz";
+    narHash = "sha256-rvDG2L+Hht5HlyHkqbYJyjVJ0OltA1jHQIXkNyl4IqI=";
   };
 }

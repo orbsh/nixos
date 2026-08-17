@@ -214,7 +214,7 @@ export module qemu {
     const OVMF_VARS_SRC = "/run/libvirt/nix-ovmf/edk2-i386-vars.fd"
     const OVMF_VARS = "/home/master/.qemu/OVMF_VARS.fd"
 
-    export def run [
+    export def xrun [
         --iso: string@cmpl-iso
         --cow: path = "/home/master/.qemu/nixos.qcow2"
     ] {
