@@ -18,7 +18,6 @@
       ./orbit/wireguard.nix
       ./orbit/wifi-mt7925.nix
       ./wanxiang.nix
-      ./wechat.nix
       #./vivaldi.nix
       #./nushell.nix
       #./surreal.nix

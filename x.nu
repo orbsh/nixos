@@ -146,8 +146,20 @@ export module utils {
         cat $file | hash sha256 | decode hex | encode base64
     }
 
+    def cmpl-link [] {
+        ls -l /nix/var/nix/gcroots/auto
+        | select name target
+        | where {|x| $x.target | str starts-with '/nix/store' }
+        | update target {|x| $x.target | str substring 44.. }
+        | rename value description
+    }
+
+    def cmpl-id [] {
+        cmpl-link | update value {|x| $x.value | path parse | get stem  }
+    }
+
     export def gcroot [
-      gcroot
+      gcroot: string@cmpl-id
       file: path
     ] {
         let h = nix store add-file $file
@@ -156,14 +168,6 @@ export module utils {
         let prefetched = (nix store prefetch-file $"file://($h)" --json | from json).storePath
         let p = nix hash path $prefetched
         $'url = "file://($h)";(char newline)narHash = "($p)";'
-    }
-
-    def cmpl-link [] {
-        ls -l /nix/var/nix/gcroots/auto
-        | select name target
-        | where {|x| $x.target | str starts-with '/nix/store' }
-        | update target {|x| $x.target | str substring 44.. }
-        | rename value description
     }
 
     export def ungcroot [link: path@cmpl-link] {
