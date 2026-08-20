@@ -20,7 +20,6 @@
       ./wanxiang.nix
       #./vivaldi.nix
       ./nushell.nix
-      #./surreal.nix
       # ../../modules/dev/units/emacs.nix  # 默认禁用，需时取消注释
       (import ../../libs/registries-gen.nix {
         inherit lib;
