@@ -1,58 +1,74 @@
-{ inputs, pkgs, lib, user, nixSubstituters, ... }: {
-  # ── Nix 自身配置 ────────────────────────────────────────
-  nix.settings = {
-    experimental-features = [ "nix-command" "flakes" ];
-    auto-optimise-store = true;
-    keep-failed = false;          # 不保留构建失败的临时目录
-    trusted-users = [ "root" user ];  # 允许这些用户指定 substituters 等受限设置
-    substituters = nixSubstituters.substituters;
-    trusted-public-keys = nixSubstituters.trusted-public-keys;
-    builders-use-substitutes = true;
-    max-substitution-jobs = 8;       # 并发下载（默认 4）
-    narinfo-cache-positive-ttl = 3600;  # narinfo 缓存 1 小时
-    connect-timeout = 5;            # 连接超时 5 秒，快速跳到下一个 substituter
+{ inputs, pkgs, lib, config, user, nixSubstituters, ... }: {
+  options.nix.proxy = {
+    address = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "HTTP proxy for nix-daemon (null = direct connection)";
+    };
+    noProxy = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [ "localhost" "127.0.0.1" "::1" ];
+      description = "no_proxy whitelist for nix-daemon";
+    };
   };
 
-  # 代理地址与 no_proxy 白名单统一定义在 flake.nix 的 nixSubstituters，
-  # 这里仅消费：镜像/本地走直连，官网 cache.nixos.org 走代理（下载由 nix-daemon 执行）
-  nix.envVars = {
-    http_proxy = nixSubstituters.proxy;
-    https_proxy = nixSubstituters.proxy;
-    all_proxy = nixSubstituters.proxy;
-    no_proxy = lib.concatStringsSep "," nixSubstituters.noProxy;
+  config = {
+    # ── Nix 自身配置 ────────────────────────────────────────
+    nix.settings = {
+      experimental-features = [ "nix-command" "flakes" ];
+      auto-optimise-store = true;
+      keep-failed = false;          # 不保留构建失败的临时目录
+      trusted-users = [ "root" user ];  # 允许这些用户指定 substituters 等受限设置
+      substituters = nixSubstituters.substituters;
+      trusted-public-keys = nixSubstituters.trusted-public-keys;
+      builders-use-substitutes = true;
+      max-substitution-jobs = 8;       # 并发下载（默认 4）
+      narinfo-cache-positive-ttl = 3600;  # narinfo 缓存 1 小时
+      connect-timeout = 5;            # 连接超时 5 秒，快速跳到下一个 substituter
+    };
+
+    # 代理配置：按 host 覆盖（workstation 有代理，server/k8s 通常无）
+    # proxy.address 为 null 时，nix-daemon 不走代理（直连 cache.nixos.org）
+    # 运行时快速切换：sudo systemctl set-environment http_proxy=... / unset-environment http_proxy
+    systemd.services.nix-daemon.environment = lib.mkIf (config.nix.proxy.address != null) {
+      http_proxy = config.nix.proxy.address;
+      https_proxy = config.nix.proxy.address;
+      all_proxy = config.nix.proxy.address;
+      no_proxy = lib.concatStringsSep "," config.nix.proxy.noProxy;
+    };
+
+    # ── direnv（进入目录自动加载 .envrc）──
+    programs.direnv = {
+      enable = true;
+      nix-direnv.enable = true;  # Nix 集成（自动缓存 flake/devShell）
+    };
+
+    # ── nix-index（nix-locate 按文件名搜索包）──
+    programs.nix-index.enable = true;
+
+    # ── Nix 生态工具 ─────────────────────────────────────
+    environment.systemPackages = with pkgs; [
+      # ── NixOS 部署与安装 ──
+      nixos-install-tools           # nixos-install, nixos-enter
+      inputs.disko.packages.${pkgs.stdenv.hostPlatform.system}.default  # 声明式磁盘分区
+      inputs.nixos-anywhere.packages.${pkgs.stdenv.hostPlatform.system}.nixos-anywhere  # 远程部署 NixOS
+
+      # ── Nix 系统管理 ──
+      nh                            # 简化 NixOS 管理（nh os switch, nh clean 等）
+
+      # ── Nix 包管理与开发 ──
+      cachix                        # Nix 缓存管理（CI/CD 加速）
+      nix-init                      # 快速生成 Nix 包 / Flake 模板
+      nix-update                    # 自动更新包版本和 hash
+
+      # ── Nix 调试与可视化 ──
+      nix-tree                      # 可视化依赖树
+      nix-diff                      # 对比 closures 差异
+      nix-index                     # 按文件名搜索包（nix-locate）
+    ];
+
+    # 修复 nh 等工具调用 sudo 时权限不足的问题
+    # 强制指向系统提供的带 setuid 的 wrapper，而不是 store 里的原始二进制
+    environment.sessionVariables.SUDO = "/run/wrappers/bin/sudo";
   };
-
-  # ── direnv（进入目录自动加载 .envrc）──
-  programs.direnv = {
-    enable = true;
-    nix-direnv.enable = true;  # Nix 集成（自动缓存 flake/devShell）
-  };
-
-  # ── nix-index（nix-locate 按文件名搜索包）──
-  programs.nix-index.enable = true;
-
-  # ── Nix 生态工具 ───────────────────────────────────────
-  environment.systemPackages = with pkgs; [
-    # ── NixOS 部署与安装 ──
-    nixos-install-tools           # nixos-install, nixos-enter
-    inputs.disko.packages.${pkgs.stdenv.hostPlatform.system}.default  # 声明式磁盘分区
-    inputs.nixos-anywhere.packages.${pkgs.stdenv.hostPlatform.system}.nixos-anywhere  # 远程部署 NixOS
-
-    # ── Nix 系统管理 ──
-    nh                            # 简化 NixOS 管理（nh os switch, nh clean 等）
-
-    # ── Nix 包管理与开发 ──
-    cachix                        # Nix 缓存管理（CI/CD 加速）
-    nix-init                      # 快速生成 Nix 包 / Flake 模板
-    nix-update                    # 自动更新包版本和 hash
-
-    # ── Nix 调试与可视化 ──
-    nix-tree                      # 可视化依赖树
-    nix-diff                      # 对比 closures 差异
-    nix-index                     # 按文件名搜索包（nix-locate）
-  ];
-
-  # 修复 nh 等工具调用 sudo 时权限不足的问题
-  # 强制指向系统提供的带 setuid 的 wrapper，而不是 store 里的原始二进制
-  environment.sessionVariables.SUDO = "/run/wrappers/bin/sudo";
 }

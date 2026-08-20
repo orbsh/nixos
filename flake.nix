@@ -71,17 +71,8 @@
       # 公共 DNS（地理位置相关：中国大陆）
       publicDnsServers = [ "223.5.5.5" "119.29.29.29" "1.1.1.1" ];
       # Nix substituter（全局，根据网络状况调整）
+      # 代理地址由各 host 的 nix.proxy.address 选项覆盖（workstation 有代理，其他默认直连）
       nixSubstituters = {
-        # 代理地址。镜像与本地地址走直连，官网 cache.nixos.org 保持走代理
-        proxy = "http://127.0.0.1:7890";
-        noProxy = [
-          "mirrors.ustc.edu.cn"
-          "mirrors.tuna.tsinghua.edu.cn"
-          "mirrors.sjtug.sjtu.edu.cn"
-          "localhost"
-          "127.0.0.1"
-          "::1"
-        ];
         substituters = [
           "https://mirrors.ustc.edu.cn/nix-channels/store"
           "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
