@@ -171,7 +171,6 @@ in {
     };
 
     environment.systemPackages = with pkgs; [
-      wofi mako
       grim slurp swappy
       hyprpaper cliphist
       wlogout swaylock-effects
@@ -190,7 +189,6 @@ in {
 
       xdg.configFile."hypr/hyprland.conf".text = ''
         # ── 1. 自动启动守护进程 (Exec-once) ───────────────────
-        exec-once = mako
         exec-once = hyprpaper
         exec-once = nm-applet --indicator
         exec-once = fcitx5 -d
@@ -265,8 +263,8 @@ in {
         # ── 7. 电源/退出菜单 ───────────────────────────────────
         bind = SUPER SHIFT, q, exec, wlogout
 
-        # ── 8. 应用启动器 ──────────────────────────────────────
-        bind = SUPER, SPACE, exec, wofi --show drun
+        # ── 8. 应用启动器（Quickshell）────────────────────────
+        bind = SUPER, SPACE, exec, quickshell ipc call default toggleLauncher
 
         # ── 9. 工作区切换 ──────────────────────────────────────
         bind = SUPER, 1, workspace, 1
@@ -308,12 +306,6 @@ in {
       '';
 
       xdg.configFile."hypr/apps.yaml".source = ../../assets/hypr/apps.yaml;
-
-      # ── Mako 通知配置 ──────────────────────────────────────
-      xdg.configFile."mako/config".text = ''
-        border-radius=10
-        padding=10
-      '';
     };
   };
 }
