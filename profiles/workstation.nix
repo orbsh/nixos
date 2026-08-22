@@ -7,13 +7,15 @@
 
     ../modules/desktop/full.nix
 
-    ../modules/services/virt.nix               # libvirtd/virt-manager 虚拟机支持
+    ../modules/services/virt.nix           # libvirtd/virt-manager 虚拟机支持
     ../modules/services/hermes-system.nix  # Hermes Agent: systemd 守护 + 全局 CLI 包裹
-    ../modules/services/harmonia.nix     # 本地二进制缓存
+    ../modules/services/harmonia.nix       # 本地二进制缓存
     ../modules/services/rustfs.nix
-    ../modules/services/ladder.nix       # Podman 代理链
-    ../modules/services/podman-apps.nix  # Podman 应用全家桶
-    ../modules/services/numa.nix         # 本地 DNS + 反向代理（workstation 专用，server 用 CoreDNS）
+    ../modules/services/ladder.nix         # mihomo 代理（自包含单元）
+    ../modules/services/gitea.nix          # 自包含：gitea + app-net
+    ../modules/services/miniflux.nix       # 自包含：miniflux + app-net
+    ../modules/services/qbittorrent.nix    # 自包含：qbittorrent + app-net
+    ../modules/services/numa.nix           # 本地 DNS + 反向代理（workstation 专用，server 用 CoreDNS）
   ];
 
   # 工作站更新快：按代 10 + 按时间 14d 双重清理
