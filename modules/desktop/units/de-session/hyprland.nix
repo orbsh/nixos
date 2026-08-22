@@ -139,9 +139,9 @@ let
                 sys.exit(1)
   '';
 
-  # 2. 自动检测系统中实际集成的包名（兼容新老命名 hyprshell / hyprswitch）
-  switcher-pkg = if builtins.hasAttr "hyprshell" pkgs then pkgs.hyprshell else pkgs.hyprswitch;
-  switcher-bin = if builtins.hasAttr "hyprshell" pkgs then "hyprshell" else "hyprswitch";
+  # 2. Alt+Tab 切换器（hyprshell，旧 hyprswitch 已改名，nixpkgs 只保留 hyprshell）
+  switcher-pkg = pkgs.hyprshell;
+  switcher-bin = "hyprshell";
 
   # 3. Lua 配置：读取资产模板，注入占位符（切换器/自启）
   extraExecOnceLua = lib.concatMapStringsSep "\n"

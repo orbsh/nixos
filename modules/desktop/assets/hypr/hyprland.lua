@@ -3,7 +3,7 @@
 -- 替代旧的 hyprland.conf 格式；Hyprland 0.4x Lua 配置 API（hl.*）
 -- 占位符（由 hyprland.nix replaceStrings 注入）：
 --   @HYPR_TOGGLE@   -> hypr-toggle 脚本绝对路径
---   @SWITCHER@      -> Alt+Tab 切换器二进制（hyprshell/hyprswitch）
+--   @SWITCHER@      -> Alt+Tab 切换器二进制（hyprshell，旧 hyprswitch 已改名）
 --   @EXTRA_EXEC_ONCE@ -> 其他单元（quickshell）注入的自启命令
 -- =============================================================================
 
@@ -76,8 +76,8 @@ hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("ghostty"))
 hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd("flameshot gui || grim -g \"$(slurp)\" - | swappy -f -"))
 -- 电源/退出
 hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.exec_cmd("wlogout"))
--- 应用启动器（Quickshell）
-hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd("quickshell ipc call default toggleLauncher"))
+-- 应用启动器（Walker）——按 SUPER+SPACE 唤起
+hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd("gapplication launch dev.benz.walker"))
 
 -- 工作区切换 / 移动窗口到工作区
 for i = 1, 10 do
@@ -86,17 +86,13 @@ for i = 1, 10 do
     hl.bind(mainMod .. " + SHIFT + " .. key,     hl.dsp.window.move({ workspace = i }))
 end
 
--- 焦点移动
-hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))
-hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }))
-hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }))
-hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
-
--- 移动窗口
-hl.bind(mainMod .. " + SHIFT + left",  hl.dsp.window.move({ direction = "left" }))
-hl.bind(mainMod .. " + SHIFT + right", hl.dsp.window.move({ direction = "right" }))
-hl.bind(mainMod .. " + SHIFT + up",    hl.dsp.window.move({ direction = "up" }))
-hl.bind(mainMod .. " + SHIFT + down",  hl.dsp.window.move({ direction = "down" }))
+-- 焦点移动 + 移动窗口（Vim 键位 h/j/k/l，迭代绑定）
+local vim_dir = { { "h", "left" }, { "l", "right" }, { "k", "up" }, { "j", "down" } }
+for _, d in ipairs(vim_dir) do
+    local key, direction = d[1], d[2]
+    hl.bind(mainMod .. " + " .. key,                    hl.dsp.focus({ direction = direction }))
+    hl.bind(mainMod .. " + SHIFT + " .. key,            hl.dsp.window.move({ direction = direction }))
+end
 
 -- ── 动画禁用（2026-08-22）──────────────────────────────
 -- 正确 API 是独立 hl.animation({leaf=...})，非 hl.config({animations=...})。
