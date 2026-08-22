@@ -140,9 +140,17 @@ let
   '';
 
   # 2. 自动检测系统中实际集成的包名（兼容新老命名 hyprshell / hyprswitch）
-  # 优先采用新版标准的 hyprshell，若不存在则回退至 hyprswitch
   switcher-pkg = if builtins.hasAttr "hyprshell" pkgs then pkgs.hyprshell else pkgs.hyprswitch;
   switcher-bin = if builtins.hasAttr "hyprshell" pkgs then "hyprshell" else "hyprswitch";
+
+  # 3. Lua 配置：读取资产模板，注入占位符（切换器/自启）
+  extraExecOnceLua = lib.concatMapStringsSep "\n"
+    (c: "    hl.exec_cmd(\"${c}\")") cfg.extraExecOnce;
+
+  hyprlandLua = lib.replaceStrings
+    [ "@HYPR_TOGGLE@" "@SWITCHER@" "@EXTRA_EXEC_ONCE@" ]
+    [ "hypr-toggle" switcher-bin extraExecOnceLua ]
+    (builtins.readFile ../../assets/hypr/hyprland.lua);
 
 in {
   options.wayland.windowManager.hyprland.extraExecOnce = lib.mkOption {
@@ -176,7 +184,7 @@ in {
       wlogout swaylock-effects
       playerctl networkmanagerapplet pavucontrol jq
       hypr-toggle-pkg     # 注入 F1-F12 脚本
-      switcher-pkg        # 🌟 自动注入 Alt+Tab 高级切换器包
+      switcher-pkg        # 🌟 Alt+Tab 高级切换器包
     ];
 
     home-manager.users.${user} = {
@@ -187,123 +195,8 @@ in {
         QT_IM_MODULE = "fcitx";
       };
 
-      xdg.configFile."hypr/hyprland.conf".text = ''
-        # ── 1. 自动启动守护进程 (Exec-once) ───────────────────
-        exec-once = hyprpaper
-        exec-once = nm-applet --indicator
-        exec-once = fcitx5 -d
-
-        # 自启 Alt+Tab 后台服务 (按照最近聚焦 MRU 机制排序)
-        exec-once = ${switcher-bin} init --show-title --init-sort-type "recently-focused" &
-
-        # 剪贴板历史自启
-        exec-once = wl-paste --type text --watch cliphist store
-        exec-once = wl-paste --type image --watch cliphist store
-
-        # 其他单元注入的自启命令（quickshell 等）
-        ${lib.concatMapStringsSep "\n" (c: "exec-once = ${c}") cfg.extraExecOnce}
-
-        # ── 2. 基础窗口与显示器配置 ──────────────────────────
-        monitor=,preferred,auto,2
-
-        # ── 2.0 键盘配置 ────────────────────────────────────
-        input {
-            kb_layout = us
-            kb_options = ctrl:swapcaps
-        }
-
-        # ── 2.1 通用布局 ──────────────────────────────────
-        general {
-            gaps_in = 2
-            gaps_out = 2
-            border_size = 2
-            col.active_border = rgba(f5a962ff)
-            col.inactive_border = rgba(595959aa)
-        }
-
-        # ── 2.2 装饰：圆角 + 阴影 ────────────────────────────
-        decoration {
-            rounding = 10
-            shadow {
-                enabled = true
-                range = 12
-                offset = 3 3
-                render_power = 3
-                color = rgba(00000044)
-            }
-        }
-
-        # ── 3. F1-F12 智能快捷键绑定 ──────────────────────────
-        bind = , F1,  exec, hypr-toggle 1
-        bind = , F2,  exec, hypr-toggle 2
-        bind = , F3,  exec, hypr-toggle 3
-        bind = , F4,  exec, hypr-toggle 4
-        bind = , F5,  exec, hypr-toggle 5
-        bind = , F6,  exec, hypr-toggle 6
-        bind = , F7,  exec, hypr-toggle 7
-        bind = , F8,  exec, hypr-toggle 8
-        bind = , F9,  exec, hypr-toggle 9
-        bind = , F10, exec, hypr-toggle 10
-        bind = , F11, exec, hypr-toggle 11
-        bind = , F12, exec, hypr-toggle 12
-
-        # ── 4. 🌟 完美的 Alt+Tab 现代切换状态机绑定 ───────────────
-        # 按下 Alt+Tab：呼出切换菜单，并在窗口列表内前向循环
-        bind = ALT, TAB, exec, ${switcher-bin} gui --mod-key alt --key tab
-
-        # 按下 Alt+Shift+Tab：在菜单内反向循环窗口
-        bind = ALT SHIFT, TAB, exec, ${switcher-bin} gui --mod-key alt --key tab --reverse-key shift
-
-        # 核心释放判定：松开左 Alt 键瞬间，瞬间跳转到选中的窗口并完全关闭 GUI
-        bindr = ALT, ALT_L, exec, ${switcher-bin} close
-
-        # ── 5. 其他基础功能快捷键 ───────────────────────────
-        bind = SUPER, q, exec, flameshot gui || grim -g "$(slurp)" - | swappy -f -
-
-        # ── 7. 电源/退出菜单 ───────────────────────────────────
-        bind = SUPER SHIFT, q, exec, wlogout
-
-        # ── 8. 应用启动器（Quickshell）────────────────────────
-        bind = SUPER, SPACE, exec, quickshell ipc call default toggleLauncher
-
-        # ── 9. 工作区切换 ──────────────────────────────────────
-        bind = SUPER, 1, workspace, 1
-        bind = SUPER, 2, workspace, 2
-        bind = SUPER, 3, workspace, 3
-        bind = SUPER, 4, workspace, 4
-        bind = SUPER, 5, workspace, 5
-        bind = SUPER, 6, workspace, 6
-        bind = SUPER, 7, workspace, 7
-        bind = SUPER, 8, workspace, 8
-        bind = SUPER, 9, workspace, 9
-        bind = SUPER, 0, workspace, 10
-
-        bind = SUPER SHIFT, 1, movetoworkspace, 1
-        bind = SUPER SHIFT, 2, movetoworkspace, 2
-        bind = SUPER SHIFT, 3, movetoworkspace, 3
-        bind = SUPER SHIFT, 4, movetoworkspace, 4
-        bind = SUPER SHIFT, 5, movetoworkspace, 5
-        bind = SUPER SHIFT, 6, movetoworkspace, 6
-        bind = SUPER SHIFT, 7, movetoworkspace, 7
-        bind = SUPER SHIFT, 8, movetoworkspace, 8
-        bind = SUPER SHIFT, 9, movetoworkspace, 9
-        bind = SUPER SHIFT, 0, movetoworkspace, 10
-
-        # ── 10. 窗口焦点切换（方向键） ─────────────────────────
-        bind = SUPER, left, movefocus, l
-        bind = SUPER, right, movefocus, r
-        bind = SUPER, up, movefocus, u
-        bind = SUPER, down, movefocus, d
-
-        # ── 11. 窗口位置移动（方向键） ─────────────────────────
-        bind = SUPER SHIFT, left, movewindow, l
-        bind = SUPER SHIFT, right, movewindow, r
-        bind = SUPER SHIFT, up, movewindow, u
-        bind = SUPER SHIFT, down, movewindow, d
-
-        # ─ 6. 窗口规则 ──────────────────────────────────
-        windowrule = match:class ^(mpv)$, float on, size 1280 720, center on
-      '';
+      # Hyprland 主配置（Lua 声明式；经 ~/.config/hypr 符号链接落盘）
+      xdg.configFile."hypr/hyprland.lua".text = hyprlandLua;
 
       xdg.configFile."hypr/apps.yaml".source = ../../assets/hypr/apps.yaml;
     };
