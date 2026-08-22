@@ -34,7 +34,12 @@ in
 
     home-manager.users.${user} = {
       home.packages = [ pkgs.quickshell ];
-      xdg.configFile."quickshell".source = cfg.shellDir;
+      xdg.configFile."quickshell/shell.qml" = {
+        # per-file 部署（避免整目录 symlink 与 .config 残留目录冲突）
+        # force：覆盖 dots-hyprland 时代遗留的 old-store symlink（报错建议的官方解法）
+        source = cfg.shellDir + "/shell.qml";
+        force = true;
+      };
 
       systemd.user.services.quickshell = {
         Unit = {

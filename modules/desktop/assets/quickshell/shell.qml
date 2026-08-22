@@ -18,17 +18,14 @@ ShellRoot {
     id: root
 
     // ── IPC：quickshell ipc call default toggleLauncher ──
-    signal toggleLauncher()
-    onToggleLauncher: launcher.toggle()
     IpcHandler {
-        target: root
-        signal: "toggleLauncher"
+        target: "default"
+        function toggleLauncher(): void { launcher.toggle() }
     }
 
     // ── 顶部状态栏 ─────────────────────────────────────────
     PanelWindow {
         id: bar
-        applyExclusive: true
         anchors { top: true; left: true; right: true }
         height: 30
         color: "#202020"

@@ -160,6 +160,12 @@ in {
   };
 
   config = {
+    # ── 会话触发：原生 start-hyprland 不建 graphical-session.target，
+    #    dispatcher 永不触发 → 这里直接拉起 DE 组件入口 target（绕过 RefuseManualStart）
+    wayland.windowManager.hyprland.extraExecOnce = [
+      "systemctl --user start desktop-hyprland.target"
+    ];
+
     # 活跃谓词：Hyprland 进程在跑 = Hyprland 会话激活（供 de-session dispatcher 使用）
     desktop.sessions.hyprland.predicate = "${pkgs.procps}/bin/pgrep -f Hyprland";
 
