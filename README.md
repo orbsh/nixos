@@ -44,6 +44,25 @@ flake.nix 扫描 hosts/ 目录
 
 
 
+## 🧱 模块组织：链式 vs 并行/叶子
+
+统一机制：`modules/<dir>/units/*.nix` = **原子单元**；`modules/<dir>/*.nix`（顶层）= **聚合器**（组合 units）。
+
+按聚合器之间是否互相 `import` 成链，分两种形状：
+
+**链式（层级式）—— 聚合器互相引用，层层叠加**
+- `desktop/`：`mini ⊂ base ⊂ full`（full→base→mini）
+- `system/`：`core ⊂ extra`（extra→core）
+- 每层只声明增量；引入最外层即得整链，公共层在根定义后由后层继承
+
+**并行 / 叶子 —— 聚合器并列或模块直接自包含，互不 import 成链**
+- `dev/`：backend / data-science / fullstack / infrastructure / rescue / server —— 并列的 **flavor 聚合器**，共用 `dev/units/`，不互相链式引用（fullstack = 全选样本，同样直接组合 units）
+- `services/`：coredns / harmonia / ladder / numa / virt 等 **自包含叶子**；`podman/` 为子目录聚合（各应用子模块）
+
+> 判断：该模块是否是「被其他聚合器 import 的一环」→ **链式**（与同域另一聚合器接成层级）；同一域内并行可互换的聚合器 / 自包含能力 → **并行/叶子**。目录可混用两者（services 里叶子与 podman 聚合并存）。
+
+---
+
 ## 🖥 桌面预设层级
 
 层级式：`mini ⊂ base ⊂ full`，每层只声明增量，逐层叠加。

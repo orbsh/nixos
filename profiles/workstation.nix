@@ -1,8 +1,7 @@
 { inputs, user, lib, pkgs, ... }: {
   imports = [
-    # 核心系统预设 + Home Manager 配置
-    ../modules/system/core.nix
-    ../modules/system/extra.nix          # 工作站扩展
+    # 系统层级：extra = core + 工作站扩展（层级式，core 由 extra 继承）
+    ../modules/system/extra.nix
 
     ../modules/dev/fullstack.nix
 
