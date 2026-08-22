@@ -1,7 +1,7 @@
 { config, lib, pkgs, user, ... }:
 
 let
-  ewwDir = ../assets/eww;
+  ewwDir = ../../assets/eww;
 
   # 独立启动脚本，避免 bash -c '...' 内联引号与 systemd unit 解析冲突
   startupScript = pkgs.writeShellScript "eww-startup" ''
@@ -54,6 +54,8 @@ let
 in
 {
 
+  # 组件不感知 DE；DE → 组件 关联由 de-session 的 deComponents 集中表维护
+
   home-manager.users.${user} = {
     programs.eww = {
       enable = true;
@@ -92,9 +94,7 @@ in
         ];
         RestartSec = "5s";
       };
-      Install = {
-        WantedBy = [ "graphical-session.target" ];
-      };
+      # 不设 WantedBy=graphical-session.target —— 仅由 de-session 的 desktop-cosmic.target 随 COSMIC 会话拉起
     };
 
     # ── 探活 watchdog：定期 ping，卡死则 kill（systemd 自动重启） ──

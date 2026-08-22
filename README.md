@@ -46,34 +46,35 @@ flake.nix 扫描 hosts/ 目录
 
 ## 🖥 桌面预设层级
 
-三个独立预设，互不依赖：
+层级式：`mini ⊂ base ⊂ full`，每层只声明增量，逐层叠加。
 
-| 预设 | 用途 | 包含组件 | Hyprland |
-|------|------|---------|----------|
-| `modules/desktop/mini.nix` | QEMU 虚拟机 | apps-core, hyprland, greetd, 输入法, 字体, 无障碍, eww | ✅ |
-| `modules/desktop/base.nix` | 便携系统 | mini + cosmic + apps-core + hyprland + eww | ✅ |
-| `modules/desktop/full.nix` | 完整工作站 | base + apps-extra, apps-im, laptop, zed, rime | ✅ |
+| 预设 | 相对 | 增量 |
+|------|------|------|
+| `mini`（QEMU） | 层级根 | apps-core, de-session（桌面子系统）, greetd, 输入法, 字体, 无障碍, qutebrowser, rbw |
+| `base`（便携） | = mini + 增量 | apps-extra, rime |
+| `full`（工作站） | = base + 增量 | apps-im, laptop, networkmanager, walker, wl-clipboard |
 
-**设计原则**：每个预设自包含，不互相 import，改一个不影响其他。
+**设计原则**：逐层 `import`（`base` imports `mini`，`full` imports `base`），每层只声明自己的增量，公共层在 mini 定义后继承。桌面子系统（cosmic/hyprland/quickshell/eww 及 DE→组件关联表）统一收敛于 `units/de-session/`。
+
+**DE 模型**：纳入由 imports 决定（引 de-session = 装桌面子系统），运行时由 dispatcher 检测活跃会话（cosmic/hyprland）拉起对应 target，组件（quickshell→hyprland、eww→cosmic）只挂自己 DE 的 target，绝不挂 graphical-session.target。切换 DE = 登录选会话，不 rebuild。
 
 ### 桌面单元（units）
 
 | 单元 | 用途 |
 |------|------|
-| `cosmic.nix` | COSMIC 桌面环境 |
-| `greetd.nix` | greetd 登录管理器 |
+| `de-session/` | **桌面子系统**：`default`（DE 层：dispatcher + DE→组件关联表）+ `cosmic` + `hyprland` + `quickshell` + `eww` |
+| `greetd.nix` | greetd 登录管理器（会话选择 + 记忆） |
 | `input-method.nix` | fcitx5 中文输入法 |
 | `fonts.nix` | 字体配置 |
 | `accessibility.nix` | 无障碍支持 |
 | `apps-core.nix` | 核心应用（终端、编辑器、浏览器基础、媒体工具） |
 | `apps-extra.nix` | 额外应用（办公、阅读、创作工具） |
 | `apps-im.nix` | 即时通讯应用 |
-| `hyprland.nix` | Hyprland 合成器 + 辅助工具链（waybar, wofi, grim 等） |
-| `eww.nix` | Eww Wayland 状态栏（替代 waybar） |
 | `laptop.nix` | 笔记本电源管理 |
-| `zed.nix` | Zed 编辑器 |
+| `networkmanager.nix` | 网络管理 |
 | `rime.nix` | Rime 输入法（NixOS 级模块） |
-| `vivaldi.nix` | Vivaldi 浏览器 + Wayland 缩放修复 |
+| `qutebrowser.nix` | qutebrowser 浏览器 |
+| `walker.nix` | walker 启动器（备选，不常用） |
 | `home-terminals.nix` | 终端配置（ghostty + alacritty + zellij） |
 | `home-xdg.nix` | XDG 配置（mimeApps + userDirs + BROWSER） |
 
@@ -138,7 +139,7 @@ hosts/portable/default.nix
   │     │     ├── units/hyprland.nix
   │     │     ├── units/home-terminals.nix  (内联桌面 HM)
   │     │     ├── units/home-xdg.nix        (内联桌面 HM)
-  │     │     └── hyprland.enable = true
+  │     │     └── 桌面子系统经 units/de-session/ 引入（cosmic/hyprland/quickshell/eww，无独立 enable）
   │     └── modules/services/ladder.nix    (Podman 代理)
   └── modules/services/harmonia.nix         (本地二进制缓存 :5100，节点级单独引入)
 ```
@@ -146,7 +147,7 @@ hosts/portable/default.nix
 **与 workstation 的区别**：
 - 无 `dev/fullstack.nix`（无开发工具链）
 - 无 `podman/full.nix`（仅 ladder 代理）
-- 使用 `base.nix` 而非 `full.nix`（无 apps-extra/apps-im/laptop）
+- 使用 `base.nix` 而非 `full.nix`（无 apps-im/laptop/networkmanager/walker）
 - nushell `developMode = false` → 通过 flake input 部署（详见 [ADR-003](docs/adr/003-nushell-version-develop-mode.md)）
 - 启用 `udisks2`（可移动设备自动挂载）
 - 启用 `getty.autologinUser`（自动登录）
@@ -286,7 +287,7 @@ nixos/
 │   ├── desktop/                  # 桌面预设
 │   │   ├── mini.nix              # 最小桌面（QEMU）
 │   │   ├── base.nix              # 基础桌面（portable）
-│   │   ├── full.nix              # 完整桌面（workstation）
+│   │   ├── full.nix              # 完整桌面（COSMIC + Hyprland + QS）
 │   │   └── units/                # 桌面组件单元 + HM 单元（home-terminals, home-xdg）
 │   ├── dev/                      # 开发工具模块
 │   │   ├── server.nix            # 服务器开发工具

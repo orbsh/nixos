@@ -1,10 +1,9 @@
-{ pkgs, lib, dataDir, user, ... }:
+{ pkgs, lib, dataDir, user, config, ... }:
 
 let
   # ── COSMIC Git overlay 开关 ─────────────────────────
   # true: 通过 nixos-cosmic 叠加 Git 版 COSMIC（覆盖 nixpkgs 内置版本）
   # false: 使用 nixpkgs 内置版本
-  # COSMIC 稳定进入 nixpkgs 后设为 false 即可，无需删代码
   useGitOverlay = false;
 
   nixosCosmicSrc = builtins.fetchGit {
@@ -53,16 +52,19 @@ let
       nativeBuildInputs = [ pkgs.python3 ];
     } ''
       mkdir -p build
-      cp ${../assets/pop-launcher/framework.py} build/framework.py
+      cp ${../../assets/pop-launcher/framework.py} build/framework.py
       cp ${pluginPath} build/main.py
       cd build
       python3 ${genScriptSubstituted} > $out
     '';
 in
 {
-  # ── COSMIC Git overlay（可选） ──────────────────────
+  # ── COSMIC Git overlay（不随 enable 变化） ──────────────
   imports = lib.optional useGitOverlay gitOverlay;
   nixpkgs.overlays = lib.optional useGitOverlay cosmicHashFix;
+
+  # 活跃谓词（供 de-session dispatcher 使用）
+  desktop.sessions.cosmic.predicate = "${pkgs.procps}/bin/pgrep -f cosmic-comp";
 
   # ── COSMIC Desktop Environment ─────────────────────────
   services.desktopManager.cosmic.enable = true;
@@ -85,23 +87,23 @@ in
   home-manager.users.${user} = {
     xdg.dataFile = {
       "pop-launcher/framework.py" = {
-        source = ../assets/pop-launcher/framework.py;
+        source = ../../assets/pop-launcher/framework.py;
         force = true;
       };
       "pop-launcher/plugins/cwdhist/main.py" = {
-        source = ../assets/pop-launcher/cwdhist/main.py;
+        source = ../../assets/pop-launcher/cwdhist/main.py;
         executable = true;
       };
       "pop-launcher/plugins/cwdhist/plugin.ron".source = genPluginRon {
-        pluginPath = ../assets/pop-launcher/cwdhist/main.py;
+        pluginPath = ../../assets/pop-launcher/cwdhist/main.py;
         className = "CwdHistPlugin";
       };
       "pop-launcher/plugins/zellij/main.py" = {
-        source = ../assets/pop-launcher/zellij/main.py;
+        source = ../../assets/pop-launcher/zellij/main.py;
         executable = true;
       };
       "pop-launcher/plugins/zellij/plugin.ron".source = genPluginRon {
-        pluginPath = ../assets/pop-launcher/zellij/main.py;
+        pluginPath = ../../assets/pop-launcher/zellij/main.py;
         className = "ZellijPlugin";
       };
     };

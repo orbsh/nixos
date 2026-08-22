@@ -21,7 +21,7 @@ class CwdHistPlugin(PopLauncherPlugin):
         ).expanduser()
         mode = os.environ.get("NV_MODE", "neovide")
         if mode == "neovide":
-            self.open_cmd = ["neovide", "--maximized", "--frame", "none"]
+            self.open_cmd = ["neovide", "--maximized", "--frame", "none", "--vsync"]
         else:
             self.open_cmd = shlex.split(os.environ.get("NV_OPEN_CMD", "ghostty -e nvim"))
 

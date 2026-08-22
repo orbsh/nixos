@@ -145,9 +145,16 @@ let
   switcher-bin = if builtins.hasAttr "hyprshell" pkgs then "hyprshell" else "hyprswitch";
 
 in {
-  options.wayland.windowManager.hyprland.enable = lib.mkEnableOption "Hyprland 桌面环境（含完整辅助工具链）";
+  options.wayland.windowManager.hyprland.extraExecOnce = lib.mkOption {
+    type = lib.types.listOf lib.types.str;
+    default = [ ];
+    description = "额外的 Hyprland 自启命令（exec-once），供其他单元注入";
+  };
 
-  config = lib.mkIf cfg.enable {
+  config = {
+    # 活跃谓词：Hyprland 进程在跑 = Hyprland 会话激活（供 de-session dispatcher 使用）
+    desktop.sessions.hyprland.predicate = "${pkgs.procps}/bin/pgrep -f Hyprland";
+
     programs.hyprland.enable = true;
 
     services.pipewire = {
@@ -194,6 +201,9 @@ in {
         # 剪贴板历史自启
         exec-once = wl-paste --type text --watch cliphist store
         exec-once = wl-paste --type image --watch cliphist store
+
+        # 其他单元注入的自启命令（quickshell 等）
+        ${lib.concatMapStringsSep "\n" (c: "exec-once = ${c}") cfg.extraExecOnce}
 
         # ── 2. 基础窗口与显示器配置 ──────────────────────────
         monitor=,preferred,auto,2
@@ -297,7 +307,7 @@ in {
         windowrule = match:class ^(mpv)$, float on, size 1280 720, center on
       '';
 
-      xdg.configFile."hypr/apps.yaml".source = ../assets/hypr/apps.yaml;
+      xdg.configFile."hypr/apps.yaml".source = ../../assets/hypr/apps.yaml;
 
       # ── Mako 通知配置 ──────────────────────────────────────
       xdg.configFile."mako/config".text = ''
