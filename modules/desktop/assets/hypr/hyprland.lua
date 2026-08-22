@@ -61,6 +61,10 @@ hl.config({
     input = {
         kb_layout  = "us",
         follow_mouse = 1,
+        natural_scroll = true,
+        touchpad = {
+            natural_scroll = true,
+        },
     },
 })
 

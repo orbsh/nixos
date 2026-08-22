@@ -143,6 +143,26 @@ let
   switcher-pkg = pkgs.hyprshell;
   switcher-bin = "hyprshell";
 
+  # 2b. hyprshell daemon 启动脚本：扫描 Hyprland socket 目录（不依赖 hyprctl/WAYLAND_DISPLAY，
+  #     systemd 用户环境常缺 WAYLAND_DISPLAY），就绪后以常驻 daemon 模式运行 `hyprshell run`。
+  hyprshell-startup = pkgs.writeShellScript "hyprshell-startup" ''
+    # systemd 用户服务不继承 systemPackages 的 PATH，显式加入 sw/bin
+    export PATH=/run/current-system/sw/bin:$PATH
+    export XDG_RUNTIME_DIR=/run/user/$UID
+
+    # 直接扫描实例 socket，而非 hyprctl（其需 WAYLAND_DISPLAY，systemd 用户环境往往缺失）
+    sig=""
+    for i in $(seq 1 50); do
+      sig=$(basename "$(dirname "$(ls /run/user/$UID/hypr/*/.socket.sock 2>/dev/null | head -n1)")" 2>/dev/null)
+      [ -n "$sig" ] && break
+      sleep 0.1
+    done
+    [ -n "$sig" ] || exit 1
+
+    export HYPRLAND_INSTANCE_SIGNATURE="$sig"
+    exec hyprshell run
+  '';
+
   # 3. Lua 配置：读取资产模板，注入占位符（切换器/自启）
   extraExecOnceLua = lib.concatMapStringsSep "\n"
     (c: "    hl.exec_cmd(\"${c}\")") cfg.extraExecOnce;
@@ -205,6 +225,23 @@ in {
       xdg.configFile."hypr/hyprland.lua".text = hyprlandLua;
 
       xdg.configFile."hypr/apps.yaml".source = ../../assets/hypr/apps.yaml;
+
+      # hyprshell（Alt+Tab 切换器）配置：纯 switch 模式，禁 overview/launcher
+      xdg.configFile."hyprshell/config.ron".source = ../../assets/hyprshell/config.ron;
+    };
+
+    # hyprshell daemon：常驻注册 Alt+Tab 全局切换
+    systemd.user.services.hyprshell = {
+      description = "Hyprshell daemon (Alt+Tab window switcher)";
+      after = [ "graphical-session.target" ];
+      partOf = [ "graphical-session.target" ];
+      wantedBy = [ "graphical-session.target" ];
+      serviceConfig = {
+        Type = "exec";
+        ExecStart = hyprshell-startup;
+        Restart = "on-failure";
+        RestartSec = "5s";
+      };
     };
   };
 }
