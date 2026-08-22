@@ -1,10 +1,7 @@
 # 编辑器配置：Zed
 # 修复在 COSMIC/Wayland 环境下切换虚拟桌面或切屏后输入法（IME）偶尔失灵/假死的问题
-{ pkgs, lib, user, ... }:
-
-let
-  localPkg = import ../../../libs/local-pkg.nix { inherit pkgs user; };
-in {
+{ pkgs, ... }:
+{
   # ── Zed Overlay：使用 runCommand 复制后包装（避免 symlinkJoin 的符号链接问题） ──────
   nixpkgs.overlays = [
     (final: prev: {
@@ -25,9 +22,6 @@ in {
   environment.systemPackages = with pkgs; [
     # 如果你使用的是日常稳定版，使用被 Overlay 修正过的包
     zed-editor
-
-    # 临时占位（如果你的 lib/local-pkg 同样需要接管 zed 相关的特殊二进制）
-    # (localPkg { pkg = zed-editor; filename = "zed-stable_amd64.deb"; })
   ];
 
   # ── 系统级 IME 环境变量额外增强 ─────────────────────

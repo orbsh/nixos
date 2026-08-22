@@ -210,10 +210,10 @@ hosts/server/default.nix
 
 ### 5. K8s 集群（k8s-dev / k8s-small-cluster / k8s-large-cluster）
 
-K8s 节点通过 `profiles/k8s/k8s-libs.nix` 的 `expandCluster` 函数构建，自动注入：
+K8s 节点通过 `modules/k8s/k8s-libs.nix` 的 `expandCluster` 函数构建，自动注入：
 
 ```
-profiles/k8s/k8s-libs.nix → expandCluster → buildNode
+modules/k8s/k8s-libs.nix → expandCluster → buildNode
   ├── profiles/server.nix           ← 所有 K8s 节点自动继承服务器预设
   ├── k8sRoleModules             ← control / worker / combo 角色模块
   │     ├── control: k8s-control.nix
@@ -308,6 +308,16 @@ nixos/
 │   │   ├── fullstack.nix         # 全栈开发工具
 │   │   ├── rescue.nix            # 救援工具
 │   │   └── units/                # 各语言/工具单元
+│   ├── k8s/                      # Kubernetes 集群模块（配置 + 展开逻辑）
+│   │   ├── k8s-libs.nix          # 集群展开（flake.nix 直接消费）
+│   │   ├── k8s-common.nix        # CRI-O/Containerd 公共部分
+│   │   ├── k8s-control.nix       # 控制平面
+│   │   ├── k8s-worker.nix        # 工作节点
+│   │   ├── k8s-addons.nix        # 集群组件（flannel, metrics-server 等）
+│   │   ├── cert-manager.nix
+│   │   ├── containerd.nix / crio.nix
+│   │   ├── envoy-gateway.nix / istio-gateway.nix
+│   │   └── assets/               # K8s 资源清单 + 脚本
 │   └── services/                 # 系统服务模块
 │       ├── virt.nix              # 虚拟机
 │       ├── harmonia.nix          # 本地二进制缓存
@@ -322,21 +332,8 @@ nixos/
     ├── qemu.nix                  # QEMU 虚拟机预设
     ├── server.nix                # 服务器预设
     ├── workstation.nix           # 工作站预设
-    ├── iso/                      # nixos-anywhere 专用 Live ISO（~781MB）
-    │   └── default.nix           # ISO 入口（flake.nix 直接消费）
-    └── k8s/                      # Kubernetes 框架
-        ├── k8s-libs.nix          # 集群展开逻辑（flake.nix 直接消费）
-        ├── k8s-common.nix         # CRI-O/Containerd 公共部分
-        ├── k8s-control.nix       # 控制平面
-        ├── k8s-worker.nix        # 工作节点
-        ├── k8s-addons.nix        # 集群组件（flannel, metrics-server 等）
-        ├── k8s-cfssl-hostname-fix.nix
-        ├── cert-manager.nix
-        ├── containerd.nix
-        ├── crio.nix
-        ├── envoy-gateway.nix
-        ├── istio-gateway.nix
-        └── assets/               # K8s 资源清单 + 脚本
+    └── iso/                      # nixos-anywhere 专用 Live ISO（~781MB）
+        └── default.nix           # ISO 入口（flake.nix 直接消费）
 ```
 
 ---
@@ -455,8 +452,8 @@ Pod 查询外部域名
 |--------|------|------|
 | 公共 DNS 列表 | `flake.nix` | `commonArgs.publicDnsServers` |
 | 宿主机 CoreDNS | `modules/services/coredns.nix` | 引入即启用 |
-| kubelet resolv.conf | `profiles/k8s/k8s-common.nix` | 条件判断 |
-| CoreDNS Corefile | `profiles/k8s/assets/patch-coredns.sh` | 运行时 patch |
+| kubelet resolv.conf | `modules/k8s/k8s-common.nix` | 条件判断 |
+| CoreDNS Corefile | `modules/k8s/assets/patch-coredns.sh` | 运行时 patch |
 
 ### Nix Substituter 配置
 
