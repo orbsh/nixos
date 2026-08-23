@@ -126,6 +126,8 @@ binds {
 
     // 布局
     Mod+O      { toggle-overview; }
+    Mod+I      { spawn-sh "noctalia msg bar-toggle"; }   // 临时显示/隐藏状态栏
+    Mod+S      { screenshot; }   // 截图（区域，同 Print）
     Mod+F      { maximize-column; }
     Mod+Shift+F { fullscreen-window; }
     Mod+M      { maximize-window-to-edges; }

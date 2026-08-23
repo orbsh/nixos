@@ -5,6 +5,20 @@ position      = "top"
 smart_auto_hide = true
 reserve_space = false   # 不预留排他区：弹出悬浮窗口上层，隐藏不留空条
 layer         = "top"   # 普通窗口之上
+# 左侧：保留默认 [launcher, wallpaper, workspaces]（含工作区指示器），其后追加 sysmon 折线图
+start  = ["control-center", "clock", "workspaces", "sysmon-cpu", "sysmon-gpu", "sysmon-mem", "sysmon-swap", "sysmon-download", "sysmon-upload"]
+center = []
+# 右侧：去掉 media（播放器控件），保留其余默认
+end = ["launcher", "wallpaper", "tray", "notifications", "clipboard", "network", "bluetooth", "volume", "brightness", "battery", "session"]
+
+# 去掉浮动面板（含 launcher）的描边；shadow 还原
+[shell.panel]
+borders = false
+shadow  = true
+
+# launcher 的 preview pane 也被 card_borders 画 outline —— 一并去掉（全局影响控制中心/设置的卡片边）
+[shell]
+card_borders = false
 
 # cwdhist provider（迁移自 pop-launcher/cwdhist）：/cwd 前缀触发，查 sqlite → neovide 打开
 [shell.launcher.dmenu.entry.cwd]
@@ -14,3 +28,41 @@ prefix  = "/cwd"
 label   = "cwd"
 glyph   = "folder"
 global  = false
+
+# ── bar 系统监视折线图（stat 名取自 Noctalia 内置 system.monitor）──
+# show_value=true：折线旁显示实时数值；CPU/内存/swap 为百分比，net 为流量+单位
+[widget.sysmon-cpu]
+type           = "sysmon"
+stat           = "cpu_usage"
+visualization  = "graph"
+show_value     = true
+
+[widget.sysmon-gpu]
+type           = "sysmon"
+stat           = "gpu_usage"
+visualization  = "graph"
+show_value     = true
+
+[widget.sysmon-mem]
+type           = "sysmon"
+stat           = "ram_pct"
+visualization  = "graph"
+show_value     = true
+
+[widget.sysmon-swap]
+type           = "sysmon"
+stat           = "swap_pct"
+visualization  = "graph"
+show_value     = true
+
+[widget.sysmon-download]
+type           = "sysmon"
+stat           = "net_rx"
+visualization  = "graph"
+show_value     = true
+
+[widget.sysmon-upload]
+type           = "sysmon"
+stat           = "net_tx"
+visualization  = "graph"
+show_value     = true

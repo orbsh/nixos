@@ -12,9 +12,9 @@
 
 let
   # ── DE → 组件 关联表（集中维护：hyprland 启动哪些，cosmic 启动哪些） ──
+  # eww 已废弃（2026-08）：cosmic 用自带 shell，不再挂组件；系统监视挂件迁往 niri 的 Noctalia
   deComponents = {
     hyprland = [ "quickshell.service" ];
-    cosmic = [ "eww.service" ];
     niri = [ "noctalia.service" ];
   };
 
@@ -53,7 +53,7 @@ in
     ./hyprland.nix
     ./niri.nix
     ./quickshell.nix
-    ./eww.nix
+    # ./eww.nix  # 已废弃（2026-08），不再引入；文件保留备查
   ];
 
   options.desktop.sessions = lib.mkOption {
