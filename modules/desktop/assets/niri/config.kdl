@@ -43,7 +43,7 @@ window-rule {
 }
 
 // ---------------------------------------------------------------------------
-// 最近窗口切换（Alt-Tab）
+// 最近窗口切换（Alt-Tab，niri 内置单行）
 // ---------------------------------------------------------------------------
 recent-windows {
     // 缩略图调小（默认 max-height 480 / max-scale 0.5）
@@ -121,6 +121,7 @@ binds {
     Mod+Ctrl+7 { move-column-to-workspace 7; }
     Mod+Ctrl+8 { move-column-to-workspace 8; }
     Mod+Ctrl+9 { move-column-to-workspace 9; }
+    // 窗口切换还原为 niri 内置 recent-windows（不改 Noctalia 切换器）
     Mod+Tab { focus-workspace-previous; }
 
     // 布局

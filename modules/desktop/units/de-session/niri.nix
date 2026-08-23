@@ -29,15 +29,9 @@ in
       force = true;   # 覆盖可能遗留的本地 config
     };
 
-    # Noctalia v5 配置（~/.config/noctalia/config.toml，目录下 *.toml 合并）
+    # Noctalia v5 配置（`assets/noctalia/config.toml` 独立文件）
     xdg.configFile."noctalia/config.toml" = {
-      text = ''
-        [bar.default]
-        position      = "top"
-        auto_hide     = true
-        reserve_space = false   # 不预留排他区：弹出悬浮窗口上层，隐藏不留空条
-        layer         = "top"   # 普通窗口之上
-      '';
+      source = ../../assets/noctalia/config.toml;
       force = true;   # 覆盖 GUI 可能写出的占位
     };
 

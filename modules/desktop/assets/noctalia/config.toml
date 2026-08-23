@@ -1,0 +1,7 @@
+# Noctalia v5 配置（~/.config/noctalia/config.toml，目录下 *.toml 合并）
+# 状态栏：顶部 + 自动隐藏 + 悬浮于窗口之上（不占排他区）
+[bar.default]
+position      = "top"
+smart_auto_hide = true
+reserve_space = false   # 不预留排他区：弹出悬浮窗口上层，隐藏不留空条
+layer         = "top"   # 普通窗口之上
