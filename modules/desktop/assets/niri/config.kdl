@@ -12,16 +12,14 @@ input {
 // 让客户端放弃自带标题栏（CSD）→ niri 才能把边框画在窗口外圈（而非被窗口盖住）
 prefer-no-csd
 
-// 布局：2px 圆角窗口边框（GitHub Rust 语言色 #dea584）
 // 启用边框后关掉默认 focus ring，避免双圈叠层
 layout {
-    // 窗口间距 2px
-    gaps 2
+    gaps 4
     focus-ring {
         off
     }
     border {
-        width 2
+        width 4
         active-color "#dea584"
         inactive-color "#75524a"
         urgent-color "#c0392b"

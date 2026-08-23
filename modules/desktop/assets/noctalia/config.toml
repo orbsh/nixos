@@ -6,7 +6,7 @@ smart_auto_hide = true
 reserve_space = false   # 不预留排他区：弹出悬浮窗口上层，隐藏不留空条
 layer         = "top"   # 普通窗口之上
 # 左侧：保留默认 [launcher, wallpaper, workspaces]（含工作区指示器），其后追加 sysmon 折线图
-start  = ["control-center", "clock", "workspaces", "sysmon-cpu", "sysmon-gpu", "sysmon-mem", "sysmon-swap", "sysmon-download", "sysmon-upload"]
+start  = ["workspaces", "sysmon-cpu", "sysmon-gpu", "sysmon-mem", "sysmon-swap", "sysmon-download", "sysmon-upload", "control-center", "clock"]
 center = []
 # 右侧：去掉 media（播放器控件），保留其余默认
 end = ["launcher", "wallpaper", "tray", "notifications", "clipboard", "network", "bluetooth", "volume", "brightness", "battery", "session"]

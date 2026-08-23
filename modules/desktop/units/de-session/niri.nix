@@ -14,18 +14,34 @@ let
     exec ${pkgs.noctalia}/bin/noctalia
   '';
 
-  # 闲置守护：超时锁屏（Noctalia 锁屏 UI）→ 再熄屏（wlopm DPMS），活动/苏醒恢复
-  # swayidle 也需要 WAYLAND_DISPLAY，脚本同 noctalia 模式补足
+  # 熄屏 +（不插电则）suspend：依据 /sys/class/power_supply/BAT1/status。
+  # 熄屏用 niri 原生命令（niri msg action power-off-monitors，走 DPMS）——
+  # wlopm 依赖 wlr-output-power-management-v1 协议，niri 不实现，改用它无效。
+  # 由 swayidle timeout 630 触发；脚本需 WAYLAND_DISPLAY/NIRI_SOCKET（继承自 swayidle）。
+  idleOff = pkgs.writeShellScript "niri-idle-off" ''
+    if [ "$(cat /sys/class/power_supply/BAT1/status 2>/dev/null)" = "Discharging" ]; then
+      /run/current-system/sw/bin/systemctl suspend
+    else
+      # 插电：仅熄屏
+      ${pkgs.procps}/bin/pgrep -x niri >/dev/null && ${pkgs.niri}/bin/niri msg action power-off-monitors
+    fi
+  '';
+
+  # 闲置守护：超时锁屏（Noctalia 锁屏 UI）→ 再熄屏 → 不插电时额外 suspend。
   swayidleStartup = pkgs.writeShellScript "swayidle-startup" ''
     export PATH=${pkgs.coreutils}/bin:${pkgs.findutils}/bin:/run/wrappers/bin:$PATH
     if [ -z "$WAYLAND_DISPLAY" ]; then
       wl=$(find /run/user/$UID -maxdepth 1 -name 'wayland-*' -type s 2>/dev/null | head -n 1)
       [ -n "$wl" ] && export WAYLAND_DISPLAY="$(basename "$wl")"
     fi
+    # swayidle 由 niri 会话拉起时已带 NIRI_SOCKET；这里按 same 惯例回退推导
+    if [ -z "$NIRI_SOCKET" ] && [ -n "$WAYLAND_DISPLAY" ]; then
+      export NIRI_SOCKET="$(find /run/user/$UID -maxdepth 1 -name "niri.$WAYLAND_DISPLAY.*.sock" 2>/dev/null | head -n 1)"
+    fi
     exec ${pkgs.swayidle}/bin/swayidle \
       timeout 600 '${pkgs.noctalia}/bin/noctalia msg session lock' \
-      timeout 630 '${pkgs.wlopm}/bin/wlopm --off "*"' \
-      after-resume '${pkgs.wlopm}/bin/wlopm --on "*"' \
+      timeout 630 '${idleOff}' \
+      after-resume '${pkgs.niri}/bin/niri msg action power-on-monitors' \
       before-sleep '${pkgs.noctalia}/bin/noctalia msg session lock'
   '';
 in
@@ -37,7 +53,7 @@ in
 
   # niri 读取 ~/.config/niri/config.kdl（NixOS 层 programs.niri 只负责安装+注册会话，不管理配置）
   home-manager.users.${user} = {
-    home.packages = [ pkgs.noctalia pkgs.swayidle pkgs.wlopm ];
+    home.packages = [ pkgs.noctalia pkgs.swayidle ];
 
     xdg.configFile."niri/config.kdl" = {
       source = ../../assets/niri/config.kdl;
@@ -72,7 +88,7 @@ in
 
     systemd.user.services.swayidle = {
       Unit = {
-        Description = "Idle daemon: auto-lock + DPMS off (niri session)";
+        Description = "Idle daemon: auto-lock + DPMS off + suspend on battery (niri session)";
         PartOf = [ "graphical-session.target" ];
         After = [ "graphical-session.target" "noctalia.service" ];
       };
