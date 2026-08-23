@@ -5,3 +5,12 @@ position      = "top"
 smart_auto_hide = true
 reserve_space = false   # 不预留排他区：弹出悬浮窗口上层，隐藏不留空条
 layer         = "top"   # 普通窗口之上
+
+# cwdhist provider（迁移自 pop-launcher/cwdhist）：/cwd 前缀触发，查 sqlite → neovide 打开
+[shell.launcher.dmenu.entry.cwd]
+command = "python3 ~/.config/noctalia/cwdhist.py list"
+exec    = "python3 ~/.config/noctalia/cwdhist.py open \"{selection}\""
+prefix  = "/cwd"
+label   = "cwd"
+glyph   = "folder"
+global  = false

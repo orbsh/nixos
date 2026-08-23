@@ -35,6 +35,11 @@ in
       force = true;   # 覆盖 GUI 可能写出的占位
     };
 
+    # cwdhist provider 脚本（启动器 /cwd 前缀查询用；以 python3 调用，无需 +x）
+    xdg.configFile."noctalia/cwdhist.py" = {
+      source = ../../assets/noctalia/cwdhist.py;
+    };
+
     systemd.user.services.noctalia = {
       Unit = {
         Description = "Noctalia desktop shell (niri session)";
