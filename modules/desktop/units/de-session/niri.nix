@@ -13,6 +13,21 @@ let
     fi
     exec ${pkgs.noctalia}/bin/noctalia
   '';
+
+  # 闲置守护：超时锁屏（Noctalia 锁屏 UI）→ 再熄屏（wlopm DPMS），活动/苏醒恢复
+  # swayidle 也需要 WAYLAND_DISPLAY，脚本同 noctalia 模式补足
+  swayidleStartup = pkgs.writeShellScript "swayidle-startup" ''
+    export PATH=${pkgs.coreutils}/bin:${pkgs.findutils}/bin:/run/wrappers/bin:$PATH
+    if [ -z "$WAYLAND_DISPLAY" ]; then
+      wl=$(find /run/user/$UID -maxdepth 1 -name 'wayland-*' -type s 2>/dev/null | head -n 1)
+      [ -n "$wl" ] && export WAYLAND_DISPLAY="$(basename "$wl")"
+    fi
+    exec ${pkgs.swayidle}/bin/swayidle \
+      timeout 600 '${pkgs.noctalia}/bin/noctalia msg session lock' \
+      timeout 630 '${pkgs.wlopm}/bin/wlopm --off "*"' \
+      after-resume '${pkgs.wlopm}/bin/wlopm --on "*"' \
+      before-sleep '${pkgs.noctalia}/bin/noctalia msg session lock'
+  '';
 in
 {
   programs.niri.enable = true;
@@ -22,7 +37,7 @@ in
 
   # niri 读取 ~/.config/niri/config.kdl（NixOS 层 programs.niri 只负责安装+注册会话，不管理配置）
   home-manager.users.${user} = {
-    home.packages = [ pkgs.noctalia ];
+    home.packages = [ pkgs.noctalia pkgs.swayidle pkgs.wlopm ];
 
     xdg.configFile."niri/config.kdl" = {
       source = ../../assets/niri/config.kdl;
@@ -53,6 +68,20 @@ in
         RestartSec = "3s";
       };
       # 不设 WantedBy=graphical-session.target —— 仅由 de-session 的 desktop-niri.target 随 niri 会话拉起
+    };
+
+    systemd.user.services.swayidle = {
+      Unit = {
+        Description = "Idle daemon: auto-lock + DPMS off (niri session)";
+        PartOf = [ "graphical-session.target" ];
+        After = [ "graphical-session.target" "noctalia.service" ];
+      };
+      Service = {
+        Type = "simple";
+        ExecStart = swayidleStartup;
+        Restart = "on-failure";
+        RestartSec = "3s";
+      };
     };
   };
 }

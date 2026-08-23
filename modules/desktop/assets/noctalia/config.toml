@@ -11,6 +11,12 @@ center = []
 # 右侧：去掉 media（播放器控件），保留其余默认
 end = ["launcher", "wallpaper", "tray", "notifications", "clipboard", "network", "bluetooth", "volume", "brightness", "battery", "session"]
 
+# 壁纸：浏览目录（供选择器候选）+ 默认壁纸；fill_mode=crop 默认缩放覆盖
+[wallpaper]
+enabled   = true
+fill_mode = "crop"
+directory = "/home/master/Pictures/wallpaper"
+
 # 去掉浮动面板（含 launcher）的描边；shadow 还原
 [shell.panel]
 borders = false
