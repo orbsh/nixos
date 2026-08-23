@@ -28,7 +28,7 @@ layout {
 
 // 所有窗口圆角
 window-rule {
-    geometry-corner-radius 12
+    geometry-corner-radius 8 // 12
     clip-to-geometry true
 }
 
@@ -59,6 +59,11 @@ recent-windows {
 // Overview（Win+O）预览调小：zoom 越低越小
 overview {
     zoom 0.35
+}
+
+// 快捷键帮助 overlay 仅在手动 win+shift+/ 时弹出，开机/会话启动时不要自动显示
+hotkey-overlay {
+    skip-at-startup
 }
 
 // ---------------------------------------------------------------------------

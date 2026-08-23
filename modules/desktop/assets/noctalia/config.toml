@@ -6,10 +6,10 @@ smart_auto_hide = true
 reserve_space = false   # 不预留排他区：弹出悬浮窗口上层，隐藏不留空条
 layer         = "top"   # 普通窗口之上
 # 左侧：保留默认 [launcher, wallpaper, workspaces]（含工作区指示器），其后追加 sysmon 折线图
-start  = ["workspaces", "sysmon-cpu", "sysmon-gpu", "sysmon-mem", "sysmon-swap", "sysmon-download", "sysmon-upload", "control-center", "clock"]
-center = []
+start  = ["workspaces", "taskbar", "sysmon-cpu", "sysmon-mem", "sysmon-download", "sysmon-upload"]
+center = ["clock"]
 # 右侧：去掉 media（播放器控件），保留其余默认
-end = ["launcher", "wallpaper", "tray", "notifications", "clipboard", "network", "bluetooth", "volume", "brightness", "battery", "session"]
+end = ["tray", "notifications", "clipboard", "network", "bluetooth", "volume", "brightness", "battery", "launcher", "wallpaper", "control-center", "session"]
 
 # 壁纸：浏览目录（供选择器候选）+ 默认壁纸；fill_mode=crop 默认缩放覆盖
 [wallpaper]
@@ -43,21 +43,9 @@ stat           = "cpu_usage"
 visualization  = "graph"
 show_value     = true
 
-[widget.sysmon-gpu]
-type           = "sysmon"
-stat           = "gpu_usage"
-visualization  = "graph"
-show_value     = true
-
 [widget.sysmon-mem]
 type           = "sysmon"
 stat           = "ram_pct"
-visualization  = "graph"
-show_value     = true
-
-[widget.sysmon-swap]
-type           = "sysmon"
-stat           = "swap_pct"
 visualization  = "graph"
 show_value     = true
 
