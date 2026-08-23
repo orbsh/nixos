@@ -1,0 +1,159 @@
+// Niri 会话配置（scrollable-tiling Wayland compositor）
+// 仅含必要项，其余沿用 niri 默认。
+
+// 输入：触摸板自然滚动 + 轻触点击
+input {
+    touchpad {
+        tap
+        natural-scroll
+    }
+}
+
+// 让客户端放弃自带标题栏（CSD）→ niri 才能把边框画在窗口外圈（而非被窗口盖住）
+prefer-no-csd
+
+// 布局：2px 圆角窗口边框（GitHub Rust 语言色 #dea584）
+// 启用边框后关掉默认 focus ring，避免双圈叠层
+layout {
+    // 窗口间距 2px
+    gaps 2
+    focus-ring {
+        off
+    }
+    border {
+        width 2
+        active-color "#dea584"
+        inactive-color "#75524a"
+        urgent-color "#c0392b"
+    }
+}
+
+// 所有窗口圆角
+window-rule {
+    geometry-corner-radius 12
+    clip-to-geometry true
+}
+
+// Noctalia 设置窗口：浮动 + 定宽（官方推荐集成）
+window-rule {
+    match app-id="dev.noctalia.Noctalia"
+    open-floating true
+    default-column-width { fixed 1080; }
+    default-window-height { fixed 920; }
+}
+
+// ---------------------------------------------------------------------------
+// 最近窗口切换（Alt-Tab）
+// ---------------------------------------------------------------------------
+recent-windows {
+    // 缩略图调小（默认 max-height 480 / max-scale 0.5）
+    previews {
+        max-height 280
+        max-scale  0.3
+    }
+    binds {
+        Alt+Tab       { next-window; }
+        Alt+Shift+Tab { previous-window; }
+        Alt+grave     { next-window filter="app-id"; }
+    }
+}
+
+// Overview（Win+O）预览调小：zoom 越低越小
+overview {
+    zoom 0.35
+}
+
+// ---------------------------------------------------------------------------
+// 基础全局快捷键（Mod = Super，与 Hyprland 习惯对齐）
+// ---------------------------------------------------------------------------
+binds {
+    // 帮助：显示重要快捷键列表
+    Mod+Shift+Slash { show-hotkey-overlay; }
+
+    // 启动常用程序
+    Mod+Return { spawn "ghostty"; }
+    Mod+Space  { spawn-sh "noctalia msg panel-toggle launcher"; }
+    Mod+W      { toggle-column-tabbed-display; }
+    Mod+E      { spawn "neovide"; }
+    Mod+B      { spawn "qutebrowser"; }
+
+    // 关闭 / 退出
+    Mod+Q       { close-window; }
+    Mod+Shift+E { quit; }
+
+    // 窗口/列导航（hjkl）
+    Mod+H { focus-column-left; }
+    Mod+L { focus-column-right; }
+    Mod+J { focus-workspace-down; }
+    Mod+K { focus-workspace-up; }
+
+    // 移动窗口/列
+    Mod+Ctrl+H { move-column-left; }
+    Mod+Ctrl+L { move-column-right; }
+    Mod+Ctrl+J { move-window-down; }
+    Mod+Ctrl+K { move-window-up; }
+
+    // 列移到相邻工作区（上/下）
+    Mod+Shift+J { move-column-to-workspace-down; }
+    Mod+Shift+K { move-column-to-workspace-up; }
+
+    Mod+Home      { focus-column-first; }
+    Mod+End       { focus-column-last; }
+    Mod+Ctrl+Home { move-column-to-first; }
+    Mod+Ctrl+End  { move-column-to-last; }
+
+    // 工作区（动态，1-9）
+    Mod+1 { focus-workspace 1; }
+    Mod+2 { focus-workspace 2; }
+    Mod+3 { focus-workspace 3; }
+    Mod+4 { focus-workspace 4; }
+    Mod+5 { focus-workspace 5; }
+    Mod+6 { focus-workspace 6; }
+    Mod+7 { focus-workspace 7; }
+    Mod+8 { focus-workspace 8; }
+    Mod+9 { focus-workspace 9; }
+    Mod+Ctrl+1 { move-column-to-workspace 1; }
+    Mod+Ctrl+2 { move-column-to-workspace 2; }
+    Mod+Ctrl+3 { move-column-to-workspace 3; }
+    Mod+Ctrl+4 { move-column-to-workspace 4; }
+    Mod+Ctrl+5 { move-column-to-workspace 5; }
+    Mod+Ctrl+6 { move-column-to-workspace 6; }
+    Mod+Ctrl+7 { move-column-to-workspace 7; }
+    Mod+Ctrl+8 { move-column-to-workspace 8; }
+    Mod+Ctrl+9 { move-column-to-workspace 9; }
+    Mod+Tab { focus-workspace-previous; }
+
+    // 布局
+    Mod+O      { toggle-overview; }
+    Mod+F      { maximize-column; }
+    Mod+Shift+F { fullscreen-window; }
+    Mod+M      { maximize-window-to-edges; }
+    Mod+R      { switch-preset-column-width; }
+    Mod+C      { center-column; }
+    Mod+Minus  { set-column-width "-10%"; }
+    Mod+Equal  { set-column-width "+10%"; }
+    Mod+V      { toggle-window-floating; }
+    Mod+Shift+V { switch-focus-between-floating-and-tiling; }
+
+    // 合并 / 拆出列
+    Mod+BracketLeft  { consume-or-expel-window-left; }
+    Mod+BracketRight { consume-or-expel-window-right; }
+    Mod+Comma        { consume-window-into-column; }
+    Mod+Period       { expel-window-from-column; }
+
+    // 截图
+    Print      { screenshot; }
+    Ctrl+Print { screenshot-screen; }
+    Alt+Print  { screenshot-window; }
+
+    // 音量 / 亮度
+    XF86AudioRaiseVolume  allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1+ -l 1.0"; }
+    XF86AudioLowerVolume  allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1-"; }
+    XF86AudioMute         allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"; }
+    XF86AudioMicMute      allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"; }
+    XF86MonBrightnessUp   allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "+10%"; }
+    XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "10%-"; }
+
+    // 关屏
+    Mod+Shift+P { power-off-monitors; }
+}

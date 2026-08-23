@@ -15,6 +15,7 @@ let
   deComponents = {
     hyprland = [ "quickshell.service" ];
     cosmic = [ "eww.service" ];
+    niri = [ "noctalia.service" ];
   };
 
   # 已注册的 DE（由各 DE 单元声明 predicate）
@@ -50,6 +51,7 @@ in
   imports = [
     ./cosmic.nix
     ./hyprland.nix
+    ./niri.nix
     ./quickshell.nix
     ./eww.nix
   ];
