@@ -30,7 +30,7 @@ card_borders = false
 [shell.launcher.dmenu.entry.cwd]
 command = "python3 ~/.config/noctalia/cwdhist.py list"
 exec    = "python3 ~/.config/noctalia/cwdhist.py open \"{selection}\""
-prefix  = "/cwd"
+prefix  = "q"
 label   = "cwd"
 glyph   = "folder"
 global  = false

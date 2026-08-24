@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 DB = Path(os.environ.get("CWD_HISTORY_FILE", "~/.local/share/nushell/cwd_history.sqlite")).expanduser()
-LIMIT = 30
+LIMIT = 200
 
 
 def open_cmd():
@@ -34,11 +34,11 @@ def do_list():
     ).fetchall()
     conn.close()
     for path, count in rows:
-        p = _expand(path)
-        if not os.path.isdir(p):
+        # 保留 DB 原始形式（`~/...`）直接展示；open 时才 expand 成真实路径
+        if not os.path.isdir(_expand(path)):
             continue
         # 一行一个候选；TAB 后是描述，Noctalia 显示标题+描述，选中原样返回整行
-        sys.stdout.write(f"{p}\t📁 {Path(p).name} · ×{count}\n")
+        sys.stdout.write(f"{path}\t📁 {Path(path).name} · ×{count}\n")
 
 
 def do_open(raw: str):
