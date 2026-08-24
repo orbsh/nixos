@@ -172,14 +172,33 @@ in {
     {
       home-manager.users.${user} = {
         # 候选窗主题 theme.conf + 翻页/勾选影像
-        xdg.dataFile."fcitx5/themes/niri/theme.conf".source = ../assets/rime/theme.conf;
-        xdg.dataFile."fcitx5/themes/niri/prev.png".source = ../assets/rime/prev.png;
-        xdg.dataFile."fcitx5/themes/niri/next.png".source = ../assets/rime/next.png;
-        xdg.dataFile."fcitx5/themes/niri/radio.png".source = ../assets/rime/radio.png;
-        xdg.dataFile."fcitx5/themes/niri/arrow.png".source = ../assets/rime/arrow.png;
+        # force=true：这些文件此前是手放普通文件，HM 需要覆盖。内容与 assets 一致（幂等）。
+        xdg.dataFile."fcitx5/themes/niri/theme.conf" = {
+          source = ../assets/rime/theme.conf;
+          force = true;
+        };
+        xdg.dataFile."fcitx5/themes/niri/prev.png" = {
+          source = ../assets/rime/prev.png;
+          force = true;
+        };
+        xdg.dataFile."fcitx5/themes/niri/next.png" = {
+          source = ../assets/rime/next.png;
+          force = true;
+        };
+        xdg.dataFile."fcitx5/themes/niri/radio.png" = {
+          source = ../assets/rime/radio.png;
+          force = true;
+        };
+        xdg.dataFile."fcitx5/themes/niri/arrow.png" = {
+          source = ../assets/rime/arrow.png;
+          force = true;
+        };
 
         # ClassicUI 配置（扁平格式；无 [ClassicUI] 段头——带段头整段不生效）
-        xdg.configFile."fcitx5/conf/classicui.conf".source = ../assets/rime/classicui.conf;
+        xdg.configFile."fcitx5/conf/classicui.conf" = {
+          source = ../assets/rime/classicui.conf;
+          force = true;
+        };
       };
     }
   ];

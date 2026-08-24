@@ -12,24 +12,26 @@ input {
 // 让客户端放弃自带标题栏（CSD）→ niri 才能把边框画在窗口外圈（而非被窗口盖住）
 prefer-no-csd
 
-// 启用边框后关掉默认 focus ring，避免双圈叠层
+// 禁用 border，改用 focus-ring 作为焦点指示（渐变对齐窗口主题）
 layout {
-    gaps 2
+    gaps 6
     focus-ring {
-        off
-    }
-    border {
+        // off
         width 3
-
-        // 激活边框：对角渐变，左下亮青 → 右上暗蓝（对齐官方截图：左下亮、右上暗）
+        // 焦点环渐变：浅蓝 → 浅桃，对角渐变，色空间 oklch 长色相角
         active-gradient from="#94bbf4" to="#f8b791" angle=45 in="oklch longer hue"
         active-color "#f1bb88" // 渐变回退纯色
-
-        // 未激活窗口无边框（全透明 alpha）。边框统一 width，靠透明实现无边框。
+        // inactive：别的显示器上仍带焦点的窗口（单屏不显示）
         inactive-color "#00000000"
-
+    }
+    border {
+        off
+        width 6
+        active-gradient from="#94bbf4" to="#f8b791" angle=315 in="oklch longer hue"
+        active-color "#f1bb88" // 渐变回退纯色
+        // 未激活窗口无边框（透明）
+        inactive-color "#00000000"
         urgent-color "#c0392b"
-
     }
 }
 
