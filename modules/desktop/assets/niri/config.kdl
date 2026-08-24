@@ -14,9 +14,9 @@ prefer-no-csd
 
 // 禁用 border，改用 focus-ring 作为焦点指示（渐变对齐窗口主题）
 layout {
-    gaps 6
+    gaps 4
     focus-ring {
-        // off
+        off
         width 3
         // 焦点环渐变：浅蓝 → 浅桃，对角渐变，色空间 oklch 长色相角
         active-gradient from="#94bbf4" to="#f8b791" angle=45 in="oklch longer hue"
@@ -25,12 +25,11 @@ layout {
         inactive-color "#00000000"
     }
     border {
-        off
-        width 6
+        // off
+        width 2
         active-gradient from="#94bbf4" to="#f8b791" angle=315 in="oklch longer hue"
         active-color "#f1bb88" // 渐变回退纯色
-        // 未激活窗口无边框（透明）
-        inactive-color "#00000000"
+        inactive-color "#75524a"
         urgent-color "#c0392b"
     }
 }
@@ -79,7 +78,7 @@ hotkey-overlay {
 // 基础全局快捷键（Mod = Super，与 Hyprland 习惯对齐）
 // ---------------------------------------------------------------------------
 binds {
-    Alt+Space  { spawn-sh "noctalia msg panel-toggle launcher"; }
+    Mod+Space  { spawn-sh "noctalia msg panel-toggle launcher"; }
 
     // 帮助：显示重要快捷键列表
     Mod+Shift+Slash { show-hotkey-overlay; }
@@ -97,6 +96,9 @@ binds {
 
     // 取色：hyprpicker 点屏幕，自动复制 hex 到剪贴板
     Mod+Shift+S { spawn "hyprpicker" "-a"; }
+
+    // 屏幕两点测距：从 A 拖到 B，算直线距离，复制到剪贴板（Win+Ctrl+S）
+    Mod+Ctrl+S { spawn "niri-measure"; }
 
     // 窗口/列导航（hjkl）
     Mod+H { focus-column-left; }

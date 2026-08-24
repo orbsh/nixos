@@ -27,6 +27,19 @@ let
     fi
   '';
 
+  # 屏幕两点测距（Win+Ctrl+S）：从 A 拖到 B，算直线距离 + 宽×高。
+  # 显示走 notify-send（若有通知守护）；同时 wl-copy 复制到剪贴板保证可取。
+  measure = pkgs.writeShellScriptBin "niri-measure" ''
+    set -eu
+    geom=$(${pkgs.slurp}/bin/slurp -f '%w %h' 2>/dev/null || true)
+    [ -z "$geom" ] && exit 0
+    read -r w h <<< "$geom"
+    d=$(${pkgs.python3}/bin/python3 -c "import math;print(round(math.hypot($w,$h)))")
+    printf -v msg '距离 %spx（宽×高 %sx%s）' "$d" "$w" "$h"
+    ${pkgs.libnotify}/bin/notify-send -t 3000 '屏幕测量' "$msg" 2>/dev/null || true
+    printf '%s\n' "$msg" | ${pkgs.wl-clipboard}/bin/wl-copy
+  '';
+
   # 闲置守护：超时锁屏（Noctalia 锁屏 UI）→ 再熄屏 → 不插电时额外 suspend。
   swayidleStartup = pkgs.writeShellScript "swayidle-startup" ''
     export PATH=${pkgs.coreutils}/bin:${pkgs.findutils}/bin:/run/wrappers/bin:$PATH
@@ -53,7 +66,7 @@ in
 
   # niri 读取 ~/.config/niri/config.kdl（NixOS 层 programs.niri 只负责安装+注册会话，不管理配置）
   home-manager.users.${user} = {
-    home.packages = [ pkgs.noctalia pkgs.swayidle pkgs.hyprpicker ];
+    home.packages = [ pkgs.noctalia pkgs.swayidle pkgs.hyprpicker measure ];
 
     xdg.configFile."niri/config.kdl" = {
       source = ../../assets/niri/config.kdl;

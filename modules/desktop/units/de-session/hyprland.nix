@@ -235,7 +235,6 @@ in {
       description = "Hyprshell daemon (Alt+Tab window switcher)";
       after = [ "graphical-session.target" ];
       partOf = [ "graphical-session.target" ];
-      wantedBy = [ "graphical-session.target" ];
       serviceConfig = {
         Type = "exec";
         ExecStart = hyprshell-startup;
