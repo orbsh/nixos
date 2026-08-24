@@ -11,4 +11,7 @@
       "::1"
     ];
   };
+
+  # Vicinae 插件/专区 store 下载：同用本机 Clash 代理（server 进程拉取，经 vicinae.service 环境注入）
+  programs.vicinae.proxy = "http://127.0.0.1:7890";
 }

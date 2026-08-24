@@ -80,7 +80,8 @@ hotkey-overlay {
 // 基础全局快捷键（Mod = Super，与 Hyprland 习惯对齐）
 // ---------------------------------------------------------------------------
 binds {
-    Mod+Space  { spawn-sh "noctalia msg panel-toggle launcher"; }
+    // 应用启动器：vicinae（常驻 server + Unix socket IPC toggle）
+    Mod+Space  { spawn "vicinae" "toggle"; }
 
     // 帮助：显示重要快捷键列表
     Mod+Shift+Slash { show-hotkey-overlay; }

@@ -23,6 +23,7 @@
     peazip        # 压缩包管理（支持 200+ 格式）
     yt-dlp        # 视频/音频下载器
     ddgr          # DuckDuckGo 命令行搜索
+    rofi          # 应用启动器（原生支持 Wayland，rofi-wayland 已并入本包）
 
     # 浏览器
     #firefox
