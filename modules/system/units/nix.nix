@@ -1,17 +1,4 @@
 { inputs, pkgs, lib, config, user, nixSubstituters, ... }: {
-  options.nix.proxy = {
-    address = lib.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      default = null;
-      description = "HTTP proxy for nix-daemon (null = direct connection)";
-    };
-    noProxy = lib.mkOption {
-      type = lib.types.listOf lib.types.str;
-      default = [ "localhost" "127.0.0.1" "::1" ];
-      description = "no_proxy whitelist for nix-daemon";
-    };
-  };
-
   config = {
     # ── Nix 自身配置 ────────────────────────────────────────
     nix.settings = {
@@ -27,14 +14,13 @@
       connect-timeout = 5;            # 连接超时 5 秒，快速跳到下一个 substituter
     };
 
-    # 代理配置：按 host 覆盖（workstation 有代理，server/k8s 通常无）
-    # proxy.address 为 null 时，nix-daemon 不走代理（直连 cache.nixos.org）
+    # 代理地址取共享 proxy.address（singbox 引入时自动赋；也可指向其他代理服务）；null= 不走代理(直连 cache)
     # 运行时快速切换：sudo systemctl set-environment http_proxy=... / unset-environment http_proxy
-    systemd.services.nix-daemon.environment = lib.mkIf (config.nix.proxy.address != null) {
-      http_proxy = config.nix.proxy.address;
-      https_proxy = config.nix.proxy.address;
-      all_proxy = config.nix.proxy.address;
-      no_proxy = lib.concatStringsSep "," config.nix.proxy.noProxy;
+    systemd.services.nix-daemon.environment = lib.mkIf (config.proxy.address != null) {
+      http_proxy = config.proxy.address;
+      https_proxy = config.proxy.address;
+      all_proxy = config.proxy.address;
+      no_proxy = lib.concatStringsSep "," nixSubstituters.noProxy;
     };
 
     # ── direnv（进入目录自动加载 .envrc）──

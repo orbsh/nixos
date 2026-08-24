@@ -1,5 +1,6 @@
 # Noctalia v5 配置（~/.config/noctalia/config.toml，目录下 *.toml 合并）
 # 状态栏：顶部 + 自动隐藏 + 悬浮于窗口之上（不占排他区）
+# 注：底部 auto-hide 存在 hover 竞争 bug（贴边触发→立即缩回→需再上移才显示），故长期用顶部。
 [bar.default]
 position      = "top"
 smart_auto_hide = true

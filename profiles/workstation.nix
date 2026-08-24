@@ -12,6 +12,7 @@
     ../modules/services/harmonia.nix       # 本地二进制缓存
     ../modules/services/rustfs.nix
     ../modules/services/ladder.nix         # mihomo 代理（自包含单元）
+    ../modules/services/singbox.nix        # sing-box 代理组件（引入即起效，纯直连占位）
     ../modules/services/gitea.nix          # 自包含：gitea + app-net
     ../modules/services/miniflux.nix       # 自包含：miniflux + app-net
     ../modules/services/qbittorrent.nix    # 自包含：qbittorrent + app-net
@@ -22,6 +23,13 @@
   nix.gc.keepGenerations = lib.mkForce 10;
   nix.gc.deleteOlderThan = lib.mkForce "14d";
 
+
+  # ── sing-box 代理（测试阶段）───────────────────────────
+  # 端口先用 6789（避免与 mihomo 的 7890 冲突），测试完成后再切到默认 7890。
+  # 默认全直连；要代理出口：手改 ~/.config/singbox/outbounds.json 等（systemctl reload singbox 生效）。
+  services.singbox = {
+    listenPort = 6789;   # 测试端口：避免与 mihomo 的 7890 冲突，测完改回默认
+  };
 
   # ── Numa 本地 DNS ──────────────────────────────────────
   services.numa = {

@@ -22,11 +22,7 @@ in
       default = true;
       description = "Vicinae 应用启动器 daemon。默认启用——引入即启用，由 de-session 门控运行时启动";
     };
-    proxy = lib.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      default = null;
-      description = "HTTP 代理地址（插件/专区 store 下载走代理；null = 直连）。工作站常设 127.0.0.1:7890（本机 Clash）";
-    };
+    # 代理地址不再用 proxy 选项——走共享 proxy.address（见 core.nix），null= 直连
   };
 
   config = lib.mkIf config.programs.vicinae.enable {
@@ -54,11 +50,11 @@ in
           ExecStart = startupScript;
           Restart = "on-failure";
           RestartSec = "3s";
-          # 插件/专区 store 下载走代理（proxy 非空时注入；server 进程拉取，故设于此同步 nix-daemon 约定）
-          Environment = lib.mkIf (config.programs.vicinae.proxy != null) [
-            "http_proxy=${config.programs.vicinae.proxy}"
-            "https_proxy=${config.programs.vicinae.proxy}"
-            "all_proxy=${config.programs.vicinae.proxy}"
+          # 插件/专区 store 下载走代理（proxy.address 非空时注入；server 进程拉取，故设于此同步 nix-daemon 约定）
+          Environment = lib.mkIf (config.proxy.address != null) [
+            "http_proxy=${config.proxy.address}"
+            "https_proxy=${config.proxy.address}"
+            "all_proxy=${config.proxy.address}"
           ];
         };
         # 不设 WantedBy=graphical-session.target —— 仅由 de-session 的 desktop-<de>.target 随对应会话拉起

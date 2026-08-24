@@ -8,6 +8,7 @@
 
     ../modules/services/virt.nix
     ../modules/services/harmonia.nix
+    ../modules/services/singbox.nix   # sing-box 代理组件（引入即起效，全直连占位）
   ];
 
   # 服务器更新慢：只按代保留（50 代），不按时间清理，保留完整回滚能力

@@ -14,6 +14,8 @@
 
     # 开发工具
     ../modules/dev/server.nix
+
+    ../modules/services/singbox.nix   # sing-box 代理组件（引入即起效，全直连占位）
   ];
 
 

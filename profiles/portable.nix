@@ -7,7 +7,7 @@
     ../modules/desktop/base.nix
 
     # ../modules/services/virt.nix
-    ../modules/services/ladder.nix
+    ../modules/services/singbox.nix   # sing-box 代理组件（替代 ladder/mihomo，引入即起效）
   ];
 
   # 移动硬盘不能修改 EFI 变量，否则在宿主机安装时会写到宿主机的 EFI
