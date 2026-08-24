@@ -66,7 +66,7 @@ in
 
   # niri 读取 ~/.config/niri/config.kdl（NixOS 层 programs.niri 只负责安装+注册会话，不管理配置）
   home-manager.users.${user} = {
-    home.packages = [ pkgs.noctalia pkgs.swayidle pkgs.hyprpicker measure ];
+    home.packages = [ pkgs.noctalia pkgs.swayidle pkgs.hyprpicker pkgs.xwayland-satellite measure ];
 
     xdg.configFile."niri/config.kdl" = {
       source = ../../assets/niri/config.kdl;
