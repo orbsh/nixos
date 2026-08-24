@@ -1,10 +1,16 @@
 { pkgs, lib, dataDir, config, user, ... }:
 let
   rimeIce = pkgs.rime-ice;
-  wubiSrc = "${dataDir}/rime-wubi";
   cfg = config.rime.wubi;
   octCfg = config.rime.octagram;
   wanxiangCfg = config.rime.wanxiang;
+
+  # 五笔词库来源：fetchTree 钉住 url+narHash（同 wanxiang），不再走 dataDir 外部路径。
+  # src 为空时 wubiSrc = null，且下方五笔块 gated 在 enable && src!=null，不会触发 fetch。
+  wubiSrc = if cfg.src != null then (builtins.fetchTree {
+    type = "git";
+    inherit (cfg.src) url narHash;
+  }).outPath else null;
 
   wanxiangSrcPath = if wanxiangCfg.src != null then
     (builtins.fetchTree {
@@ -46,6 +52,17 @@ in {
 
   options.rime.wubi.enable = lib.mkEnableOption "Rime 五笔输入支持";
 
+  options.rime.wubi.src = lib.mkOption {
+    type = lib.types.nullOr (lib.types.submodule {
+      options = {
+        url = lib.mkOption { type = lib.types.str; };
+        narHash = lib.mkOption { type = lib.types.str; };
+      };
+    });
+    default = null;
+    description = "五笔词库来源（storage git 仓库 url + narHash，与 wanxiang 同机制）。为空时不启用五笔词库。";
+  };
+
   options.rime.octagram.enable = lib.mkEnableOption "Rime Octagram N-Gram 语言模型（提升长句预测准确度）";
 
   options.rime.wanxiang = {
@@ -74,139 +91,7 @@ in {
     {
       home-manager.users.${user} = {
         # ── Custom default.yaml ──
-        xdg.dataFile."fcitx5/rime/default.yaml".text = ''
-          config_version: '2026-02-06'
-
-          schema_list:
-            - schema: rime_ice
-            - schema: double_pinyin_flypy
-          '' + lib.optionalString cfg.enable ''
-            - schema: wubi86_fg
-            - schema: wubi86_fg_pinyin
-            - schema: wubi86_fg_trad
-            - schema: wubi86_fg_trad_pinyin
-          '' + ''
-          menu:
-            page_size: 5
-
-          switcher:
-            caption: 〔方案选单〕
-            hotkeys:
-              - F4
-              - Control+grave
-              - Control+Shift+grave
-            save_options:
-              - ascii_punct
-              - traditionalization
-              - emoji
-              - full_shape
-              - search_single_char
-            fold_options: true
-            abbreviate_options: true
-            option_list_separator: ' / '
-
-          ascii_composer:
-            good_old_caps_lock: true
-            switch_key:
-              Caps_Lock: clear
-              Shift_L: commit_code
-              Shift_R: noop
-              Control_L: noop
-              Control_R: noop
-
-          punctuator:
-            digit_separators: ",.:"
-            full_shape:
-              ' ' : { commit: ' ' }
-              ',' : { commit: ， }
-              '.' : { commit: 。 }
-              '<' : [ 《, 〈, «, ‹ ]
-              '>' : [ 》, 〉, », › ]
-              '/' : [ ／, ÷ ]
-              '?' : { commit: ？ }
-              ";" : { commit: ； }
-              ":" : { commit: ： }
-              "'" : { pair: [ "'", "'" ] }
-              '"' : { pair: [ '"', '"' ] }
-              '\\' : [ 、, ＼ ]
-              '|' : [ ·, ｜, '§', '¦' ]
-              '`' : ｀
-              '~' : ～
-              '!' : { commit: ！ }
-              '@' : [ ＠, ☯ ]
-              '#' : [ ＃, ⌘ ]
-              '%' : [ ％, '°', '℃' ]
-              '$' : [ ￥, '$', '€', '£', '¥', '¢', '¤' ]
-              '^' : { commit: …… }
-              '&' : ＆
-              '*' : [ ＊, ·, ・, ×, ※, ❂ ]
-              '(' : （
-              ')' : ）
-              '-' : －
-              '_' : ——
-              '+' : ＋
-              '=' : ＝
-              '[' : [ 「, 【, 〔, ［ ]
-              ']' : [ 」, 】, 〕, ］ ]
-              '{' : [ 『, 〖, ｛ ]
-              '}' : [ 』, 〗, ｝ ]
-            half_shape:
-              ',' : '，'
-              '.' : '。'
-              '<' : '《'
-              '>' : '》'
-              '/' : '/'
-              '?' : '？'
-              ";" : '；'
-              ":" : '：'
-              "'" : { pair: [ "'", "'" ] }
-              '"' : { pair: [ '"', '"' ] }
-              '\\' : '、'
-              '|' : '|'
-              '`' : '·'
-              '~' : '~'
-              '!' : '！'
-              '@' : '@'
-              '#' : '#'
-              '%' : '%'
-              '$' : '¥'
-              '^' : '……'
-              '&' : '&'
-              '*' : '*'
-              '(' : '（'
-              ')' : '）'
-              '-' : '-'
-              '_' : ——
-              '+' : '+'
-              '=' : '='
-              '[' : '【'
-              ']' : '】'
-              '{' : '「'
-              '}' : '」'
-
-          recognizer:
-            patterns:
-              email: "^[a-z][-_.0-9a-z]*@.*$"
-              uppercase: "[A-Z][-_+.'0-9A-Za-z]*$"
-              url: "^(www[.]|https?:|ftp:|mailto:).*$|^[0-9a-z]+[-_.0-9a-z]*\\.[a-z]+$"
-
-          key_binder:
-            bindings:
-              - {accept: "Control+Shift+1", toggle: ascii_mode, when: always}
-              - {accept: "Control+Shift+2", toggle: full_shape, when: always}
-              - {accept: "Control+Shift+e", toggle: simplified, when: always}
-              - {accept: "Control+Shift+3", toggle: traditionalization, when: always}
-              - {accept: "Control+Shift+4", toggle: ascii_punct, when: always}
-              - {accept: bracketleft, send: Page_Up, when: paging}
-              - {accept: bracketright, send: Page_Down, when: has_menu}
-              - {accept: minus, send: Page_Up, when: paging}
-              - {accept: equal, send: Page_Down, when: has_menu}
-              - {accept: comma, send: comma, when: has_menu}
-              - {accept: period, send: period, when: has_menu}
-              - {accept: semicolon, send: semicolon, when: has_menu}
-              - {accept: apostrophe, send: apostrophe, when: has_menu}
-        '';
-
+        xdg.dataFile."fcitx5/rime/default.yaml".source = ../assets/rime/default.yaml;
         # ── Custom rime.lua ──
         xdg.dataFile."fcitx5/rime/rime.lua".source = ../assets/rime/rime.lua;
       };
@@ -229,7 +114,7 @@ in {
     # librime-lua and librime-octagram are merged into librime.so at build time
     # (BUILD_MERGED_PLUGINS=ON), no runtime plugin deployment needed
 
-    (lib.mkIf cfg.enable {
+    (lib.mkIf (cfg.enable && wubiSrc != null) {
       home-manager.users.${user} = {
         # ── Wubi overlay files ──
         xdg.dataFile."fcitx5/rime/wubi86_fg.schema.yaml".source = "${wubiSrc}/wubi86_fg.schema.yaml";
@@ -282,5 +167,20 @@ in {
         '';
       };
     })
+
+    # ── Fcitx5 ClassicUI 候选窗主题（白底 + 深棕字，accent #dea584）──
+    {
+      home-manager.users.${user} = {
+        # 候选窗主题 theme.conf + 翻页/勾选影像
+        xdg.dataFile."fcitx5/themes/niri/theme.conf".source = ../assets/rime/theme.conf;
+        xdg.dataFile."fcitx5/themes/niri/prev.png".source = ../assets/rime/prev.png;
+        xdg.dataFile."fcitx5/themes/niri/next.png".source = ../assets/rime/next.png;
+        xdg.dataFile."fcitx5/themes/niri/radio.png".source = ../assets/rime/radio.png;
+        xdg.dataFile."fcitx5/themes/niri/arrow.png".source = ../assets/rime/arrow.png;
+
+        # ClassicUI 配置（扁平格式；无 [ClassicUI] 段头——带段头整段不生效）
+        xdg.configFile."fcitx5/conf/classicui.conf".source = ../assets/rime/classicui.conf;
+      };
+    }
   ];
 }
