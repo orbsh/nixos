@@ -35,6 +35,7 @@
       font-family           = "Lilex";
       font-style            = "Regular";
       font-size             = 11;
+      # background-opacity    = 0.8;
       shell-integration     = "none";
       window-padding-x      = 2;
       window-padding-y      = 0;
@@ -65,6 +66,7 @@
       };
       window = {
         decorations = "none";
+        # opacity = 0.8;
         dimensions = { columns = 120; lines = 40; };
       };
       terminal.shell.program = "nu";

@@ -14,6 +14,8 @@ prefer-no-csd
 
 // 禁用 border，改用 focus-ring 作为焦点指示（渐变对齐窗口主题）
 layout {
+    empty-workspace-above-first
+
     gaps 4
     focus-ring {
         off
@@ -34,7 +36,7 @@ layout {
     }
 }
 
-// 所有窗口圆角
+// 所有窗口圆角（激活 + 非激活）
 window-rule {
     geometry-corner-radius 8 // 12
     clip-to-geometry true

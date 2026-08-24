@@ -199,6 +199,13 @@ in {
           source = ../assets/rime/classicui.conf;
           force = true;
         };
+
+        # Rime 后端配置：中英状态跨程序独立（InputState=Program，原运行时手改为 All=共享导致跨程序串）
+        # force=true：此前是手放普通文件（8月24日由 All 改为 Program），HM 需覆盖。
+        xdg.configFile."fcitx5/conf/rime.conf" = {
+          source = ../assets/rime/rime.conf;
+          force = true;
+        };
       };
     }
   ];
