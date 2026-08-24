@@ -14,15 +14,22 @@ prefer-no-csd
 
 // 启用边框后关掉默认 focus ring，避免双圈叠层
 layout {
-    gaps 4
+    gaps 2
     focus-ring {
         off
     }
     border {
-        width 4
-        active-color "#dea584"
-        inactive-color "#75524a"
+        width 3
+
+        // 激活边框：对角渐变，左下亮青 → 右上暗蓝（对齐官方截图：左下亮、右上暗）
+        active-gradient from="#94bbf4" to="#f8b791" angle=45 in="oklch longer hue"
+        active-color "#f1bb88" // 渐变回退纯色
+
+        // 未激活窗口无边框（全透明 alpha）。边框统一 width，靠透明实现无边框。
+        inactive-color "#00000000"
+
         urgent-color "#c0392b"
+
     }
 }
 
@@ -70,36 +77,45 @@ hotkey-overlay {
 // 基础全局快捷键（Mod = Super，与 Hyprland 习惯对齐）
 // ---------------------------------------------------------------------------
 binds {
+    Alt+Space  { spawn-sh "noctalia msg panel-toggle launcher"; }
+
     // 帮助：显示重要快捷键列表
     Mod+Shift+Slash { show-hotkey-overlay; }
 
     // 启动常用程序
     Mod+Return { spawn "ghostty"; }
-    Mod+Space  { spawn-sh "noctalia msg panel-toggle launcher"; }
-    Mod+W      { toggle-column-tabbed-display; }
     Mod+E      { spawn "neovide"; }
     Mod+B      { spawn "qutebrowser"; }
 
     // 关闭 / 退出
     Mod+Q       { close-window; }
     Mod+Shift+E { quit; }
-    Mod+Shift+L { spawn-sh "noctalia msg session lock"; }   // 手动锁屏（Noctalia 锁屏 UI）
+    // 手动锁屏（Noctalia 锁屏 UI）
+    Mod+Shift+Z { spawn-sh "noctalia msg session lock"; }
+
+    // 取色：hyprpicker 点屏幕，自动复制 hex 到剪贴板
+    Mod+Shift+S { spawn "hyprpicker" "-a"; }
 
     // 窗口/列导航（hjkl）
     Mod+H { focus-column-left; }
     Mod+L { focus-column-right; }
-    Mod+J { focus-workspace-down; }
-    Mod+K { focus-workspace-up; }
+    Mod+J { focus-window-or-workspace-down; }
+    Mod+K { focus-window-or-workspace-up; }
 
     // 移动窗口/列
-    Mod+Ctrl+H { move-column-left; }
-    Mod+Ctrl+L { move-column-right; }
-    Mod+Ctrl+J { move-window-down; }
-    Mod+Ctrl+K { move-window-up; }
-
-    // 列移到相邻工作区（上/下）
+    Mod+Shift+H { move-column-left; }
+    Mod+Shift+L { move-column-right; }
     Mod+Shift+J { move-column-to-workspace-down; }
     Mod+Shift+K { move-column-to-workspace-up; }
+    Mod+W       { toggle-column-tabbed-display; }
+    Mod+Ctrl+H  { consume-or-expel-window-left; }
+    Mod+Ctrl+L  { consume-or-expel-window-right; }
+    Mod+Ctrl+J  { move-window-down; }
+    Mod+Ctrl+K  { move-window-up; }
+    // 合并 / 拆出列
+    Mod+Comma        { consume-window-into-column; }
+    Mod+Period       { expel-window-from-column; }
+
 
     Mod+Home      { focus-column-first; }
     Mod+End       { focus-column-last; }
@@ -141,12 +157,6 @@ binds {
     Mod+Equal  { set-column-width "+10%"; }
     Mod+V      { toggle-window-floating; }
     Mod+Shift+V { switch-focus-between-floating-and-tiling; }
-
-    // 合并 / 拆出列
-    Mod+BracketLeft  { consume-or-expel-window-left; }
-    Mod+BracketRight { consume-or-expel-window-right; }
-    Mod+Comma        { consume-window-into-column; }
-    Mod+Period       { expel-window-from-column; }
 
     // 截图
     Print      { screenshot; }
