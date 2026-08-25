@@ -17,7 +17,7 @@ LIMIT = 200
 def open_cmd():
     mode = os.environ.get("NV_MODE", "neovide")
     if mode == "neovide":
-        return ["neovide", "--maximized", "--frame", "none", "--vsync"]
+        return ["neovide", "--maximized", "--vsync"]
     return shlex.split(os.environ.get("NV_OPEN_CMD", "ghostty -e nvim"))
 
 

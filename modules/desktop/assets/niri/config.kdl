@@ -110,15 +110,15 @@ binds {
     Mod+K { focus-window-or-workspace-up; }
 
     // 移动窗口/列
-    Mod+Shift+H { move-column-left; }
-    Mod+Shift+L { move-column-right; }
-    Mod+Shift+J { move-column-to-workspace-down; }
-    Mod+Shift+K { move-column-to-workspace-up; }
+    Mod+Ctrl+H { move-column-left; }
+    Mod+Ctrl+L { move-column-right; }
+    Mod+Ctrl+J { move-column-to-workspace-down; }
+    Mod+Ctrl+K { move-column-to-workspace-up; }
     Mod+W       { toggle-column-tabbed-display; }
-    Mod+Ctrl+H  { consume-or-expel-window-left; }
-    Mod+Ctrl+L  { consume-or-expel-window-right; }
-    Mod+Ctrl+J  { move-window-down; }
-    Mod+Ctrl+K  { move-window-up; }
+    Mod+Shift+H  { consume-or-expel-window-left; }
+    Mod+Shift+L  { consume-or-expel-window-right; }
+    Mod+Shift+J  { move-window-down; }
+    Mod+Shift+K  { move-window-up; }
     // 合并 / 拆出列
     Mod+Comma        { consume-window-into-column; }
     Mod+Period       { expel-window-from-column; }
