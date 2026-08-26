@@ -33,7 +33,7 @@ export def main [
             if ($output | is-not-empty) {
                 $cfg | to json | save -f $output
             } else {
-                $cfg
+                $cfg | to json
             }
         }
     }
@@ -165,12 +165,12 @@ export def kdl-to-rules [] {
                 $r = $r | append {$cur.0: $cur.1, ...$cur.2}
             }
             let p = $p
-            | update rule_set? {|y| [$y.rule_set]}
+            | update rule_set? {|y| [$y.rule_set] }
             | update protocol? {|y| [$y.protocol] }
             $cur = [$n, $a, $p]
         }
     }
-    $r | append $cur
+    $r | append {$cur.0: $cur.1, ...$cur.2}
 }
 
 export def merge-config [rules rule_set outbounds] {
