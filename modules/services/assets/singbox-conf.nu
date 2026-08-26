@@ -127,14 +127,14 @@ export def kdl-to-outbounds [] {
             {
                 type: $x.props.type?
                 tag: $x.args.0
-                outbounds: ($ob | each { $in | get args.0 })
+                outbounds: ($ob | each { ($x.args.0)-($in | get args.0) })
                 ...$op
             }
         ]
         for i in $ob {
             $r ++= [{
                 type: $i.name
-                tag: $i.args.0
+                tag: ($x.args.0)-($i.args.0)
                 ...($i.children | outbounds-item)
             }]
         }
