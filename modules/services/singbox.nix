@@ -101,17 +101,20 @@ in
       serviceConfig = {
         Type = "simple";
         User = user;
+        WorkingDirectory = configDirPath;
         # 读取 KDL 源目录(kdlDirPath)所有 *.kdl → 合并 → 生成 config.json 到输出目录(configDirPath)
         ExecStartPre = pkgs.writeShellScript "singbox-execstartpre" ''
           set -e
           mkdir -p ${configDirPath} ${kdlDirPath} ${ruleDirPath}
           # 无 .kdl 源文件时生成全直连占位 config.kdl（服务器占位/首次）
-          if ! compgen -G "${kdlDirPath}/*.kdl" >/dev/null; then
+          # 注: ls 无匹配返回非零，加 || true 避免 set -e 误终止
+          kdls="$(ls ${kdlDirPath}/*.kdl 2>/dev/null || true)"
+          if [ -z "$kdls" ]; then
             cat > "${kdlDirPath}/config.kdl" <<'KDL'
 singbox {
     log level=info timestamp=#true
     inbounds {
-        mixed listen="127.0.0.1" port=${port}
+        mixed listen="127.0.0.1" listen_port=${port}
     }
     outbounds {
         direct tag=direct
@@ -121,11 +124,11 @@ singbox {
     }
 }
 KDL
-            chown ${user}:${user} "${kdlDirPath}/config.kdl"
+            chown ${user} "${kdlDirPath}/config.kdl"
           fi
           # singbox-conf 命令：--config-path 读 kdlDirPath 所有 *.kdl 合并，--rule-bin-path 扫描规则数据目录 .srs
           ${singboxConfPath} generate --config-path ${kdlDirPath} --rule-bin-path ${ruleDirPath} --output "${configDirPath}/config.json"
-          chown ${user}:${user} "${configDirPath}/config.json"
+          chown ${user} "${configDirPath}/config.json"
         '';
         # 加载生成的单一 config.json
         ExecStart = "${pkgs.sing-box}/bin/sing-box run -c ${configDirPath}/config.json";

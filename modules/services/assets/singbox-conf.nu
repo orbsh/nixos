@@ -31,7 +31,7 @@ export def main [
             let merged = $kdls | each {|f| open $f --raw | from kdl } | flatten
             let cfg = $merged | kdl-to-config $rule_bin_path
             if ($output | is-not-empty) {
-                $cfg | to json --raw | save -f $output
+                $cfg | to json | save -f $output
             } else {
                 $cfg
             }
@@ -146,20 +146,28 @@ export def kdl-to-outbounds [] {
 export def kdl-to-rules [] {
     let x = $in
     mut r = []
-    mut cur = {}
-    for i in ($x.children | flatten | where name == rule | get props) {
-        if ($i.action? | is-not-empty) and $i.action? == $cur.action? and $i.method? == $cur.method? {
-            $cur.protocol = $cur.protocol? | append $i.protocol?
-        } else if ($i.outbound? | is-not-empty) and $i.outbound? == $cur.outbound? {
-            $cur.rule_set = $cur.rule_set? | append $i.rule_set?
+    mut cur = []
+    for i in ($x.children | flatten) {
+        let n = $i.name
+        let a = $i.args.0
+        let p = $i.props
+        if $n == $cur.0? and $a == $cur.1? {
+            match $n {
+                action if $p.method? == $cur.2.method? => {
+                    $cur.2.protocol = $cur.2.protocol | append $p.protocol?
+                }
+                outbound => {
+                    $cur.2.rule_set = $cur.2.rule_set | append $p.rule_set
+                }
+            }
         } else {
             if ($cur | is-not-empty) {
-                $r = $r | append $cur
+                $r = $r | append {$cur.0: $cur.1, ...$cur.2}
             }
-            let i = $i
+            let p = $p
             | update rule_set? {|y| [$y.rule_set]}
             | update protocol? {|y| [$y.protocol] }
-            $cur = $i
+            $cur = [$n, $a, $p]
         }
     }
     $r | append $cur
@@ -235,13 +243,13 @@ export def kdl-to-ruleset [] {
         {
             type: inline
             tag: $x.args.0
-            rules: $r
+            rules: [$r]
         }
     }
 }
 
 export def scan-binary-ruleset [path] {
-    if ($path | is-empty) { return }
+    if ($path | is-empty) { return [] }
     glob ($path)/*.srs
     | each {|x|
         {
