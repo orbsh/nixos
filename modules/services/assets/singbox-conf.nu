@@ -117,7 +117,18 @@ export def outbounds-item [] {
     }
 }
 
-const SUPPORTED_PROTOCOL = [trojan anytls hysteria2 vmess vless ssr]
+# sing-box 官方支持的全部 outbound 协议 (sing-box 1.13.x docs /configuration/outbound/)
+# 用于从聚合节点(urltest/selector 等)中过滤出协议子节点；ssr 非 sing-box 原生，保留兼容
+const SUPPORTED_PROTOCOL = [
+    direct block
+    http socks mixed
+    shadowsocks shadowsocks2009 shadowsocks2022
+    vmess vless trojan
+    hysteria hysteria2 anytls
+    wireguard ssh tuic shadowtls
+    ssr
+]
+
 export def kdl-to-outbounds [] {
     $in | each {|x|
         let ob = $x.children | where name in $SUPPORTED_PROTOCOL
