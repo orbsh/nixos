@@ -12,12 +12,13 @@ export def main [
     --rule-bin-path: string
     --output: string
 ] {
+    let o = $in
     match $action {
         outbounds-to-kdl => {
-            $in | outbounds-to-kdl
+            $o | from json | outbounds-to-kdl
         }
         kdl-to-config => {
-            $in | kdl-to-config $rule_bin_path
+            $o | from kdl | kdl-to-config $rule_bin_path | to json
         }
         generate => {
             let dir = $config_path
@@ -170,7 +171,8 @@ export def kdl-to-rules [] {
             $cur = [$n, $a, $p]
         }
     }
-    $r | append {$cur.0: $cur.1, ...$cur.2}
+    # $cur is [] when there is no rules block (empty input); guard before indexing $cur.0
+    if ($cur | is-not-empty) { $r | append {$cur.0: $cur.1, ...$cur.2} } else { $r }
 }
 
 export def merge-config [rules rule_set outbounds] {

@@ -39,7 +39,7 @@ let
   # KDL 合并/生成命令：singbox-conf（进 systemPackages → /run/current-system/sw/bin）
   # 内部用 assets/singbox-conf.nu，通过 standalone generate 入口读取配置目录生成 config.json
   singboxConf = pkgs.writeShellScriptBin "singbox-conf" ''
-    exec ${pkgs.nushell}/bin/nu --no-config-file ${./assets/singbox-conf.nu} "$@"
+    exec ${pkgs.nushell}/bin/nu --stdin --no-config-file ${./assets/singbox-conf.nu} "$@"
   '';
   singboxConfPath = "${singboxConf}/bin/singbox-conf";
 
