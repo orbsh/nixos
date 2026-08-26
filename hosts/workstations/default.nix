@@ -30,6 +30,9 @@
 
     # 用户级环境变量（仅对 orbit 节点的 master 用户生效）
     home-manager.users.${user}.home.sessionVariables.PREFER_ALT = "1";
+
+    # orbit 单独：KDL 配置源目录指向本机数据目录（默认与 configDir 相同，此处拆分）
+    services.singbox.kdlDir = "/home/${user}/data/ladder/singbox-conf";
   };
   # 成员 1：Alice
   "team-alice" = {

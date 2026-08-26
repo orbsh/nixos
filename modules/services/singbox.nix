@@ -3,80 +3,48 @@
 #
 # 架构（对齐方案 memos/singbox-migration-plan.md）：
 #   - 系统级 service（非 user service）——服务器无登录用户会话也要能跑
-#   - 全用 -C 配置目录（主配置也放目录里），sing-box 自动合并 ~/.config/singbox 顶层所有 *.json：
-#     · config.json      主配置（log/inbounds/outbounds[direct 兜底]/route 框架）
-#     · outbounds.json   出口扩展点（数组留空+注释；加代理出口在此追加，与 config 的 outbounds 拼接）
-#     · rules.json       rule_set 声明扩展点（数组留空+注释；引用顶层规则数据文件）
-#   - 单层目录，无子目录（-C 不递归 os.ReadDir；规则数据文件也平铺同目录，path 同目录引用）
-#   - 注：sing-box 只支持 JSON/JSONC（不支持 YAML/TOML）
-#   - configDir 指向 ~/.config/singbox（非 store）→ 可手改，改后 kill -HUP / systemctl reload 热更无需 rebuild
+#   - 配置以 KDL 源文件管理：kdlDir(~/.config/singbox) 下放置 *.kdl 源文件
+#     （singbox / rules / rule_set / outbounds 各段，可拆分成多个 .kdl 文件）
+#   - 三个目录独立：
+#     · configDir  = 配置输出目录（生成 config.json，sing-box run -c 加载）
+#     · kdlDir     = KDL 配置源目录（*.kdl，--config-path）。默认与 configDir 相同，可拆开
+#     · ruleDir    = 规则数据目录（*.srs 二进制规则，--rule-bin-path）
+#   - ExecStartPre 用 singbox-conf 命令（writeShellScriptBin 进 systemPackages）
+#     读取 kdlDir 下所有 *.kdl 合并(glob+flatten)生成单一 config.json 到 configDir，然后 sing-box run -c 加载
+#   - singbox-conf 命令内部经 assets/singbox-conf.nu 的 standalone generate 入口执行
+#   - 热更：改 .kdl → systemctl reload（先 check 后 HUP）重新生成并重载
+#   - 注：sing-box 本身只支持 JSON/JSONC；KDL 只是我们的编辑/生成源，运行仍用生成的 config.json
 #   - 网络切换自动重连：NetworkManager dispatcher（层1）+ 健康检查 timer（层2）
 #
 # 用法：
-#   默认 = 全直连（工作站/服务器通用，引入即起效）。
-#   要代理：手改 ~/.config/singbox/outbounds.json（数组追加 socks 出口）+ rules.json（引用 rule_set）+ config.json（route 加分流/改 final）。
+#   默认 = 全直连（工作站/服务器通用，引入即起效）：只放 singbox.kdl（log/dns/inbounds/route 框架，final=direct）。
+#   要代理：在 configDir 放 outbounds.kdl（urltest/selector 聚合 + 协议节点）+ rules.kdl（rule_set 声明）+ 对应规则源。
 #   服务器占位：import 即全直连。
 { config, pkgs, lib, user, ... }:
 
 let
   cfg = config.services.singbox;
   userHome = "/home/${user}";
-  # 默认配置目录 = ~/.config/singbox（顶层 *.json 平铺自动合并；不再多包一层 conf.d）
   defaultConfigDir = "${userHome}/.config/singbox";
   configDirPath  = if cfg.configDir != null then cfg.configDir else defaultConfigDir;
+  # KDL 配置源目录：*.kdl 源文件所在处（--config-path）。
+  # 默认与配置输出目录(configDirPath)相同；可单独指定为别处（如 ~/data/ladder/singbox-conf）。
+  # 生成动作：读 kdlDirPath 的 *.kdl 合并 → 写 config.json 到 configDirPath。
+  kdlDirPath     = if cfg.kdlDir != null then cfg.kdlDir else configDirPath;
+  # 规则数据目录：*.srs 二进制规则文件（scan-binary-ruleset 扫描生成 rule_set 声明）
+  # 与 configDir 独立 —— KDL 源目录不一定有 .srs，规则数据可能单独存放
+  defaultRuleDir = "${userHome}/.config/singbox/rule-sets";
+  ruleDirPath    = if cfg.ruleDir != null then cfg.ruleDir else defaultRuleDir;
 
-  # ── 三个生成文件的内容（JSONC，upsert——仅首次生成，后手改）──
+  # KDL 合并/生成命令：singbox-conf（进 systemPackages → /run/current-system/sw/bin）
+  # 内部用 assets/singbox-conf.nu，通过 standalone generate 入口读取配置目录生成 config.json
+  singboxConf = pkgs.writeShellScriptBin "singbox-conf" ''
+    exec ${pkgs.nushell}/bin/nu --no-config-file ${./assets/singbox-conf.nu} "$@"
+  '';
+  singboxConfPath = "${singboxConf}/bin/singbox-conf";
+
   port = toString cfg.listenPort;
 
-  # 主配置：log + inbounds + outbounds([direct] 兜底出口) + route 框架（final=direct）
-  mainJSON = ''
-    {
-      // 主配置框架（首次生成后可手改，kill -HUP / systemctl reload 生效）
-      "log": { "level": "info", "timestamp": true },
-      "inbounds": [
-        { "type": "mixed", "listen": "127.0.0.1", "listen_port": ${port} }
-      ],
-      // direct 兜底出口：所有未命中分流规则的流量走它（直连）
-      "outbounds": [
-        { "type": "direct", "tag": "direct" }
-      ],
-      "route": {
-        // 路由规则示例见下（取消注释即用）；未命中走 final（direct 兜底）
-        "rules": [
-          // { "rule_set": ["rule-private"], "outbound": "direct" }
-          // { "rule_set": ["rule-world"],   "outbound": "proxy" }
-        ],
-        "final": "direct"
-      }
-    }
-  '';
-
-  # 出口扩展点：数组留空（direct 已在 config.json），加代理出口在此追加（拼接合并）
-  outboundsJSON = ''
-    {
-      // 出口扩展点 —— 追加代理出口在此处（数组与 config.json 的 outbounds 拼接）。例如：
-      //   { "type": "socks", "tag": "proxy", "server": "1.2.3.4", "server_port": 7890 }
-      //   { "type": "http",  "tag": "http",  "server": "1.2.3.4", "server_port": 8080 }
-      // 加完在 config.json / rules.json 的 route 里引用该 tag 做分流。
-      "outbounds": [
-      ]
-    }
-  '';
-
-  # rule_set 声明：type local + path 指向 ~/.config/singbox 顶层规则数据文件（.json source 或 .srs binary）
-  # 不用子目录——规则数据文件直接平铺在 ~/.config/singbox/ 下（如 private.json / world.json），path 指向同目录
-  rulesJSON = ''
-    {
-      // 规则集声明——type local 引用 ~/.config/singbox 下数据文件（含在自动合并的 .json 之外，作为 rule_set 数据源）
-      // 例如：先把分流规则写成 ~/.config/singbox/private.json、world.json（Plain RuleSet 格式），再取消注释引用：
-      "route": {
-        "rule_set": [
-          // { "type": "local", "tag": "rule-private", "format": "source", "path": "${configDirPath}/private.json" },
-          // { "type": "local", "tag": "rule-world",   "format": "source", "path": "${configDirPath}/world.json" }
-        ]
-      }
-    }
-  '';
 in
 {
   options.services.singbox = {
@@ -88,12 +56,22 @@ in
     configDir = lib.mkOption {
       type = lib.types.nullOr lib.types.path;
       default = null;
-      description = "配置目录（~/.config/singbox，顶层 *.json 自动合并）。null = $HOME/.config/singbox";
+      description = "配置输出目录（放置生成的 config.json）。null = $HOME/.config/singbox";
+    };
+    kdlDir = lib.mkOption {
+      type = lib.types.nullOr lib.types.path;
+      default = null;
+      description = "KDL 配置源目录（放置 *.kdl 源文件，--config-path）。null = 与 configDir 相同";
+    };
+    ruleDir = lib.mkOption {
+      type = lib.types.nullOr lib.types.path;
+      default = null;
+      description = "规则数据目录（*.srs 二进制规则文件，scan-binary-ruleset 扫描生成 rule_set 声明）。与 configDir 独立。null = $HOME/.config/singbox/rule-sets";
     };
     healthUrl = lib.mkOption {
       type = lib.types.str;
-      default = "http://www.gstatic.com/generate_204";
-      description = "健康检查探活地址（连续失败触发重启）";
+      default = "";
+      description = "健康检查探活地址（连续失败触发重启）。空 = 不探活（适合服务器固定网络等不变环境）";
     };
   };
 
@@ -103,13 +81,15 @@ in
     # singbox 是本地 mixed 入站，故用 http:// 前缀。可手动覆盖为其他代理(socks5://...)
     proxy.address = lib.mkDefault "http://127.0.0.1:${toString cfg.listenPort}";
 
-    # ── sing-box 包 ───────────────────────────────────────────
-    environment.systemPackages = [ pkgs.sing-box ];
+    # ── sing-box 包 + 配置生成命令（singbox-conf 进 system-path）──
+    environment.systemPackages = [ pkgs.sing-box singboxConf ];
 
-    # ── 配置目录 ──
+    # ── 配置输出目录 + KDL 源目录 + 规则数据目录 ──
     systemd.tmpfiles.rules = [
       "d ${userHome}/.config/singbox 0755 ${user} ${user} -"
       "d ${configDirPath} 0755 ${user} ${user} -"
+      "d ${kdlDirPath} 0755 ${user} ${user} -"
+      "d ${ruleDirPath} 0755 ${user} ${user} -"
     ];
 
     systemd.services.singbox = {
@@ -121,30 +101,38 @@ in
       serviceConfig = {
         Type = "simple";
         User = user;
-        # 首次生成三个文件（upsert：存在则跳过，不覆盖手改）
+        # 读取 KDL 源目录(kdlDirPath)所有 *.kdl → 合并 → 生成 config.json 到输出目录(configDirPath)
         ExecStartPre = pkgs.writeShellScript "singbox-execstartpre" ''
-          mkdir -p ${userHome}/.config/singbox ${configDirPath}
-          write_if_missing() {
-            [ -f "$1" ] && return 0
-            cat > "$1"
-            chown ${user}:${user} "$1"
-          }
-          write_if_missing ${configDirPath}/config.json <<'JSON_C'
-${mainJSON}
-JSON_C
-          write_if_missing ${configDirPath}/outbounds.json <<'JSON_O'
-${outboundsJSON}
-JSON_O
-          write_if_missing ${configDirPath}/rules.json <<'JSON_R'
-${rulesJSON}
-JSON_R
+          set -e
+          mkdir -p ${configDirPath} ${kdlDirPath} ${ruleDirPath}
+          # 无 .kdl 源文件时生成全直连占位 config.kdl（服务器占位/首次）
+          if ! compgen -G "${kdlDirPath}/*.kdl" >/dev/null; then
+            cat > "${kdlDirPath}/config.kdl" <<'KDL'
+singbox {
+    log level=info timestamp=#true
+    inbounds {
+        mixed listen="127.0.0.1" port=${port}
+    }
+    outbounds {
+        direct tag=direct
+    }
+    route {
+        final direct
+    }
+}
+KDL
+            chown ${user}:${user} "${kdlDirPath}/config.kdl"
+          fi
+          # singbox-conf 命令：--config-path 读 kdlDirPath 所有 *.kdl 合并，--rule-bin-path 扫描规则数据目录 .srs
+          ${singboxConfPath} generate --config-path ${kdlDirPath} --rule-bin-path ${ruleDirPath} --output "${configDirPath}/config.json"
+          chown ${user}:${user} "${configDirPath}/config.json"
         '';
-        # 只需 -C（主配置也在目录里，自动合并）
-        ExecStart = "${pkgs.sing-box}/bin/sing-box run -C ${configDirPath}";
+        # 加载生成的单一 config.json
+        ExecStart = "${pkgs.sing-box}/bin/sing-box run -c ${configDirPath}/config.json";
         # 热更：先 check 校验，通过才发 SIGHUP。check 失败则该行非零 → systemd 中止，不 reload，旧进程继续（避免空窗）
         # systemd 逐行执行 ExecReload 数组，任一行失败即整体失败且不执行后续。
         ExecReload = [
-          "${pkgs.sing-box}/bin/sing-box check -C ${configDirPath}"
+          "${pkgs.sing-box}/bin/sing-box check -c ${configDirPath}/config.json"
           "${pkgs.coreutils}/bin/kill -HUP $MAINPID"
         ];
         Restart = "on-failure";
@@ -169,6 +157,10 @@ JSON_R
       serviceConfig = {
         Type = "oneshot";
         ExecStart = pkgs.writeShellScript "singbox-healthcheck" ''
+          # healthUrl 为空 = 不探活（服务器固定网络等不变环境），直接跳过
+          if [ -z "${cfg.healthUrl}" ]; then
+            exit 0
+          fi
           if ! ${pkgs.curl}/bin/curl -fsS --connect-timeout 5 --max-time 8 \
             -x http://127.0.0.1:${toString cfg.listenPort} \
             ${cfg.healthUrl} >/dev/null 2>&1; then

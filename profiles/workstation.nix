@@ -26,9 +26,11 @@
 
   # ── sing-box 代理（测试阶段）───────────────────────────
   # 端口先用 6789（避免与 mihomo 的 7890 冲突），测试完成后再切到默认 7890。
-  # 默认全直连；要代理出口：手改 ~/.config/singbox/outbounds.json 等（systemctl reload singbox 生效）。
+  # 默认全直连；要代理出口：手改 ~/.config/singbox/outbounds.kdl 等（systemctl reload singbox 生效）。
+  # 工作站网络会变 → 启用健康检查探活（模块默认 healthUrl 为空=不探活，这里显式设一个）。
   services.singbox = {
     listenPort = 6789;   # 测试端口：避免与 mihomo 的 7890 冲突，测完改回默认
+    healthUrl = "http://connect.rom.miui.com/generate_204";   # 探活：代理链路异常自动重启
   };
 
   # ── Numa 本地 DNS ──────────────────────────────────────
