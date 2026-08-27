@@ -64,3 +64,15 @@
 - **数组追加非覆盖**：想覆盖 outbound 做不到，只会追加同 tag 副本；单层目录、文件名字典序定合并序
 - **`systemctl reload` = 改配置生效（轻）**；**`systemctl restart` = 网络切换恢复（重）**——两件事
 - **proxy.address 为空 = 直连**：这是对"未配置代理也该正常访问"的防御性保证
+- **代理一律单元级注入，绝不泄露到 systemd 全局环境**（user-repeated 雷区）。共享
+  `proxy.address` 只应出现在**单元级**注入点，不得写入 systemd manager 全局环境：
+  - user service → `startupScript` 内 `[ -z "$http_proxy" ] && export http_proxy=…`（进程内生效）
+  - system service（NixOS 声明式）→ `systemd.services.<x>.environment = { http_proxy = …; }`
+    实测 nix.nix 的写法：`sudo systemctl show-environment` 与 `systemctl --user show-environment`
+    均无 proxy 泄露，变量仅在 nix-daemon 单元内。注意 system 级 unit 不受
+    `systemctl --user set-environment` 影响，代理固定走 singbox（切换在 singbox 侧）。
+  - **禁止**：依赖 `sudo systemctl set-environment http_proxy=…`（写 manager 全局环境，
+    泄露给所有服务）；**禁止** user service 静态 `Service.Environment=`（覆盖运行时
+    set-environment 且锁死值）。
+  - 判断"是否泄露"要分别查 `sudo systemctl show-environment` 与 `systemctl --user
+    show-environment`（system/user 环境隔离，互不反映）。

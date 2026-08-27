@@ -14,8 +14,10 @@
       connect-timeout = 5;            # 连接超时 5 秒，快速跳到下一个 substituter
     };
 
-    # 代理地址取共享 proxy.address（singbox 引入时自动赋；也可指向其他代理服务）；null= 不走代理(直连 cache)
-    # 运行时快速切换：sudo systemctl set-environment http_proxy=... / unset-environment http_proxy
+    # 代理走 singbox 全局提供（7890）；nix-daemon 单元级静态固定，切换代理在 singbox 侧，不在此处运行时热切。
+    # 单元级 environment（systemd.services.*.environment）只在 nix-daemon 进程内生效，不写入 systemd 全局环境。
+    # 注意：不要改成依赖 `sudo systemctl set-environment`（那会写 manager 全局环境，泄露给所有服务）——
+    # 代理一律单元级注入，杜绝全局泄露。
     systemd.services.nix-daemon.environment = lib.mkIf (config.proxy.address != null) {
       http_proxy = config.proxy.address;
       https_proxy = config.proxy.address;

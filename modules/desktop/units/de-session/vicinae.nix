@@ -12,6 +12,13 @@ let
       wl=$(find /run/user/$UID -maxdepth 1 -name 'wayland-*' -type s 2>/dev/null | head -n 1)
       [ -n "$wl" ] && export WAYLAND_DISPLAY="$(basename "$wl")"
     fi
+    # 代理 fallback：仅在未显式设置时回退到共享 proxy.address；显式 set-environment 值优先。
+    # 绝不用 Service.Environment= 静态锁定（会覆盖运行时 set-environment，污染全局环境）。
+    ${lib.optionalString (config.proxy.address != null) ''
+      [ -z "$http_proxy" ] && export http_proxy=${config.proxy.address}
+      [ -z "$https_proxy" ] && export https_proxy=${config.proxy.address}
+      [ -z "$all_proxy" ] && export all_proxy=${config.proxy.address}
+    ''}
     exec ${pkgs.vicinae}/bin/vicinae server
   '';
 in
@@ -50,12 +57,8 @@ in
           ExecStart = startupScript;
           Restart = "on-failure";
           RestartSec = "3s";
-          # 插件/专区 store 下载走代理（proxy.address 非空时注入；server 进程拉取，故设于此同步 nix-daemon 约定）
-          Environment = lib.mkIf (config.proxy.address != null) [
-            "http_proxy=${config.proxy.address}"
-            "https_proxy=${config.proxy.address}"
-            "all_proxy=${config.proxy.address}"
-          ];
+          # 代理由 startupScript 内 [ -z ] && export 回退注入（可被运行时 set-environment 覆盖），
+          # 不在 Service.Environment 静态锁定——避免覆盖运行时切换并污染全局环境。
         };
         # 不设 WantedBy=graphical-session.target —— 仅由 de-session 的 desktop-<de>.target 随对应会话拉起
       };

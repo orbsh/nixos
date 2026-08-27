@@ -82,6 +82,8 @@ hotkey-overlay {
 binds {
     // 应用启动器：vicinae（常驻 server + Unix socket IPC toggle）
     Mod+Space  { spawn "vicinae" "toggle"; }
+    // Noctalia 原生启动器（dmenu 面板）
+    Alt+Space  { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
 
     // 帮助：显示重要快捷键列表
     Mod+Shift+Slash { show-hotkey-overlay; }
