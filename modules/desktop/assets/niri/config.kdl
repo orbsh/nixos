@@ -89,19 +89,20 @@ binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
 
     // 启动常用程序
-    Mod+Return { spawn "ghostty"; }
-    Mod+E      { spawn "neovide"; }
-    Mod+B      { spawn "qutebrowser"; }
+    Mod+Q   { spawn "ghostty"; }
+    Mod+W   { spawn "qutebrowser"; }
+    Mod+E   { spawn "neovide"; }
 
     // 关闭 / 退出
-    Mod+Q       { close-window; }
+    Mod+Ctrl+Q  { close-window; }
     Mod+Shift+E { quit; }
     // 手动锁屏（Noctalia 锁屏 UI）
     Mod+Shift+Z { spawn-sh "noctalia msg session lock"; }
 
+    // 截图（区域，同 Print）
+    Mod+S      { screenshot; }
     // 取色：hyprpicker 点屏幕，自动复制 hex 到剪贴板
     Mod+Shift+S { spawn "hyprpicker" "-a"; }
-
     // 屏幕两点测距：从 A 拖到 B，算直线距离，复制到剪贴板（Win+Ctrl+S）
     Mod+Ctrl+S { spawn "niri-measure"; }
 
@@ -116,7 +117,6 @@ binds {
     Mod+Ctrl+L { move-column-right; }
     Mod+Ctrl+J { move-column-to-workspace-down; }
     Mod+Ctrl+K { move-column-to-workspace-up; }
-    Mod+W       { toggle-column-tabbed-display; }
     Mod+Shift+H  { consume-or-expel-window-left; }
     Mod+Shift+L  { consume-or-expel-window-right; }
     Mod+Shift+J  { move-window-down; }
@@ -156,7 +156,7 @@ binds {
     // 布局
     Mod+O      { toggle-overview; }
     Mod+I      { spawn-sh "noctalia msg bar-toggle"; }   // 临时显示/隐藏状态栏
-    Mod+S      { screenshot; }   // 截图（区域，同 Print）
+    Mod+U      { toggle-column-tabbed-display; }
     Mod+F      { maximize-column; }
     Mod+Shift+F { fullscreen-window; }
     Mod+M      { maximize-window-to-edges; }
