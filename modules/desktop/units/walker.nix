@@ -40,6 +40,11 @@ in
     xdg.configFile."walker/config.toml".source = ../assets/walker/config.toml;
     xdg.configFile."walker/themes/default/style.css".source = ../assets/walker/themes/default/style.css;
 
+    # ── elephant：menus 提供者（@ 前缀 · Lua→nushell 通用桥）──
+    xdg.configFile."elephant/scripts/elephant_menu.nu".source = ../assets/elephant/scripts/elephant_menu.nu;
+    xdg.configFile."elephant/scripts/cwdhist.nu".source = ../assets/elephant/scripts/cwdhist.nu;
+    xdg.configFile."elephant/menus/cwdhist.lua".source = ../assets/elephant/menus/cwdhist.lua;
+
     systemd.user.services.walker = {
       Unit = {
         Description = "Walker daemon";

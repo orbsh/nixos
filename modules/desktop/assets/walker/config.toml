@@ -17,3 +17,11 @@ quick_activate = ["alt 1", "alt 2", "alt 3", "alt 4", "alt 5", "alt 6", "alt 7",
 [windows]    # 窗口切换（Alt+Tab 能力）
 [bookmarks]
 [clipboard]
+
+# ── provider 前缀 ────────────────────────────────────
+[providers]
+default = ["apps"]
+
+[[providers.prefixes]]          # 打 ; 再输入 → 切到 elephant menus（; 的自定义菜单）
+prefix = ";"
+provider = "menus"

@@ -80,8 +80,8 @@ hotkey-overlay {
 // 基础全局快捷键（Mod = Super，与 Hyprland 习惯对齐）
 // ---------------------------------------------------------------------------
 binds {
-    // 应用启动器：vicinae（常驻 server + Unix socket IPC toggle）
-    Mod+Space  { spawn "vicinae" "toggle"; }
+    // 应用启动器：walker（常驻 gapplication service，D-Bus 唤起；D-Bus app id = dev.benz.walker）
+    Mod+Space  { spawn "gapplication" "launch" "dev.benz.walker"; }
     // Noctalia 原生启动器（dmenu 面板）
     Alt+Space  { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
 
