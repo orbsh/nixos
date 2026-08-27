@@ -240,6 +240,10 @@ export def merge-config [rules rule_set outbounds] {
 
 export def kdl-to-ruleset [] {
     $in
+    | group-by args.0
+    | items {|k, v|
+        { tag: $k, children: ($v.children | flatten) }
+    }
     | each {|x|
         mut r = {
             ip_cidr: []
@@ -255,7 +259,7 @@ export def kdl-to-ruleset [] {
         }
         {
             type: inline
-            tag: $x.args.0
+            tag: $x.tag
             rules: [$r]
         }
     }

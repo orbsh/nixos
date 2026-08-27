@@ -146,19 +146,22 @@ KDL
     };
 
     # ── 网络切换自动重连（层1）：NM dispatcher（仅工作站有 NetworkManager）──
+    # 仅 up 事件触发：down 时网络已断，重启无意义；up 后等 3s 网络稳定再 restart
     networking.networkmanager.dispatcherScripts = lib.mkIf (config.networking.networkmanager.enable or false) [{
       source = pkgs.writeText "singbox-nm-dispatcher" ''
         #!/bin/sh
-        [ "$2" = "up" ] || [ "$2" = "down" ] || \
-        [ "$2" = "vpn-up" ] || [ "$2" = "vpn-down" ] || exit 0
+        [ "$2" = "up" ] || [ "$2" = "vpn-up" ] || exit 0
+        sleep 3
         /run/current-system/sw/bin/systemctl restart singbox.service
       '';
       type = "basic";
     }];
 
     # ── 网络切换自动重连（层2）：健康检查 timer（catch 静默断链/上游无响应）──
+    # after 仅做启动顺序约束，不用 requires/wants：健康检查必须能在 singbox 挂掉时独立运行
     systemd.services.singbox-healthcheck = {
       description = "sing-box health check (restart on failure)";
+      after = [ "singbox.service" ];
       serviceConfig = {
         Type = "oneshot";
         ExecStart = pkgs.writeShellScript "singbox-healthcheck" ''
@@ -169,7 +172,7 @@ KDL
           if ! ${pkgs.curl}/bin/curl -fsS --connect-timeout 5 --max-time 8 \
             -x http://127.0.0.1:${toString cfg.listenPort} \
             ${cfg.healthUrl} >/dev/null 2>&1; then
-            flag=/tmp/singbox-health-fail
+            flag=/run/singbox-health-fail
             n=$([ -f "$flag" ] && cat "$flag" || echo 0)
             n=$((n+1))
             if [ "$n" -ge 3 ]; then
@@ -179,7 +182,7 @@ KDL
               echo "$n" > "$flag"
             fi
           else
-            rm -f /tmp/singbox-health-fail
+            rm -f /run/singbox-health-fail
           fi
         '';
       };
@@ -190,8 +193,8 @@ KDL
       timerConfig = {
         OnBootSec = "2min";
         OnUnitActiveSec = "2min";
+        Persistent = true;
       };
     };
-    systemd.services.singbox-healthcheck.requires = [ "singbox.service" ];
   };
 }
