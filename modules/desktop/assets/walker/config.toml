@@ -12,16 +12,17 @@ size = 14
 [keybinds]
 quick_activate = ["alt 1", "alt 2", "alt 3", "alt 4", "alt 5", "alt 6", "alt 7", "alt 8", "alt 9"]
 
-# ── provider 启用 ────────────────────────────────────
-[apps]       # 应用搜索
-[windows]    # 窗口切换（Alt+Tab 能力）
-[bookmarks]
-[clipboard]
+# ── cwd 历史菜单（menus:cwdhist）：每条可选多种方式打开，各绑不同快捷键 ──
+# action 名与 elephant cwdhist.lua 的 OPEN_ACTIONS 键一致
+[providers.actions]
+"menus:cwdhist" = [
+  { action = "open_neovide",    label = "用 neovide 打开",       bind = "Return", default = true, after = "Close" },
+  { action = "open_alacritty",  label = "用 alacritty 打开",     bind = "ctrl t",               after = "Close" },
+  { action = "open_cosmic",     label = "用 cosmic-files 打开",  bind = "ctrl f",               after = "Close" },
+]
 
-# ── provider 前缀 ────────────────────────────────────
-[providers]
-default = ["apps"]
-
-[[providers.prefixes]]          # 打 ; 再输入 → 切到 elephant menus（; 的自定义菜单）
-prefix = ";"
-provider = "menus"
+# ── cwd 历史菜单直达：打 [ 一键到"最近目录"（menus:cwdhist），如 / 之于 files ──
+# merge 对 provider 匹配：menus:cwdhist 不在默认前缀表 → 追加，不覆盖 / ; 等默认
+[[providers.prefixes]]
+prefix = "["
+provider = "menus:cwdhist"
