@@ -43,7 +43,9 @@ in
     # ── elephant：menus 提供者（@ 前缀 · Lua→nushell 通用桥）──
     xdg.configFile."elephant/scripts/elephant_menu.nu".source = ../assets/elephant/scripts/elephant_menu.nu;
     xdg.configFile."elephant/scripts/cwdhist.nu".source = ../assets/elephant/scripts/cwdhist.nu;
+    xdg.configFile."elephant/scripts/windowsmru.nu".source = ../assets/elephant/scripts/windowsmru.nu;
     xdg.configFile."elephant/menus/cwdhist.lua".source = ../assets/elephant/menus/cwdhist.lua;
+    xdg.configFile."elephant/menus/windowsmru.lua".source = ../assets/elephant/menus/windowsmru.lua;
 
     systemd.user.services.walker = {
       Unit = {

@@ -8,13 +8,16 @@ def main [query: string] {
     # 转义单引号 + 包成 SQL 字面量 '%kw%'（与 mod.nu 的 quote 一致）
     let kw = $query | str replace -a "'" "''"
     let keyword = $"'%($kw)%'"
-    let rows = open $db | query db $"select cwd, count from cwd_history where cwd like ($keyword) order by count desc limit 50;"
+    let rows = open $db
+    | query db $"select cwd, count from cwd_history where cwd like ($keyword) order by count desc limit 50;"
     for r in $rows {
         let cwd = $r.cwd
         # ~ 展开成绝对路径（供菜单 Action 的 %VALUE% 直接用）+ 过滤已不存在的目录
         let abs = if ($cwd | str starts-with "~") {
             $env.HOME + ($cwd | str replace "~" "")
-        } else { $cwd }
+        } else {
+            $cwd 
+        }
         if ($abs | path exists) {
             print $"($cwd)\t×($r.count)\t($abs)"
         }

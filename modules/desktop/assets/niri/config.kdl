@@ -62,7 +62,7 @@ recent-windows {
     binds {
         Alt+Tab       { next-window; }
         Alt+Shift+Tab { previous-window; }
-        Alt+grave     { next-window filter="app-id"; }
+        Mod+Tab       { next-window filter="app-id"; }
     }
 }
 
@@ -81,9 +81,11 @@ hotkey-overlay {
 // ---------------------------------------------------------------------------
 binds {
     // 应用启动器：walker（常驻 gapplication service，D-Bus 唤起；D-Bus app id = dev.benz.walker）
-    Mod+Space  { spawn "gapplication" "launch" "dev.benz.walker"; }
+    Alt+Space  { spawn "gapplication" "launch" "dev.benz.walker"; }
+    // 窗口切换（walker 直达 MRU 窗口菜单 menus:windowsmru；Alt 按住+数字选择）
+    Alt+grave  { spawn "walker" "-m" "menus:windowsmru"; }
     // Noctalia 原生启动器（dmenu 面板）
-    Alt+Space  { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
+    Mod+Space  { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
 
     // 帮助：显示重要快捷键列表
     Mod+Shift+Slash { show-hotkey-overlay; }
@@ -150,8 +152,8 @@ binds {
     Mod+Ctrl+7 { move-column-to-workspace 7; }
     Mod+Ctrl+8 { move-column-to-workspace 8; }
     Mod+Ctrl+9 { move-column-to-workspace 9; }
-    // Mod+Tab = workspace 间循环；Alt+Tab = 窗口循环（见上方 recent-windows binds）
-    Mod+Tab { focus-workspace-previous; }
+    // 工作区循环
+    Mod+Shift+Tab  { focus-workspace-previous; }
 
     // 布局
     Mod+O      { toggle-overview; }
