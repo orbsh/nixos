@@ -26,10 +26,14 @@ c.fonts.web.family.standard= 'Noto Sans CJK SC'
 c.fonts.web.family.fixed= 'JetBrains Mono'
 c.fonts.web.family.sans_serif= 'Jetbrains Mono'
 c.fonts.web.family.serif= 'Noto Serif CJK SC'
+c.fonts.web.size.default = 18
 
 config.bind('<Alt-o>', 'cmd-set-text -s :tab-focus')
 config.bind('<Alt-i>', 'edit-text')
 config.bind('<Ctrl-o>', 'edit-url')
+config.bind('<Alt-;>', 'mode-leave')
+config.bind('<Alt-;>', 'mode-leave', mode='insert')
+config.bind('<Alt-;>', 'mode-leave', mode='passthrough')
 config.bind('zl', 'spawn --userscript rbw.nu')
 
 config.bind(';l', 'hint userscript link translate.nu')

@@ -10,16 +10,6 @@
   programs.neovide = {
     enable = true;
     settings = {
-      frame = "none";
-      vsync = false;  # Wayland/COSMIC 下 VSync 不被遵守导致空闲空转 100% CPU；关闭后由 neovide_refresh_rate 限帧（见 lua/common/gui.lua）
-      multigrid = false;  # 关闭多网格渲染，避免横条闪动伪影
-      font = {
-        normal = ["MonaspiceAr NFM" "Noto Sans Mono CJK SC"];
-        size = 21;
-        features = {
-          "MonaspiceAr NFM" = ["+ss01" "+ss02" "+ss03" "+ss04" "+ss05" "+ss06" "+ss07" "+ss08" "+calt" "+dlig"];
-        };
-      };
       box-drawing = {
         mode = "native";
       };
