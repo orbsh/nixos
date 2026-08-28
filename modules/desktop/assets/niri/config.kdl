@@ -84,8 +84,8 @@ binds {
     Alt+Space  { spawn "gapplication" "launch" "dev.benz.walker"; }
     // 窗口切换（walker 直达 MRU 窗口菜单 menus:windowsmru；Alt 按住+数字选择）
     Alt+grave  { spawn "walker" "-m" "menus:windowsmru"; }
-    // Noctalia 原生启动器（dmenu 面板）
-    Mod+Space  { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
+    // cwd 历史直达（walker 菜单 menus:cwdhist，等价于 walker 里按
+    Mod+Space  { spawn "walker" "-m" "menus:cwdhist"; }
 
     // 帮助：显示重要快捷键列表
     Mod+Shift+Slash { show-hotkey-overlay; }
