@@ -1,5 +1,5 @@
 -- elephant 菜单：最近目录（cwd 历史）
--- 数据来自 nushell cwd_history（LIKE 过滤，经通用桥 elephant_menu.nu 取回 TAB 分隔行）
+-- 数据来自 sqlite cwd_history（LIKE 过滤，经 cwdhist.py 取回 TAB 分隔行）
 Name = "cwdhist"
 NamePretty = "最近目录"
 Icon = "folder-open"
@@ -8,21 +8,23 @@ SearchName = true
 FixedOrder = true   -- 保留脚本返回的 count-desc（按使用频率）顺序
 Keywords = { "cwd", "history", "recent", "dirs", "directories", "folder" }  -- 英文也能搜到
 
+-- 所有打开方式前置：先自增访问计数（绝对路径 → ~/path upsert，与 shell cd 同源）
+local Bump = "python3 ~/.config/elephant/scripts/cwdhist.py enter \"%VALUE%\" ; "
+
 -- 兜底默认 action（个别 entry 无 action 时用）
-Action = "bash -c 'cd \"%VALUE%\" && neovide --maximized --vsync'"
+Action = Bump .. "bash -c 'cd \"%VALUE%\" && neovide --maximized --vsync'"
 
 -- 每条记录都可选的多种打开方式（具名 action）
--- 按键映射在 walker 的 [providers.actions."menus:cwdhist"] 里定义（Enter / ctrl t / ctrl f）
+-- 按键映射在 walker 的 [providers.actions.\"menus:cwdhist\"] 里定义（Enter / ctrl t / ctrl f）
 local OPEN_ACTIONS = {
-  open_neovide   = "bash -c 'cd \"%VALUE%\" && neovide --maximized --vsync'",
-  open_alacritty = "alacritty --working-directory '%VALUE%'",
-  open_cosmic    = "cosmic-files '%VALUE%'",
+  open_neovide   = Bump .. "bash -c 'cd \"%VALUE%\" && neovide --maximized --vsync'",
+  open_alacritty = Bump .. "alacritty --working-directory '%VALUE%'",
+  open_cosmic    = Bump .. "cosmic-files '%VALUE%'",
 }
 
 function GetEntries(query)
-    local bridge = (os.getenv("HOME") or "~") .. "/.config/elephant/scripts/elephant_menu.nu"
-    local q = query or ""
-    local handle = io.popen("nu " .. bridge .. " cwdhist " .. tostring(q))
+    local script = (os.getenv("HOME") or "~") .. "/.config/elephant/scripts/cwdhist.py"
+    local handle = io.popen("python3 " .. script .. " list " .. tostring(query or ""))
     if not handle then return {} end
     local entries = {}
     for line in handle:lines() do

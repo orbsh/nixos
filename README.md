@@ -274,6 +274,14 @@ nix build .#iso.config.system.build.isoImage
 
 ---
 
+## 🛠 脚本书写原则
+
+nixos 项目中的脚本，语言优先级：
+
+- **优先 Python** —— 通用性强、生态好，且 Python 是必备基础组件（包括服务器端）。
+- **交互优先 Nushell** —— 用户可能直接调用的命令可用 Nushell，交互／自动补全体验更好。
+- **尽量避免 Bash** —— 仅在短胶水／辅助片段保留 bash（如 Nix 构建期未声明 python 依赖时，默认 shell 即为 bash）；用户态脚本不以 bash 实现。
+
 ## 📁 目录结构
 
 ```
