@@ -19,7 +19,7 @@ let
 
   # ferron 不展开 ~，需将 box.conf 中 ~/.box 替换为绝对路径
   ferronConfig = pkgs.runCommand "ferron-box.conf" {} ''
-    sed 's|~/.box|${cfg.documentRoot}|g' ${ferronScripts}/box.conf > $out
+    sed -e 's|~/.box|${cfg.documentRoot}|g' -e 's|PUB_ROOT_PLACEHOLDER|${cfg.pubRoot}|g' ${ferronScripts}/box.conf > $out
   '';
 
   # CGI 脚本（.nu）所需的外部工具
@@ -56,6 +56,15 @@ in {
       description = ''
         文档根目录（box.conf 中 root 指向此处）。
         下载文件放在此目录下；CGI 脚本通过 ~/.box/ferron 符号链接访问。
+      '';
+    };
+
+    pubRoot = lib.mkOption {
+      type = lib.types.path;
+      default = cfg.documentRoot;
+      description = ''
+        pub.nu 只读下载服务的根目录。
+        通过 CGI 环境变量 PUB_ROOT 传递给 pub.nu 脚本。
       '';
     };
   };
