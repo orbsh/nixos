@@ -15,6 +15,7 @@
     ../modules/services/gitea.nix          # 自包含：gitea + app-net
     ../modules/services/miniflux.nix       # 自包含：miniflux + app-net
     ../modules/services/qbittorrent.nix    # 自包含：qbittorrent + app-net
+    ../modules/services/ferron.nix         # Ferron 3.x 常驻服务（文件下载 + CGI 网关，port 8080）
     ../modules/services/numa.nix           # 本地 DNS + 反向代理（workstation 专用，server 用 CoreDNS）
   ];
 
