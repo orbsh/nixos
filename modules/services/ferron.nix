@@ -17,6 +17,11 @@ let
   # Ferron 脚本目录（Nix store，含 box.conf / box.nu / bin.nu / ...）
   ferronScripts = lib.sources.cleanSource ./assets/ferron;
 
+  # ferron 不展开 ~，需将 box.conf 中 ~/.box 替换为绝对路径
+  ferronConfig = pkgs.runCommand "ferron-box.conf" {} ''
+    sed 's|~/.box|${cfg.documentRoot}|g' ${ferronScripts}/box.conf > $out
+  '';
+
   # CGI 脚本（.nu）所需的外部工具
   cgiPath = lib.makeBinPath [
     pkgs.nushell
@@ -39,10 +44,9 @@ in {
 
     configFile = lib.mkOption {
       type = lib.types.path;
-      default = "${ferronScripts}/box.conf";
+      default = ferronConfig;
       description = ''
-        Ferron 配置文件路径。默认指向 ./assets/ferron/box.conf（Nix store 只读副本）
-        （box.conf 中 root "~/.box" + rewrite → /ferron/*.nu CGI 脚本）
+        Ferron 配置文件路径。默认从 ./assets/ferron/box.conf 生成（~/.box 替换为绝对路径）
       '';
     };
 
@@ -50,7 +54,7 @@ in {
       type = lib.types.path;
       default = "/home/${user}/.box";
       description = ''
-        文档根目录（box.conf 中 root "~/.box" 指向此处）。
+        文档根目录（box.conf 中 root 指向此处）。
         下载文件放在此目录下；CGI 脚本通过 ~/.box/ferron 符号链接访问。
       '';
     };
