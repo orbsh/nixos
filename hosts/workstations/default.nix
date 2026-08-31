@@ -36,7 +36,10 @@
       configDir = "/home/${user}/data/ladder/singbox-conf";
       ruleDir = "/home/${user}/data/ladder/sing-box/config/rule_sets";
     };
-    services.ferron.dataRoot = "/home/${user}/pub/Assets";
+    services.ferron = {
+      dataRoot = "/home/${user}/.box";
+      cacheRoot = "/home/${user}/pub/Assets/nixos";
+    };
   };
   # 成员 1：Alice
   "team-alice" = {
