@@ -70,9 +70,14 @@ def ensure-bootstrap [] {
     let f = acl-file
     if ($f | path exists) { return }
     mkdir ($f | path dirname | path expand --no-symlink)
-    let tok = random chars --length 24
-    {$tok: admin} | to yaml | save -f $f
-    print -e $"(char nl)Generated acl/index.yml (admin token): ($tok)"
+    {
+      (random chars --length 24): admin
+      (random chars --length 24): setup
+      (random chars --length 24): upload
+    }
+    | to yaml
+    | tee { save -f $f }
+    | print -e $"(char nl)Generated acl/index.yml: ($in)"
 }
 
 # ── GET: 读 + 列目录 (无目录内过滤; 无需 token, 仅目录不同) ─
