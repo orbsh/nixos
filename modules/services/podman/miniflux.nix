@@ -1,4 +1,7 @@
-{ pkgs, dataDir, user, ... }: {
+{ pkgs, config, dataDir, user, ... }:
+let
+  miniflux = config.services.miniflux;
+in {
   virtualisation.oci-containers.containers = {
     miniflux = {
       image = "miniflux/miniflux:latest";
@@ -11,10 +14,10 @@
         "CREATE_ADMIN" = "1";
         "ADMIN_USERNAME" = "admin";
         "ADMIN_PASSWORD" = "adminadmin";
-        "BASE_URL" = "http://localhost:8090";
+        "BASE_URL" = "http://localhost:${toString miniflux.port}";
       };
       ports = [
-        "8090:8080"
+        "${toString miniflux.port}:8080"
       ];
       # 使用独立网络 + 固定 IP
       extraOptions = [ "--network" "app-net" "--ip" "10.89.0.104" ];

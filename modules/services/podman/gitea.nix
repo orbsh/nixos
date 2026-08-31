@@ -1,4 +1,7 @@
-{ pkgs, dataDir, user, ... }: {
+{ pkgs, config, dataDir, user, ... }:
+let
+  gitea = config.services.gitea;
+in {
   virtualisation.oci-containers.containers = {
     gitea = {
       image = "gitea/gitea:1.27";
@@ -14,8 +17,8 @@
         "GITEA__webhook__ALLOWED_HOST_LIST" = "ci-eventsource-svc";
       };
       ports = [
-        "3333:3000"
-        "3322:22"
+        "${toString gitea.port}:3000"
+        "${toString gitea.sshPort}:22"
       ];
       # 使用独立网络 + 固定 IP
       extraOptions = [ "--network" "app-net" "--ip" "10.89.0.102" ];

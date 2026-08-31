@@ -1,4 +1,7 @@
-{ dataDir, user, ... }: {
+{ config, dataDir, user, ... }:
+let
+  qbt = config.services.qbittorrent;
+in {
   virtualisation.oci-containers.containers = {
     qbittorrent = {
       image = "superng6/qbittorrentee:latest";
@@ -8,16 +11,16 @@
         "UMASK" = "002";
         "TZ" = "Etc/UTC";
         "QBT_WEBUI_PORT" = "8181";
-        "QBT_TORRENTING_PORT" = "6881";
+        "QBT_TORRENTING_PORT" = "${toString qbt.torrentPort}";
       };
       volumes = [
         "/home/${user}/data/qbittorrent/data:/config"
         "/home/${user}/Downloads/qbittorrent:/downloads"
       ];
       ports = [
-        "8181:8080"    # Web UI
-        "6881:6881"    # Torrenting (TCP)
-        "6881:6881/udp" # Torrenting (UDP)
+        "${toString qbt.port}:8080"       # Web UI（host port → 容器 8080）
+        "${toString qbt.torrentPort}:${toString qbt.torrentPort}"   # Torrenting TCP
+        "${toString qbt.torrentPort}:${toString qbt.torrentPort}/udp" # Torrenting UDP
       ];
       autoStart = true;
     };

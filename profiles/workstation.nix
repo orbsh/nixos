@@ -1,4 +1,4 @@
-{ inputs, user, lib, pkgs, ... }: {
+{ inputs, config, user, lib, pkgs, ... }: {
   imports = [
     # 系统层级：extra = core + 工作站扩展（层级式，core 由 extra 继承）
     ../modules/system/extra.nix
@@ -34,12 +34,24 @@
   # ── Numa 本地 DNS ──────────────────────────────────────
   services.numa = {
     enable = true;
-    tld = "numa";
-    useDynamicConfig = true;  # 允许 REST API 动态更新配置
+    tld = "d";                # 本机服务域名后缀：box.d / gitea.d / ...
+    useDynamicConfig = false; # 纯声明式：直接读 store 静态配置（不再允许 REST API 动改，避免动态文件挡住声明式服务）
     src = {
       url = "file:///nix/store/l45bva8grxhv8pziwjq5c0cgm5rz31hq-numa-linux-x86_64.tar.gz";
       narHash = "sha256-mOSJdpZlZmTc7PU50ACL2lvDtywdMrOL7g8lvSqtUx0=";
     };
+
+    # ── 本机 web 服务 → *.d 域名（numa 本地 DNS + 反向代理） ──
+    # 注意：端口全部引用各服务模块的 port 选项，避免重复硬编码
+    services = [
+      { name = "box";         targetPort = config.services.ferron.port; }      # ferron：文件下载 + CGI 网关
+      { name = "gitea";       targetPort = config.services.gitea.port; }       # gitea 代码托管
+      { name = "miniflux";    targetPort = config.services.miniflux.port; }    # miniflux RSS 阅读器
+      { name = "qbittorrent"; targetPort = config.services.qbittorrent.port; } # qbittorrent Web UI
+      { name = "s3";          targetPort = config.services.rustfs.port; }      # rustfs S3 兼容 API
+      { name = "rustfs";      targetPort = config.services.rustfs.consolePort; } # rustfs 管理控制台
+      { name = "singbox";     targetPort = config.services.singbox.listenPort; } # singbox 代理入口
+    ];
   };
 
   # ── Security ─────────────────────────────────────────────

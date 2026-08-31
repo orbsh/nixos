@@ -29,6 +29,12 @@ let
     tld = "${cfg.tld}"
     bind_addr = "127.0.0.1"
 
+    ${lib.concatMapStringsSep "\n" (s: ''
+      [[services]]
+      name = "${s.name}"
+      target_port = ${toString s.targetPort}
+      target_host = "${s.targetHost}"
+    '') cfg.services}
     [mobile]
     enabled = false
   '';
@@ -47,8 +53,30 @@ in {
 
     tld = lib.mkOption {
       type = lib.types.str;
-      default = "numa";
-      description = "Local TLD for .numa domains";
+      default = "d";
+      description = ''Local TLD 后缀。默认 "d"（本机工作站服务，如 box.d/gitea.d），与内网服务器常用的 ".s" 相区分。'';
+    };
+
+    services = lib.mkOption {
+      type = lib.types.listOf (lib.types.submodule {
+        options = {
+          name = lib.mkOption {
+            type = lib.types.str;
+            description = "服务域名前缀，映射为 <name>.<tld>";
+          };
+          targetPort = lib.mkOption {
+            type = lib.types.int;
+            description = "后端监听端口（本机）";
+          };
+          targetHost = lib.mkOption {
+            type = lib.types.str;
+            default = "127.0.0.1";
+            description = "后端主机，默认本机 loopback";
+          };
+        };
+      });
+      default = [ ];
+      description = "反向代理的 web 服务列表。每项生成一个 <name>.<tld> 域名 → targetHost:targetPort。";
     };
 
     dataDir = lib.mkOption {
