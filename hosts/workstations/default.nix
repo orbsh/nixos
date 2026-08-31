@@ -36,6 +36,7 @@
       configDir = "/home/${user}/data/ladder/singbox-conf";
       ruleDir = "/home/${user}/data/ladder/sing-box/config/rule_sets";
     };
+    services.ferron.pubRoot = "/home/${user}/pub/Assets";
   };
   # 成员 1：Alice
   "team-alice" = {
