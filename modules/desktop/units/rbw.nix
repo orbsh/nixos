@@ -12,7 +12,7 @@
         };
       };
       default = {
-        url = "file:///nix/store/ihdz0zf9mf5qxh0jid0shmjks1ppfldg-rbw_1.15.0_linux_amd64.tar.gz";
+        url = "http://box.d/cache/rbw_1.15.0_linux_amd64.tar.gz";
         narHash = "sha256-HulxqTwSeB+//jIL0QsG25rYAEdZKvTqHjVexpvgjR4=";
       };
       description = "rbw 预编译包来源（指定 url 和 narHash）";

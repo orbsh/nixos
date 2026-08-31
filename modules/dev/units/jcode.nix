@@ -11,7 +11,7 @@
         };
       };
       default = {
-        url = "file:///nix/store/vxy308pqcc91859gg9g43j4d0wji7ib0-jcode-linux-x86_64.tar.gz";
+        url = "http://box.d/cache/jcode-linux-x86_64.tar.gz";
         narHash = "sha256-UrOntWFXVlyIfDkeF+v1FTsy4rOkZm5C19gs79MIWCk=";
       };
       description = "jcode 预编译包来源";

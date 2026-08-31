@@ -3,7 +3,7 @@
 
   # https://github.com/amzxyz/RIME-LMDG/releases/download/LTS/wanxiang-lts-zh-hans.gram
   rime.wanxiang.src = {
-    url = "file:///nix/store/zlq9gvhynkvc2hial3310yw39kb32y3i-wanxiang-lts-zh-hans.gram";
-    narHash = "sha256-apW5hlRjyRrJgk6eJ5IGUNbn+Y6y/LMXtB6go9EOG+0=";
+    url = "http://box.d/cache/wanxiang-lts-zh-hans.gram";
+    narHash = "sha256-uIkCY74pXvBMy6FvNqCX9k5/dJ9FkIOKUdjEWjhY6/s=";
   };
 }
