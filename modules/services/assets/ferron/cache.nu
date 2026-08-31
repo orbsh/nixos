@@ -8,7 +8,7 @@ use $utils *
 #   逻辑:      文件在 CACHE_ROOT 存在 → 直接 send-file
 #              不存在 → 读 CACHE_ROOT/index.yml 取 <name>: [urls]
 #                       → 顺序 curl 下载(先成功者胜) → 存 CACHE_ROOT
-#   环境变量:  CACHE_ROOT  (缓存目录, 默认 PUB_ROOT)
+#   环境变量:  CACHE_ROOT  (缓存目录, 默认 DOCUMENT_ROOT)
 #
 # index.yml 样例:
 #   jcode-linux-x86_64.tar.gz:
@@ -23,7 +23,7 @@ export def main [] {
 }
 
 def serve [] {
-    let root = $env.CACHE_ROOT? | default ($env.PUB_ROOT? | default $env.DOCUMENT_ROOT)
+    let root = $env.CACHE_ROOT? | default $env.DOCUMENT_ROOT
     # `/cache/<name>`: name = PATH_INFO 最后一段 (rewrite ^/cache/(.*) 到 /cache/$1)
     let name = $env.PATH_INFO | path split | last
     if ($name | is-empty) {
