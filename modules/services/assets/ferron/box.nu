@@ -5,16 +5,18 @@ use $utils *
 
 # box.nu: 统一数据网关 (读 + 上传 + 列目录) + token 角色鉴权
 #   目录分割安全模型 (无目录内部过滤):
-#     DATA_ROOT (data/)  - upload 角色读写; 无 token 只读
+#     DATA_ROOT (data/)  - upload 角色读写; '' (无有效 token) 只读
 #     HOOKS_ROOT (hooks/) - setup 角色读写 (上传 hook 脚本)
 #     ACL_ROOT  (acl/)    - admin 角色读写 (含 index.yml)
 #   URL 形态: box.d/box/<rel>    rel 相对当前 token 的角色根
 #   鉴权: 请求头 `box-token: <token>` -> ACL_ROOT/index.yml 中该 token 的角色
-#        role: admin|setup|upload|(空→只读 data)
+#        role: admin|setup|upload|'' (''=无有效 token, 匿名只读 data)
+#   读取无需 token (目录不同而已); 写入要求 role 非空
 #   hook 寻址 (核心特性, 保留): 上传到 data/<rel> 时,
 #        在 HOOKS_ROOT/<rel> 下解析 run.nu 并执行
 #   启动引导: ACL_ROOT/index.yml 缺失时首请求生成随机 admin token
 #   安全: 路径穿越防护 (目标必须位于自己的角色根内)
+#   数据流: token 只解析一次 (token-role), 根目录存在由启动/部署保证, 不逐请求查
 
 export def main [] {
     # 第一行捕获 stdin (若先调用其他函数会抢占 $in)
@@ -37,21 +39,18 @@ def rel-segments [] {
 }
 def rel [] { rel-segments | path join }
 
-# 当前 token 的角色; ACL_FILE 固定为 ACL_ROOT/index.yml (ensure-bootstrap 保证存在)
-# 这是 ACL 的唯一解析点: 内部不再重复读/判
+# 当前 token 的角色: admin|setup|upload|'' (''=无有效 token = 匿名)
+# 空串作为 index.yml 的 record key 合法 (不存在 → get -o 给空 → default '')
 def token-role [] {
-    let tok = $env.HTTP_BOX_TOKEN? | default ''
-    if ($tok | is-empty) { return { valid: true, role: '' } }   # 匿名: 只读 data
-    let r = open (acl-file) | get -o $tok | default ''
-    { valid: ($r | is-not-empty), role: $r }
+    open (acl-file) | get -o ($env.HTTP_BOX_TOKEN? | default '') | default ''
 }
 
-# role -> 操作根 (纯映射, 无副作用)
+# role -> 操作根 (纯映射, 无副作用; '' → DATA_ROOT 匿名只读)
 def role-root-of [role] {
     match $role {
         admin  => { $env.ACL_ROOT? | default '' }
         setup  => { $env.HOOKS_ROOT? | default '' }
-        _      => { $env.DATA_ROOT? | default '' }   # upload 与匿名 都落 data
+        _      => { $env.DATA_ROOT? | default '' }   # ''(匿名) 与 upload 都落 data
     }
 }
 
@@ -63,8 +62,6 @@ def inside-root [path root] {
 }
 
 # ── ACL ──────────────────────────────────────────────────
-# token -> 单值角色 (admin|setup|upload|''), token-role 已定义
-
 def acl-file [] { ($env.ACL_ROOT? | default '') | path join 'index.yml' }
 def data-root [] { $env.DATA_ROOT? | default '' }
 def hooks-root [] { $env.HOOKS_ROOT? | default '' }
@@ -72,18 +69,15 @@ def hooks-root [] { $env.HOOKS_ROOT? | default '' }
 def ensure-bootstrap [] {
     let f = acl-file
     if ($f | path exists) { return }
-    mkdir (($f | path dirname) | path expand --no-symlink)
+    mkdir ($f | path dirname | path expand --no-symlink)
     let tok = random chars --length 24
-    $'($tok): admin\n' | save -f $f
+    {$tok: admin} | to yaml | save -f $f
     print -e $"(char nl)Generated acl/index.yml (admin token): ($tok)"
 }
 
-# ── GET: 读 + 列目录 (无目录内过滤) ────────────────────
+# ── GET: 读 + 列目录 (无目录内过滤; 无需 token, 仅目录不同) ─
 def serve [] {
-    let role = token-role
-    if not $role.valid { status 403; return }   # 无效 token → 403
-    let root = role-root-of $role.role
-    if ($root | is-empty) { status 403; return }   # 目录未配置 → 403
+    let root = role-root-of (token-role)
     let path = $root | path join (rel)
     if not (inside-root $path $root) { status 403; return }
 
@@ -99,14 +93,14 @@ def list-dir [dir] {
     ls $dir | select name type size modified | to json -r
 }
 
-# ── POST/PUT: 上传 ───────────────────────────────────────
+# ── POST/PUT: 上传 (仅有效 token, role 非空) ──────────────
 # 命中 hook 时 hook 输出作为响应 (SSE); 否则返回 event JSON
 def upload [] {
     let n = $in
     let role = token-role
-    if not ($role.valid and ($role.role | is-not-empty)) { status 403; return }
-    let root = role-root-of $role.role
-    if ($root | is-empty) { status 403; return }
+    if ($role | is-empty) { status 403; return }   # ''=无有效 token, 不可写
+
+    let root = role-root-of $role
     let dest = $root | path join (rel)
     if not (inside-root $dest $root) { status 403; return }
 
@@ -124,7 +118,7 @@ def upload [] {
     }
 
     # hook 寻址: 仅 upload 传 data 时, 查 HOOKS_ROOT/<rel> 下 run.nu
-    let hit = if ($role.role == 'upload') { run-hook-if-any $event } else { false }
+    let hit = if ($role == 'upload') { run-hook-if-any $event } else { false }
     if not $hit {
         content -j
         $event | upsert location {|e| $root | path join (rel) } | to json -r
