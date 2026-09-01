@@ -3,7 +3,8 @@
   imports = [
     ./mini.nix                    # 继承 mini（apps-core, de-session, greetd, 输入法/字体/可访问性等）
     ./units/apps-extra.nix
-    ./units/rime.nix
+    ./units/rime-pinyin.nix       # Rime 拼音层（内部引入 rime-base）
+    ./units/rime-wubi.nix         # Rime 五笔层（内部引入 rime-base）
   ];
 
   # ── 合并各模块的 resume 命令 ───────────────────────

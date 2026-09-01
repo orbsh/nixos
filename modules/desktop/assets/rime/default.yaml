@@ -1,8 +1,7 @@
 config_version: '2026-02-06'
 
-schema_list:
-  - schema: rime_ice
-  - schema: double_pinyin_flypy
+# schema_list 由 rime-base.nix 生成的 default.custom.yaml(patch)注入,
+# 各方案模块(rime-pinyin / rime-wubi)向 options.rime.schemas 注册。
 menu:
   page_size: 5
 

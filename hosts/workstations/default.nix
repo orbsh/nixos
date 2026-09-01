@@ -28,6 +28,11 @@
       })
     ];
 
+    # orbit 主场景「五笔为主、拼音兜底」：启用 wubi86（带拼音反查）+ 保留 rime-ice 拼音
+    # 本地模式（localPath 优先于 src 默认远端地址）
+    rime.wubi.enable = true;
+    rime.wubi.localPath = "/home/${user}/data/rime-wubi";
+
     # 用户级环境变量（仅对 orbit 节点的 master 用户生效）
     home-manager.users.${user}.home.sessionVariables.PREFER_ALT = "1";
 
