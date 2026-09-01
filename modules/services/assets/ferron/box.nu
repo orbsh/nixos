@@ -7,14 +7,16 @@ use $utils *
 #   目录分割安全模型 (无目录内部过滤):
 #     DATA_ROOT (data/)  - upload 角色读写; '' (无有效 token) 只读
 #     HOOKS_ROOT (hooks/) - hook 角色读写 (上传 hook 脚本)
-#     ACL_ROOT  (acl/)    - admin 角色读写 (含 index.yml)
-#   URL 形态: box.d/box/<rel>    rel 相对当前 token 的角色根
-#   鉴权: 请求头 `box-token: <token>` -> ACL_ROOT/index.yml 中该 token 的角色
-#        role: admin|hook|upload|'' (''=无有效 token, 匿名只读 data)
+#     META_ROOT  (meta/)   - meta 角色读写 (acl.yml 角色表 + origin.yml 回源清单)
+#   URL 形态: box.d/<rel>    rel 相对当前 token 的角色根 (根挂载, 无 box 前缀)
+#   鉴权: 请求头 `box-token: <token>` -> META_ROOT/acl.yml 中该 token 的角色
+#        role: meta|hook|upload|'' (''=无有效 token, 匿名只读 data)
 #   读取无需 token (目录不同而已); 写入要求 role 非空
 #   hook 寻址 (核心特性, 保留): 上传到 data/<rel> 时,
 #        在 HOOKS_ROOT/<rel> 下解析 run.nu 并执行
-#   启动引导: ACL_ROOT/index.yml 缺失时首请求生成随机 admin token
+#   回源 (box+cache 融合): GET data/<rel> 缺失时, 查 META_ROOT/origin.yml[<rel>]
+#        顺序 curl 下载落到 data/<rel> → send-file (等同看待, 与上传混一空间)
+#   启动引导: META_ROOT/acl.yml + origin.yml 缺失时首请求生成随机 token / 空 origin
 #   安全: 路径穿越防护 (目标必须位于自己的角色根内)
 #   数据流: token 只解析一次 (token-role), 根目录存在由启动/部署保证, 不逐请求查
 
@@ -30,7 +32,8 @@ export def main [] {
 }
 
 # ── 路径解析 ─────────────────────────────────────────────
-# PATH_INFO = /box/<rel> (rewrite 后), 去掉 'box' 前缀得操作相对路径
+# PATH_INFO = /box.nu/box/<rel> (根兜底 rewrite 后): skip 1 去脚本名 box.nu,
+#   skip HEAD_LEN(=PREFIX_LEN=1) 去 rewrite 目标中脚本路由段 box, 余下即操作相对路径
 def rel-segments [] {
     $env.PATH_INFO
     | path split
@@ -39,8 +42,8 @@ def rel-segments [] {
 }
 def rel [] { rel-segments | path join }
 
-# 当前 token 的角色: admin|hook|upload|'' (''=无有效 token = 匿名)
-# 空串作为 index.yml 的 record key 合法 (不存在 → get -o 给空 → default '')
+# 当前 token 的角色: meta|hook|upload|'' (''=无有效 token = 匿名)
+# 空串作为 acl.yml 的 record key 合法 (不存在 → get -o 给空 → default '')
 def token-role [] {
     open (acl-file) | get -o ($env.HTTP_BOX_TOKEN? | default '') | default ''
 }
@@ -48,7 +51,7 @@ def token-role [] {
 # role -> 操作根 (纯映射, 无副作用; '' → DATA_ROOT 匿名只读)
 def role-root-of [role] {
     match $role {
-        admin  => { $env.ACL_ROOT? | default '' }
+        meta  => { $env.META_ROOT? | default '' }
         hook   => { $env.HOOKS_ROOT? | default '' }
         _      => { $env.DATA_ROOT? | default '' }   # ''(匿名) 与 upload 都落 data
     }
@@ -61,36 +64,79 @@ def inside-root [path root] {
     $p | str starts-with $r
 }
 
-# ── ACL ──────────────────────────────────────────────────
-def acl-file [] { ($env.ACL_ROOT? | default '') | path join 'index.yml' }
+# ── ACL / meta ──────────────────────────────────────────────
+def meta-root [] { $env.META_ROOT? | default '' }
+def acl-file [] { (meta-root) | path join 'acl.yml' }
+def origin-file [] { (meta-root) | path join 'origin.yml' }
 def data-root [] { $env.DATA_ROOT? | default '' }
 def hooks-root [] { $env.HOOKS_ROOT? | default '' }
 
 def ensure-bootstrap [] {
-    let f = acl-file
-    if ($f | path exists) { return }
-    mkdir ($f | path dirname | path expand --no-symlink)
-    {
-      (random chars --length 24): admin
-      (random chars --length 24): hook
-      (random chars --length 24): upload
+    let root = meta-root
+    mkdir $root
+    # acl.yml: token → role 表
+    let acl = acl-file
+    if not ($acl | path exists) {
+        {
+          (random chars --length 24): meta
+          (random chars --length 24): hook
+          (random chars --length 24): upload
+        }
+        | to yaml
+        | save -f $acl
     }
-    | to yaml
-    | tee { save -f $f }
-    | print -e $"(char nl)Generated acl/index.yml: ($in)"
+    # origin.yml: rel → 回源 urls 表 (缺失时生成空表)
+    let origin = origin-file
+    if not ($origin | path exists) {
+        {} | to yaml | save -f $origin
+    }
+    print -e $"(char nl)meta ready: acl.yml + origin.yml at ($root)"
 }
 
 # ── GET: 读 + 列目录 (无目录内过滤; 无需 token, 仅目录不同) ─
 def serve [] {
-    let root = role-root-of (token-role)
+    let role = token-role
+    let root = role-root-of $role
     let path = $root | path join (rel)
     if not (inside-root $path $root) { status 403; return }
 
     match ($path | path type) {
         file => { send-file $path }
         dir  => { list-dir $path }
-        _    => { status 404 }
+        _    => {
+            # 回源: 仅 data 空间(匿名/upload)缺失时查 origin.yml 下载落 data
+            if $root == (data-root) {
+                fetch-from-origin $path
+            } else {
+                status 404
+            }
+        }
     }
+}
+
+# box+cache 融合: 本地缺失 → 查 meta/origin.yml[rel] → 顺序下载落 data/<rel> → send-file
+def fetch-from-origin [path] {
+    let key = rel
+    let origin = origin-file
+    if not ($origin | path exists) { status 404; return }
+    # 字符串 key 含斜杠/句号时字面取, 不当嵌套路径解析
+    let urls = try { open $origin | get -o $key } catch { null }
+    if ($urls | is-empty) { status 404; return }
+
+    let tmp = mktemp
+    mut done = false
+    for url in $urls {
+        let r = curl -fsSL --max-time 600 -o $tmp $url | complete
+        let sz = try { ls $tmp | first | get size | into int } catch { 0 }
+        if ($r.exit_code == 0 and $sz > 0) {
+            mkdir ($path | path dirname)
+            mv -f $tmp $path
+            $done = true
+            break
+        }
+        rm -f $tmp
+    }
+    if $done { send-file $path } else { status 404 }
 }
 
 def list-dir [dir] {

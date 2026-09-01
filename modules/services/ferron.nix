@@ -1,14 +1,13 @@
 # Ferron: 轻量级 Web 服务器（常驻服务，文件下载 + CGI 网关）
 # 使用 ferron 3.x musl 静态二进制（覆盖 nixpkgs 2.x）
-# 配置和 CGI 脚本位于 ./assets/ferron/（box.conf / box.nu / cache.nu / ...）
+# 配置和 CGI 脚本位于 ./assets/ferron/（box.conf / box.nu / ...）
 # 架构（root=configDir, 无符号链接, 目录分割安全模型）：
 #   configDir - 配置+脚本目录（root）。默认指向 store 里的 scripts，脚本直接住 root。
-#   dataRoot  - 数据基底根（默认 ~/.local/share/box）。扁平目录:
-#                 hooks/  HOOKS_ROOT - hook 脚本 (hook 读写)
-#                 acl/    ACL_ROOT   - ACL 配置 (admin 读写, 含 index.yml)
-#                 nixos/  CACHE_ROOT - cache.nu 前向缓存
+#   dataRoot  - 数据基底根（默认 ~/.local/share/box 下 meta/）。扁平目录:
+#                 meta/   META_ROOT   - 配置 (meta 读写: acl.yml 角色表 + origin.yml 回源清单)
+#                 hooks/  HOOKS_ROOT  - hook 脚本 (hook 读写)
 #   dataDir   - DATA_ROOT (data 文件, upload 读写, 无 token 只读; 默认 ~/Downloads)
-#   box.nu/cache.nu 通过 DATA_ROOT/HOOKS_ROOT/CACHE_ROOT/ACL_ROOT 环境变量定位，不依赖 root。
+#   box.nu 通过 DATA_ROOT/HOOKS_ROOT/META_ROOT 环境变量定位，不依赖 root。
 { pkgs, lib, config, user, ... }:
 
 let
@@ -22,7 +21,7 @@ let
     hash = "sha256-aGfkSzGC02elK4hjuQeTFlMsC4kZqFNwSKL/UB7DTo4=";
   };
 
-  # Ferron 脚本目录（Nix store，含 box.conf / box.nu / cache.nu / ...）
+  # Ferron 脚本目录（Nix store，含 box.conf / box.nu / ...）
   # 直接作为 root=configDir（不可变、无需符号链接）
   ferronScripts = lib.sources.cleanSource ./assets/ferron;
 
@@ -31,8 +30,7 @@ let
     sed -e 's|CONFIG_DIR_PLACEHOLDER|${cfg.configDir}|g' \
         -e 's|DATA_ROOT_PLACEHOLDER|${cfg.dataDir}|g' \
         -e 's|HOOKS_ROOT_PLACEHOLDER|${cfg.hooksDir}|g' \
-        -e 's|CACHE_ROOT_PLACEHOLDER|${cfg.cacheRoot}|g' \
-        -e 's|ACL_ROOT_PLACEHOLDER|${cfg.aclDir}|g' ${ferronScripts}/box.conf > $out
+        -e 's|META_ROOT_PLACEHOLDER|${cfg.metaDir}|g' ${ferronScripts}/box.conf > $out
   '';
 
   # CGI 脚本（.nu）所需的外部工具
@@ -90,22 +88,13 @@ in {
     hooksDir = lib.mkOption {
       type = lib.types.path;
       default = "${cfg.dataRoot}/hooks";
-      description = "hook 脚本目录（setup 读写）";
+      description = "hook 脚本目录（hook 读写）";
     };
 
-    aclDir = lib.mkOption {
+    metaDir = lib.mkOption {
       type = lib.types.path;
-      default = "${cfg.dataRoot}/acl";
-      description = "ACL 配置目录（admin 读写, 含 index.yml）";
-    };
-
-    cacheRoot = lib.mkOption {
-      type = lib.types.path;
-      default = "${cfg.dataRoot}/nixos";
-      description = ''
-        cache.nu 前向缓存网关的缓存目录。
-        index.yml 索引也放此处。
-      '';
+      default = "${cfg.dataRoot}/meta";
+      description = "meta 配置目录（meta 读写: acl.yml 角色表 + origin.yml 回源清单）";
     };
   };
 
@@ -146,8 +135,7 @@ in {
       "d ${cfg.dataRoot} 0755 ${user} users -"
       "d ${cfg.dataDir} 0755 ${user} users -"
       "d ${cfg.hooksDir} 0755 ${user} users -"
-      "d ${cfg.aclDir} 0755 ${user} users -"
-      "d ${cfg.cacheRoot} 0755 ${user} users -"
+      "d ${cfg.metaDir} 0755 ${user} users -"
     ];
 
     # ── Ferron 守护服务 ──

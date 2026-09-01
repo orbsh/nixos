@@ -37,7 +37,7 @@
       ruleDir = "/home/${user}/data/ladder/sing-box/config/rule_sets";
     };
     services.ferron = {
-      cacheRoot = "/home/${user}/pub/Assets/nixos";
+      dataDir = "/home/${user}/pub/Assets";
     };
   };
   # 成员 1：Alice
