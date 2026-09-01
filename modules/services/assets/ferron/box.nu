@@ -6,11 +6,11 @@ use $utils *
 # box.nu: 统一数据网关 (读 + 上传 + 列目录) + token 角色鉴权
 #   目录分割安全模型 (无目录内部过滤):
 #     DATA_ROOT (data/)  - upload 角色读写; '' (无有效 token) 只读
-#     HOOKS_ROOT (hooks/) - setup 角色读写 (上传 hook 脚本)
+#     HOOKS_ROOT (hooks/) - hook 角色读写 (上传 hook 脚本)
 #     ACL_ROOT  (acl/)    - admin 角色读写 (含 index.yml)
 #   URL 形态: box.d/box/<rel>    rel 相对当前 token 的角色根
 #   鉴权: 请求头 `box-token: <token>` -> ACL_ROOT/index.yml 中该 token 的角色
-#        role: admin|setup|upload|'' (''=无有效 token, 匿名只读 data)
+#        role: admin|hook|upload|'' (''=无有效 token, 匿名只读 data)
 #   读取无需 token (目录不同而已); 写入要求 role 非空
 #   hook 寻址 (核心特性, 保留): 上传到 data/<rel> 时,
 #        在 HOOKS_ROOT/<rel> 下解析 run.nu 并执行
@@ -39,7 +39,7 @@ def rel-segments [] {
 }
 def rel [] { rel-segments | path join }
 
-# 当前 token 的角色: admin|setup|upload|'' (''=无有效 token = 匿名)
+# 当前 token 的角色: admin|hook|upload|'' (''=无有效 token = 匿名)
 # 空串作为 index.yml 的 record key 合法 (不存在 → get -o 给空 → default '')
 def token-role [] {
     open (acl-file) | get -o ($env.HTTP_BOX_TOKEN? | default '') | default ''
@@ -49,7 +49,7 @@ def token-role [] {
 def role-root-of [role] {
     match $role {
         admin  => { $env.ACL_ROOT? | default '' }
-        setup  => { $env.HOOKS_ROOT? | default '' }
+        hook   => { $env.HOOKS_ROOT? | default '' }
         _      => { $env.DATA_ROOT? | default '' }   # ''(匿名) 与 upload 都落 data
     }
 }
@@ -72,7 +72,7 @@ def ensure-bootstrap [] {
     mkdir ($f | path dirname | path expand --no-symlink)
     {
       (random chars --length 24): admin
-      (random chars --length 24): setup
+      (random chars --length 24): hook
       (random chars --length 24): upload
     }
     | to yaml

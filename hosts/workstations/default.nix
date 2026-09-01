@@ -37,7 +37,6 @@
       ruleDir = "/home/${user}/data/ladder/sing-box/config/rule_sets";
     };
     services.ferron = {
-      dataRoot = "/home/${user}/.box";
       cacheRoot = "/home/${user}/pub/Assets/nixos";
     };
   };

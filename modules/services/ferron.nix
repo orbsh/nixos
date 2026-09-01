@@ -3,11 +3,11 @@
 # 配置和 CGI 脚本位于 ./assets/ferron/（box.conf / box.nu / cache.nu / ...）
 # 架构（root=configDir, 无符号链接, 目录分割安全模型）：
 #   configDir - 配置+脚本目录（root）。默认指向 store 里的 scripts，脚本直接住 root。
-#   dataRoot  - 数据基底根（默认 ~/.box；orbit 设成 ~/pub/Assets）。扁平目录:
-#                 data/   DATA_ROOT  - data 文件 (upload 读写, 无 token 只读)
-#                 hooks/  HOOKS_ROOT - hook 脚本 (setup 读写)
+#   dataRoot  - 数据基底根（默认 ~/.local/share/box）。扁平目录:
+#                 hooks/  HOOKS_ROOT - hook 脚本 (hook 读写)
 #                 acl/    ACL_ROOT   - ACL 配置 (admin 读写, 含 index.yml)
 #                 nixos/  CACHE_ROOT - cache.nu 前向缓存
+#   dataDir   - DATA_ROOT (data 文件, upload 读写, 无 token 只读; 默认 ~/Downloads)
 #   box.nu/cache.nu 通过 DATA_ROOT/HOOKS_ROOT/CACHE_ROOT/ACL_ROOT 环境变量定位，不依赖 root。
 { pkgs, lib, config, user, ... }:
 
@@ -74,17 +74,17 @@ in {
 
     dataRoot = lib.mkOption {
       type = lib.types.path;
-      default = "/home/${user}/.box";
+      default = "/home/${user}/.local/share/box";
       description = ''
-        数据基底根。含扁平子目录 data/ hooks/ acl/ nixos/。
-        orbit 应设成 ~/pub/Assets。
+        数据基底根（XDG 规范）。含扁平子目录 hooks/ acl/ nixos/。
+        data/ 实际落在 ~/Downloads（见 dataDir）。
       '';
     };
 
     dataDir = lib.mkOption {
       type = lib.types.path;
-      default = "${cfg.dataRoot}/data";
-      description = "data 文件目录（upload 读写, 无 token 只读）";
+      default = "/home/${user}/Downloads";
+      description = "data 文件目录（upload 读写, 无 token 只读; 默认 ~/Downloads）";
     };
 
     hooksDir = lib.mkOption {
