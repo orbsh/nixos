@@ -95,7 +95,11 @@ def serve [] {
 
 def list-dir [dir] {
     content -j
-    ls $dir | select name type size modified | to json -r
+    # 防线前移: cd 进 root 再 ls, name 从源头就是相对路径, 不在输出端事后换算
+    cd $dir
+    ls
+    | select name type size modified
+    | to json -r
 }
 
 # ── POST/PUT: 上传 (仅有效 token, role 非空) ──────────────
@@ -118,7 +122,7 @@ def upload [] {
         host: $env.HTTP_HOST
         binary: (($n | describe -d).type == 'binary')
         size: (if (($n | describe -d).type == 'binary') { $n | bytes length } else { $n | str length })
-        filename: $dest
+        filename: (rel)
         timestamp: (date now | format date "%+")
     }
 
@@ -126,7 +130,7 @@ def upload [] {
     let hit = if ($role == 'upload') { run-hook-if-any $event } else { false }
     if not $hit {
         content -j
-        $event | upsert location {|e| $root | path join (rel) } | to json -r
+        $event | upsert location {|e| (rel) } | to json -r
     }
 }
 
@@ -152,7 +156,7 @@ def run-hook-if-any [event] {
     let script = [$workdir run.nu] | path join
     $"(open -r $hook_path)\n\nexport def main [] { let o = $in | from json; file_uploaded $o }" | save -f $script
     $event
-    | insert location {|e| data-root | path join (rel) }
+    | insert location {|e| (rel) }
     | to json -r
     | nu --stdin $script
     cd ..
