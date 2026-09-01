@@ -52,8 +52,8 @@ in
     ./niri.nix
     # ./vicinae.nix  # 禁用（2026-08-27）：改回以 walker 为主启动器；文件保留备查
     ./cosmic.nix
-    ./hyprland.nix
-    ./quickshell.nix
+    #./hyprland.nix
+    #./quickshell.nix
     # ./eww.nix  # 已废弃（2026-08），不再引入；文件保留备查
   ];
 
