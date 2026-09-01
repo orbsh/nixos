@@ -17,6 +17,7 @@
         # nix hash path /nix/store/xxx-...tar.zst
         url = "http://box.d/nixos/open-interpreter-package-x86_64-unknown-linux-musl.tar.zst";
         narHash = "sha256-/VnhM/o2X/tPq7VAho7bYieaNZcZEObBpjV4+H8jRcc=";
+        # narHash = "sha256-BJwLXVZoHgiXxfpfzq5tRijA7LRK4l171zxWkOn2A1M=";
       };
       description = "Open Interpreter 预编译包来源（rust 分支 release）";
     };
@@ -26,7 +27,7 @@
     cfg = config.dev.openinterpreter;
   in {
     environment.systemPackages = with pkgs; [
-      bubblewrap  # bwrap：Codex/jcode 沙箱执行所需
+      bubblewrap  # bwrap：Codex 沙箱执行所需
 
       (stdenv.mkDerivation {
         pname = "open-interpreter";
