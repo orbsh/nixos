@@ -37,7 +37,7 @@
     tld = "d";                # 本机服务域名后缀：box.d / gitea.d / ...
     useDynamicConfig = false; # 纯声明式：直接读 store 静态配置（不再允许 REST API 动改，避免动态文件挡住声明式服务）
     src = {
-      url = "http://box.d/cache/numa-linux-x86_64.tar.gz";
+      url = "http://box.d/nixos/numa-linux-x86_64.tar.gz";
       narHash = "sha256-a0tZ3N4Pa+kWGGvFP2XmnrG4rTDkYZbYa+2td+foH9M=";
     };
 

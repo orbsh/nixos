@@ -10,7 +10,7 @@
         };
       });
       default = {
-        url = "http://box.d/cache/WeChatLinux_x86_64.AppImage";
+        url = "http://box.d/nixos/WeChatLinux_x86_64.AppImage";
         narHash = "sha256-SucQpHHs2xW7LNhEi/4il2v1J/YeJfQOpDebpBu+IgE=";
       };
       description = "WeChat 安装包来源（指定 url 和 narHash）。非空时覆盖 nixpkgs 默认版本，设为 null 则回退 nixpkgs。";
