@@ -119,5 +119,5 @@ key_binder:
     - {accept: equal, send: Page_Down, when: has_menu}
     - {accept: comma, send: comma, when: has_menu}
     - {accept: period, send: period, when: has_menu}
-    - {accept: semicolon, send: semicolon, when: has_menu}
-    - {accept: apostrophe, send: apostrophe, when: has_menu}
+    - {accept: semicolon, send: "2", when: has_menu}
+    - {accept: apostrophe, send: "3", when: has_menu}
