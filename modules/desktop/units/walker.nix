@@ -44,6 +44,7 @@ in
     xdg.configFile."elephant/scripts/cwdhist.py".source = ../assets/elephant/scripts/cwdhist.py;
     xdg.configFile."elephant/scripts/windowsmru.py".source = ../assets/elephant/scripts/windowsmru.py;
     xdg.configFile."elephant/menus/cwdhist.lua".source = ../assets/elephant/menus/cwdhist.lua;
+    xdg.configFile."elephant/menus/cwdhist2.lua".source = ../assets/elephant/menus/cwdhist2.lua;
     xdg.configFile."elephant/menus/windowsmru.lua".source = ../assets/elephant/menus/windowsmru.lua;
 
     systemd.user.services.walker = {

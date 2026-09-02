@@ -26,3 +26,27 @@ quick_activate = ["alt 1", "alt 2", "alt 3", "alt 4", "alt 5", "alt 6", "alt 7",
 [[providers.prefixes]]
 prefix = "["
 provider = "menus:cwdhist"
+
+[[providers.prefixes]]
+prefix = "【"
+provider = "menus:cwdhist2"
+
+# ── cwdhist2（【 前缀的别名菜单）打开方式，与 menus:cwdhist 同构 ──
+[[providers.actions."menus:cwdhist2"]]
+action = "open_neovide"
+label = "用 neovide 打开"
+bind = "Return"
+default = true
+after = "Close"
+
+[[providers.actions."menus:cwdhist2"]]
+action = "open_alacritty"
+label = "用 alacritty 打开"
+bind = "ctrl t"
+after = "Close"
+
+[[providers.actions."menus:cwdhist2"]]
+action = "open_cosmic"
+label = "用 cosmic-files 打开"
+bind = "ctrl f"
+after = "Close"

@@ -50,10 +50,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1788317453,
-        "narHash": "sha256-BTVJDWIuGa5ffxQEG5WujOOm3eXPw3gZX42Wvm32gb8=",
+        "lastModified": 1788355065,
+        "narHash": "sha256-gAz5oTI7ur34CfuakQduiQd/2ZhO62Bn2XXg08nZYYQ=",
         "ref": "refs/heads/master",
-        "rev": "b8350fcdf54ccf553e46408053b1ac5b7038c18b",
+        "rev": "d9d750e4fc11c10cab2da677bdd31e427f3a3a71",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/nix-community/home-manager"
@@ -82,10 +82,10 @@
     },
     "my-nushell-config": {
       "locked": {
-        "lastModified": 1787895359,
-        "narHash": "sha256-IZPOYbuxD7Kcek6aKjZmE2Npx9zmwJF22f2pmxWgrUo=",
+        "lastModified": 1788339785,
+        "narHash": "sha256-y3A1y8IgcV5DKly12k5Ggc179wM2NdtDKDfgN3RUMy8=",
         "ref": "refs/heads/main",
-        "rev": "1567d1db48e6cba8b965c2d4805b0a6230ce3c91",
+        "rev": "f433ca8c11a32fe176bf64f15439e1d402d36afd",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/orbsh/nushell"
@@ -258,11 +258,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1788248235,
-        "narHash": "sha256-siCQqLbY7AbZ9V3oyc65K8bhNr7QgZTXoqLTws3pv0s=",
+        "lastModified": 1788332415,
+        "narHash": "sha256-BTFrmyh0oaVDsvA9NNw0YpbbeppTwU0t70iVx672Ew8=",
         "owner": "oxalica",
         "repo": "rust-overlay",
-        "rev": "6a84c41e705533dcc5569ac0731f18406b4cdf86",
+        "rev": "860d7c835ab91bfc8972b67092f5f2db8e9390a0",
         "type": "github"
       },
       "original": {
