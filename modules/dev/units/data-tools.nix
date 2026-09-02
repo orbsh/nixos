@@ -4,6 +4,7 @@
   #     不再自建 python3.withPackages 环境（避免多个同名 python3-env 竞争系统 python3 链接）。
   programs.pythonEnv.extraPackages = [
     pkgs.python3Packages.polars
+    pkgs.python3Packages.lancedb
   ];
 
   environment.systemPackages = [
