@@ -45,7 +45,7 @@
       nh                            # 简化 NixOS 管理（nh os switch, nh clean 等）
 
       # ── Nix 包管理与开发 ──
-      cachix                        # Nix 缓存管理（CI/CD 加速）
+      # cachix                        # Nix 缓存管理（CI/CD 加速）
       nix-init                      # 快速生成 Nix 包 / Flake 模板
       nix-update                    # 自动更新包版本和 hash
 
