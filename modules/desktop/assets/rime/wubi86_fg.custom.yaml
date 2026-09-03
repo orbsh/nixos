@@ -1,0 +1,3 @@
+# wubi86_fg 补丁：编码唯一时自动上屏（无重码即上屏，不必等四码）。
+patch:
+  speller/auto_select_unique_candidate: true

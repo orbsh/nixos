@@ -70,6 +70,12 @@ in {
       ];
     })
 
+    # wubi86_fg.custom.yaml：编码唯一时自动上屏（来源 assets，不从上游词库仓库部署）
+    (lib.mkIf cfg.enable {
+      home-manager.users.${user}.xdg.dataFile."fcitx5/rime/wubi86_fg.custom.yaml".source =
+        ../assets/rime/wubi86_fg.custom.yaml;
+    })
+
     # 本地模式：symlink 直连本地仓库文件（活文件，改动即时生效）
     # config.lib 在 HM 模块内部作用域才可见，须以内层模块包一层取到
     (lib.mkIf (cfg.enable && cfg.localPath != null) {
