@@ -10,8 +10,10 @@ export def main [
     action: string@cmpl
     --config-path: string
     --rule-bin-path: string
+    --rule-prefix: string   # rule-set path 前缀重写（产物给非本机消费方时用，如容器挂载布局）
     --output: string
     --outbound-tag: string
+    --clash-api: string     # 注入 experimental.clash_api.external_controller（如 127.0.0.1:7892）；不传则不生成该节点
 ] {
     let o = $in
     match $action {
@@ -19,7 +21,7 @@ export def main [
             $o | from json | outbounds-to-kdl $outbound_tag
         }
         kdl-to-config => {
-            $o | from kdl | kdl-to-config $rule_bin_path | to json
+            $o | from kdl | kdl-to-config $rule_bin_path $rule_prefix | to json
         }
         generate => {
             let dir = $config_path
@@ -31,7 +33,13 @@ export def main [
                 error make { msg: $"no *.kdl files in configDir: ($dir)" }
             }
             let merged = $kdls | each {|f| open $f --raw | from kdl } | flatten
-            let cfg = $merged | kdl-to-config $rule_bin_path
+            let cfg = $merged | kdl-to-config $rule_bin_path $rule_prefix
+            # 注入 experimental.clash_api（KDL 源不掺生成物；不传 --clash-api 则保持 KDL 原样）
+            let cfg = if ($clash_api | is-not-empty) {
+                $cfg | merge { experimental: { clash_api: { external_controller: $clash_api } } }
+            } else {
+                $cfg
+            }
             if ($output | is-not-empty) {
                 $cfg | to json | save -f $output
             } else {
@@ -41,11 +49,19 @@ export def main [
     }
 }
 
-export def kdl-to-config [rule_bin_path] {
+export def kdl-to-config [rule_bin_path, rule_prefix?] {
     let o = $in
     let rules = $o | where name == rules | kdl-to-rules
     let rule_set = scan-binary-ruleset $rule_bin_path
     | append ($o | where name == rule_set | kdl-to-ruleset)
+    let rule_set = if ($rule_prefix | is-empty) {
+        $rule_set
+    } else {
+        # 本地规则集重写为相对工作目录（-D）的路径，产物可移植；布局由调用方决定
+        $rule_set | each {|r|
+            if $r.type == local { $r | update path $"($rule_prefix)/($r.path | path basename)" } else { $r }
+        }
+    }
     let outbounds = $o | where name == outbounds | kdl-to-outbounds
     $o | where name == singbox | merge-config $rules $rule_set $outbounds
 }
@@ -54,7 +70,7 @@ def new [rec] {
     { name: "", args: [], props: {}, children: [] } | merge $rec
 }
 
-export def outbounds-to-kdl [tag] {
+export def outbounds-to-kdl [tag props={}] {
     $in
     | each {|x|
         let name = $x.type? | default "unknown"
@@ -95,7 +111,7 @@ export def outbounds-to-kdl [tag] {
     | new {
         name: outbounds
         args: [$tag]
-        props: {type: urltest}
+        props: $props
         children: $in
     }
     | to kdl --format nodes

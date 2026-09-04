@@ -37,9 +37,10 @@
     home-manager.users.${user}.home.sessionVariables.PREFER_ALT = "1";
 
     # orbit 单独：KDL 配置源目录 + 规则数据目录指向本机数据目录（configDir 不落默认 ~/.config）
+    # ladder 仓库已迁移新布局：config/（KDL 源）+ assets/（.srs），见仓库 README
     services.singbox = {
-      configDir = "/home/${user}/data/ladder/singbox-conf";
-      ruleDir = "/home/${user}/data/ladder/sing-box/config/rule_sets";
+      configDir = "/home/${user}/data/singbox/config";
+      ruleDir = "/home/${user}/data/singbox/assets";
     };
     services.ferron = {
       dataDir = "/home/${user}/pub/Assets";

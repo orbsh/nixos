@@ -12,7 +12,7 @@
 #   - ExecStartPre 用 singbox-conf 命令（writeShellScriptBin 进 systemPackages）
 #     读取 configDir 下所有 *.kdl 合并(glob+flatten)生成单一 config.json 到 dataDir，然后 sing-box run -c 加载
 #   - singbox-conf 命令内部经 assets/singbox-conf.nu 的 standalone generate 入口执行
-#   - 热更：改 .kdl → systemctl reload（先 check 后 HUP）重新生成并重载
+#   - 热更：改 .kdl → systemctl reload（重新生成 config.json → clash API PUT /configs 进程内重载）
 #   - 注：sing-box 本身只支持 JSON/JSONC；KDL 只是我们的编辑/生成源，运行仍用生成的 config.json
 #   - 网络切换自动重连：NetworkManager dispatcher（层1）+ 健康检查 timer（层2）
 #
@@ -47,6 +47,38 @@ let
 
   port = toString cfg.listenPort;
 
+  # 共享生成逻辑（ExecStartPre 与 ExecReload 同用）：
+  #   1. 目录就绪；无 .kdl 源时生成全直连占位 config.kdl（服务器占位/首次）
+  #   2. singbox-conf generate 读 configDirPath 所有 *.kdl 合并 → config.json 到数据目录
+  #      clashApiPort 非 null 时注入 experimental.clash_api（声明式由 NixOS 管，KDL 源不掺生成物）
+  singboxGen = pkgs.writeShellScript "singbox-generate" ''
+    set -e
+    mkdir -p ${dataDirPath} ${configDirPath} ${ruleDirPath}
+    # 注: ls 无匹配返回非零，加 || true 避免 set -e 误终止
+    kdls="$(ls ${configDirPath}/*.kdl 2>/dev/null || true)"
+    if [ -z "$kdls" ]; then
+      cat > "${configDirPath}/config.kdl" <<'KDL'
+singbox {
+    log level=info timestamp=#true output="singbox.log"
+    inbounds {
+        mixed listen="127.0.0.1" listen_port=${port}
+    }
+    outbounds {
+        direct tag=direct
+    }
+    route {
+        final direct
+    }
+}
+KDL
+      chown ${user} "${configDirPath}/config.kdl"
+    fi
+    ${singboxConfPath} generate --config-path ${configDirPath} --rule-bin-path ${ruleDirPath} \
+      ${lib.optionalString (cfg.clashApiPort != null) ''--clash-api "127.0.0.1:${toString cfg.clashApiPort}"''} \
+      --output "${dataDirPath}/config.json"
+    chown ${user} "${dataDirPath}/config.json"
+  '';
+
 in
 {
   options.services.singbox = {
@@ -69,6 +101,11 @@ in
       type = lib.types.path;
       default = "${config.services.singbox.dataDir}/rule-sets";
       description = "规则数据目录（*.srs 二进制规则文件，scan-binary-ruleset 扫描生成 rule_set 声明）。默认 dataDir/rule-sets";
+    };
+    clashApiPort = lib.mkOption {
+      type = lib.types.nullOr lib.types.int;
+      default = 7892;
+      description = "clash API（external_controller）端口。固定绑定 127.0.0.1；null = 禁用。默认 7892（避开 9090 常用端口）";
     };
     healthUrl = lib.mkOption {
       type = lib.types.str;
@@ -105,40 +142,15 @@ in
         # 工作目录 = 数据目录：让 sing-box 生成的 cache.db / singbox.log 落到数据目录（与 config.json 同处）
         WorkingDirectory = dataDirPath;
         # 读取 KDL 源目录(configDirPath)所有 *.kdl → 合并 → 生成 config.json 到数据目录(dataDirPath)
-        ExecStartPre = pkgs.writeShellScript "singbox-execstartpre" ''
-          set -e
-          mkdir -p ${dataDirPath} ${configDirPath} ${ruleDirPath}
-          # 无 .kdl 源文件时生成全直连占位 config.kdl（服务器占位/首次）
-          # 注: ls 无匹配返回非零，加 || true 避免 set -e 误终止
-          kdls="$(ls ${configDirPath}/*.kdl 2>/dev/null || true)"
-          if [ -z "$kdls" ]; then
-            cat > "${configDirPath}/config.kdl" <<'KDL'
-singbox {
-    log level=info timestamp=#true output="singbox.log"
-    inbounds {
-        mixed listen="127.0.0.1" listen_port=${port}
-    }
-    outbounds {
-        direct tag=direct
-    }
-    route {
-        final direct
-    }
-}
-KDL
-            chown ${user} "${configDirPath}/config.kdl"
-          fi
-          # singbox-conf 命令：--config-path 读 configDirPath 所有 *.kdl 合并，--rule-bin-path 扫描规则数据目录 .srs
-          ${singboxConfPath} generate --config-path ${configDirPath} --rule-bin-path ${ruleDirPath} --output "${dataDirPath}/config.json"
-          chown ${user} "${dataDirPath}/config.json"
-        '';
+        ExecStartPre = singboxGen;
         # 加载生成的单一 config.json
         ExecStart = "${pkgs.sing-box}/bin/sing-box run -c ${dataDirPath}/config.json";
-        # 热更：先 check 校验，通过才发 SIGHUP。check 失败则该行非零 → systemd 中止，不 reload，旧进程继续（避免空窗）
-        # systemd 逐行执行 ExecReload 数组，任一行失败即整体失败且不执行后续。
+        # 热更：重新生成 config.json → 走 clash API 进程内重载（不断连接，不重建实例）。
+        # 配置不正确时接口返回 5xx，reload 失败、旧进程旧配置继续（避免空窗），无需单独 check。
+        # clashApiPort = null（禁用 API）时无热更通道，reload 直接失败退出。
         ExecReload = [
-          "${pkgs.sing-box}/bin/sing-box check -c ${dataDirPath}/config.json"
-          "${pkgs.coreutils}/bin/kill -HUP $MAINPID"
+          singboxGen
+          "${pkgs.curl}/bin/curl -fsS -X PUT http://127.0.0.1:${toString cfg.clashApiPort}/configs -d '{\"path\": \"${dataDirPath}/config.json\"}'"
         ];
         Restart = "on-failure";
         RestartSec = "5s";
