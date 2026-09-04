@@ -11,11 +11,12 @@ export def main [
     --config-path: string
     --rule-bin-path: string
     --output: string
+    --outbound-tag: string
 ] {
     let o = $in
     match $action {
         outbounds-to-kdl => {
-            $o | from json | outbounds-to-kdl
+            $o | from json | outbounds-to-kdl $outbound_tag
         }
         kdl-to-config => {
             $o | from kdl | kdl-to-config $rule_bin_path | to json
@@ -53,7 +54,7 @@ def new [rec] {
     { name: "", args: [], props: {}, children: [] } | merge $rec
 }
 
-export def outbounds-to-kdl [] {
+export def outbounds-to-kdl [tag] {
     $in
     | each {|x|
         let name = $x.type? | default "unknown"
@@ -91,7 +92,12 @@ export def outbounds-to-kdl [] {
         }
         new {name: $name, args:[$x.tag], children: $children }
     }
-    | new {name: outbounds, children: $in}
+    | new {
+        name: outbounds
+        args: [$tag]
+        props: {type: urltest}
+        children: $in
+    }
     | to kdl --format nodes
 }
 
