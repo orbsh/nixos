@@ -70,10 +70,23 @@ in {
       ];
     })
 
-    # wubi86_fg.custom.yaml：编码唯一时自动上屏（来源 assets，不从上游词库仓库部署）
+    # wubi86_fg.custom.yaml / wubi86_fg_pinyin.custom.yaml：四码唯一自动上屏
     (lib.mkIf cfg.enable {
-      home-manager.users.${user}.xdg.dataFile."fcitx5/rime/wubi86_fg.custom.yaml".source =
-        ../assets/rime/wubi86_fg.custom.yaml;
+      home-manager.users.${user} = { lib, ... }: {
+        xdg.dataFile = {
+          "fcitx5/rime/wubi86_fg.custom.yaml".source =
+            ../assets/rime/wubi86_fg.custom.yaml;
+          "fcitx5/rime/wubi86_fg_pinyin.custom.yaml".source =
+            ../assets/rime/wubi86_fg_pinyin.custom.yaml;
+        };
+
+        # Nix store 文件 mtime 固定，Rime 可能因此跳过 custom.yaml 重建；
+        # 删除已编译 schema，让下一次 Rime 部署强制读取最新补丁。
+        home.activation.rimeWubiSchemaRebuild =
+          lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+            ${pkgs.coreutils}/bin/rm -f "$HOME/.local/share/fcitx5/rime/build/wubi86_fg.schema.yaml" "$HOME/.local/share/fcitx5/rime/build/wubi86_fg_pinyin.schema.yaml"
+          '';
+      };
     })
 
     # 本地模式：symlink 直连本地仓库文件（活文件，改动即时生效）

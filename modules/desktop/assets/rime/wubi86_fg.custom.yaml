@@ -1,3 +1,9 @@
-# wubi86_fg 补丁：编码唯一时自动上屏（无重码即上屏，不必等四码）。
+# wubi86_fg 补丁：
+# - 使用 librime 内置 auto_select，唯一候选自动上屏
+# - auto_select_pattern 仅在满四码时检查唯一候选
+# - enable_completion: false 避免未完成编码产生多余候选
 patch:
-  speller/auto_select_unique_candidate: true
+  speller/auto_select: true
+  speller/auto_select_pattern: "^....$"
+  speller/max_code_length: 4
+  translator/enable_completion: false

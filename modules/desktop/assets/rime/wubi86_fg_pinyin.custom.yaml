@@ -1,0 +1,7 @@
+# wubi86_fg_pinyin（拼音混输）补丁：
+# - 使用 librime 内置 auto_select，四码唯一时自动上屏
+# - 不设 max_code_length，允许拼音继续输入
+# - enable_completion: true 保持拼音补全
+patch:
+  speller/auto_select: true
+  speller/auto_select_pattern: "^....$"
