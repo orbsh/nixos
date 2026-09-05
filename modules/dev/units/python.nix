@@ -28,6 +28,8 @@
           structlog python-json-logger pyyaml
           # Compression
           zstandard
+          # format
+          kdl-py
         ]
         # developMode 增补（并入统一 env，避免第二 env）
         ++ lib.optionals config.programs.developMode [
