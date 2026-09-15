@@ -17,6 +17,7 @@
       ./orbit/disk.nix
       ./orbit/wireguard.nix
       ./orbit/wifi-mt7925.nix
+      ./orbit/tailscale.nix
       ./wanxiang.nix
       #./vivaldi.nix
       #./nushell.nix
