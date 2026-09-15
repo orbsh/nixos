@@ -15,7 +15,8 @@ let
   # eww 已废弃（2026-08）：cosmic 用自带 shell，不再挂组件；系统监视挂件迁往 niri 的 Noctalia
   deComponents = {
     hyprland = [ "quickshell.service" "hyprshell.service" ];
-    niri = [ "noctalia.service" "swayidle.service" ];
+    # fcitx5 属 niri 会话组件（input-method.nix 定义服务；Wayland IM 随会话拉起）
+    niri = [ "noctalia.service" "swayidle.service" "fcitx5.service" ];
   };
 
   # 已注册的 DE（由各 DE 单元声明 predicate）
