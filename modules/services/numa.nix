@@ -35,6 +35,11 @@ let
       target_port = ${toString s.targetPort}
       target_host = "${s.targetHost}"
     '') cfg.services}
+    ${lib.concatMapStringsSep "\n" (f: ''
+      [[forwarding]]
+      suffix = [ ${lib.concatStringsSep ", " (map (z: ''"${z}"'') (lib.toList f.suffix))} ]
+      upstream = [ ${lib.concatStringsSep ", " (map (d: ''"${d}"'') (lib.toList f.upstream))} ]
+    '') cfg.forwarding}
     [mobile]
     enabled = false
   '';
@@ -98,6 +103,23 @@ in {
       type = lib.types.listOf lib.types.str;
       default = publicDnsServers;  # 全局统一公共 DNS，见 flake.nix commonArgs
       description = "Upstream DNS servers";
+    };
+
+    forwarding = lib.mkOption {
+      type = lib.types.listOf (lib.types.submodule {
+        options = {
+          suffix = lib.mkOption {
+            type = lib.types.either lib.types.str (lib.types.listOf lib.types.str);
+            description = "条件转发的域名后缀（单个或列表）";
+          };
+          upstream = lib.mkOption {
+            type = lib.types.either lib.types.str (lib.types.listOf lib.types.str);
+            description = "该后缀的转发目标（IP:53 或 DoT/DoH URL，列表做 failover）";
+          };
+        };
+      });
+      default = [ ];
+      description = "Per-suffix 条件转发。命中的查询转发给 upstream，其余走默认 [upstream]。";
     };
 
     src = lib.mkOption {
