@@ -12,6 +12,7 @@ in {
       hardware/disk.nix
       hardware/hardware-configuration.nix
       hardware/wireguard.nix
+      ./tailscale.nix
 
       # 角色预设
       ../../profiles/server.nix  # 提取出的服务器基座
