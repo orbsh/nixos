@@ -12,6 +12,7 @@
     strace      # 系统调用追踪
     tcpdump     # 网络抓包
     lsof        # 列出打开文件
+    bubblewrap  # 轻量沙箱 (bwrap)，unshare 用户态封装
 
     # ── 网络工具 ──────────────────────────────────────
     websocat    # WebSocket CLI
