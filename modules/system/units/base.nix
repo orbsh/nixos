@@ -63,7 +63,7 @@
     # 基础 CLI 工具（所有主机通用）
     environment.systemPackages = with pkgs; [
       # ── 网络与传输 ──
-      git curl wget rsync socat netcat-openbsd
+      git curl wget rsync socat netcat-openbsd openssl
       # ── 文件与系统工具 ──
       util-linux  # mount, fdisk, lsblk 等
       jq tree file unzip fd ripgrep sd bind dust  # bind: dig, nslookup
