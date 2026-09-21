@@ -127,8 +127,11 @@ in {
   # 注：rust.nu 中另有 cargo-tree / cross / cargo-eval / wit-deps-cli / wit-bindgen-cli，
   # nixpkgs 暂未提供，此处省略（需要时可用 cargo install 补装）。
 
+  # No RUSTC_WRAPPER: sccache measured a 9.6% hit rate on Rust and cost ~24s of
+  # hashing/write overhead per cold build. What it buys (cheap deletion of target/)
+  # is moot: artifacts now live in a shared build-dir and target/ holds only final
+  # outputs. See ~/.cargo/config.toml for the build-dir / profile settings.
   environment.variables = {
-    RUSTC_WRAPPER = "sccache";
     CARGO_HOME  = "$HOME/.cargo";
     RUSTUP_HOME = "$HOME/.rustup";
   };
