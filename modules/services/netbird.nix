@@ -6,6 +6,19 @@
 { config, lib, ... }:
 let
   cfg = config.services.myNetbird;
+
+  # netbird 客户端 profile 里 ManagementURL 是 Go 的 url.URL，不是字符串：
+  # config.d 由 encoding/json 直接解进 Config，所以必须给 url.URL 的字段形状
+  # （Scheme + Host，Host 含端口、不含 scheme）。写成字符串会在守护进程启动时报
+  # "cannot unmarshal string into Go struct field Config.ManagementURL of type url.URL"。
+  mgmtUrl = builtins.match "^(https?)://([^/]+).*" cfg.managementUrl;
+  mgmtUrlParts =
+    if mgmtUrl == null
+    then throw "services.myNetbird.managementUrl 需为 https?://host[:port][/...] 形式"
+    else {
+      scheme = builtins.elemAt mgmtUrl 0;
+      host = builtins.elemAt mgmtUrl 1;
+    };
 in
 {
   options.services.myNetbird = {
@@ -23,11 +36,12 @@ in
       description = "WireGuard 监听端口（P2P 直连用，openFirewall 自动放行）";
     };
 
-    # numa 只做单标签 suffix 匹配；netbird 服务端 MagicDNS zone 需配成同名单标签域
+    # numa 只做单标签 suffix 匹配；自定义域一律单字母，故服务端账号的
+    # custom peer DNS domain 也须设成同一个字母
     dnsSuffix = lib.mkOption {
       type = lib.types.str;
-      default = "nb";
-      description = "netbird MagicDNS zone（须与服务端 DNS 设置一致），空 = 不注册 numa forwarding";
+      default = "n";
+      description = "netbird MagicDNS zone（须与服务端账号的 custom peer DNS domain 一致），空 = 不注册 numa forwarding";
     };
 
     dnsResolverAddress = lib.mkOption {
@@ -47,8 +61,11 @@ in
         # 手动登录：不启用 setup key 自动登录
         login.enable = false;
         dns-resolver.address = cfg.dnsResolverAddress;
-        # 自建控制面：default.json 的 ManagementURL 等价键，经 config.d 合入 config.json
-        config.ManagementURL = cfg.managementUrl;
+        # 自建控制面：写进 config.d 的 ManagementURL（url.URL 字段形状，见文件头注释）
+        config.ManagementURL = {
+          Scheme = mgmtUrlParts.scheme;
+          Host = mgmtUrlParts.host;
+        };
       };
     };
 

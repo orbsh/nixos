@@ -7,7 +7,7 @@
   services.myNetbird = {
     enable = true;
     managementUrl = "https://netbird.xinminghui.com";
-    # DNS 独立于系统解析（numa 按 *.nb suffix 转发给 netbird resolver），
+    # DNS 独立于系统解析（numa 按 *.n suffix 转发给 netbird resolver），
     # 不吃整条 resolv.conf——与 tailscale 的 acceptDns=false 同一取舍
   };
 }
