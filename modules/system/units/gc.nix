@@ -1,7 +1,15 @@
-# Nix GC 统一策略引擎
-# 三个正交维度：按代 / 按时间 / 空间阈值，独立配置，由同一 systemd 服务执行。
-# - 按代/按时间：删除旧 generation（nix-env --delete-generations）
-# - 空间阈值：注入 nix.settings.min-free/max-free，daemon 在磁盘满时构建/下载前自动兜底（优先保业务）
+# Nix GC 策略：按代清理
+# 单一维度 nix.gc.keepGenerations —— 保留最近 N 代，其余由 nix-env --delete-generations 删除，
+# 再由 nix-collect-garbage 回收不可达路径。
+#
+# 为何没有「按时间」维度：nix-env --delete-generations 一次只接受一种规则
+# （Nix 2.34.8：+N 与 Nd 混用直接报 invalid generation number），而按时间删除会突破
+# 「至少保留 N 代」的下限——保留窗口就变成时间的函数而非数量的函数。回滚窗口只由数量定义。
+#
+# 为何没有「空间阈值」（min-free/max-free）：它作用于 GC 的不可达路径，不是 generation。
+# 磁盘紧张时它一个代也删不掉（不可达路径清空即停，nix.conf: until max-free bytes are
+# available or there is no more garbage），所以既不能替代按代策略，也不能在空间不足时把
+# 代数降到 N 以下。去掉后磁盘满的表现为构建 ENOSPC，收敛时机由每周的按代清理负责。
 { pkgs, lib, config, ... }:
 
 {
@@ -9,53 +17,24 @@
     keepGenerations = lib.mkOption {
       type = lib.types.nullOr lib.types.int;
       default = null;
-      description = "保留最近 N 代 generation（null=不按代清理）";
-    };
-    deleteOlderThan = lib.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      default = null;
-      description = "删除超过该时间前的 generation，如 \"14d\"（null=不按时间）";
-    };
-    minFree = lib.mkOption {
-      type = lib.types.nullOr lib.types.int;
-      default = null;
-      description = "可用空间低于该字节数时自动清理不可达路径（磁盘满兜底）";
-    };
-    maxFree = lib.mkOption {
-      type = lib.types.nullOr lib.types.int;
-      default = null;
-      description = "空间清理到可用该字节数为止";
+      description = "保留最近 N 代 generation（null=不清理 generation）";
     };
   };
 
   config = {
-    # 默认策略：按时间 30d + 空间兜底（服务器端在 profile 中覆盖为按代）
-    nix.gc.keepGenerations = lib.mkDefault null;
-    nix.gc.deleteOlderThan = lib.mkDefault "30d";
-    nix.gc.minFree = lib.mkDefault (50 * 1024 * 1024 * 1024);
-    nix.gc.maxFree = lib.mkDefault (100 * 1024 * 1024 * 1024);
+    # 默认：保留最近 10 代（与 systemd-boot configurationLimit 默认值一致）
+    nix.gc.keepGenerations = lib.mkDefault 10;
 
-    # 按代/按时间策略服务（任一启用时激活）
-    nix.gc.automatic = lib.mkIf (config.nix.gc.keepGenerations != null
-                                 || config.nix.gc.deleteOlderThan != null)
+    # 启用时关闭上游 nix.gc.automatic，清理由本服务负责
+    nix.gc.automatic = lib.mkIf (config.nix.gc.keepGenerations != null)
                                  (lib.mkDefault false);
 
-    # 空间兜底由 daemon 层处理（磁盘满时构建/下载前触发）
-    nix.settings.min-free = lib.mkIf (config.nix.gc.keepGenerations != null
-                                      || config.nix.gc.deleteOlderThan != null)
-                                      (lib.mkDefault config.nix.gc.minFree);
-    nix.settings.max-free = lib.mkIf (config.nix.gc.keepGenerations != null
-                                      || config.nix.gc.deleteOlderThan != null)
-                                      (lib.mkDefault config.nix.gc.maxFree);
-
-    systemd.services.nix-gc-policy = lib.mkIf (config.nix.gc.keepGenerations != null
-                                               || config.nix.gc.deleteOlderThan != null) {
-      description = "Nix GC: generation/time policy based cleanup";
+    systemd.services.nix-gc-policy = lib.mkIf (config.nix.gc.keepGenerations != null) {
+      description = "Nix GC: generation count policy based cleanup";
       path = [ pkgs.nix pkgs.bash pkgs.coreutils pkgs.findutils ];
       script = ''
         set -euo pipefail
-        keep=''${config.nix.gc.keepGenerations}
-        older=''${config.nix.gc.deleteOlderThan}
+        keep='${lib.toString config.nix.gc.keepGenerations}'
 
         profiles="/nix/var/nix/profiles/system"
         profiles+=" $(find /nix/var/nix/profiles/per-user -maxdepth 2 \
@@ -63,19 +42,26 @@
 
         for prof in $profiles; do
           [ -e "$prof" ] || continue
-          args=()
-          if [ -n "$keep" ]; then args+=(+"$keep"); fi
-          if [ -n "$older" ]; then args+=("$older"); fi
-          if [ "''${#args[@]}" -gt 0 ]; then
-            nix-env --profile "$prof" --delete-generations "''${args[@]}" || true
-          fi
+          nix-env --profile "$prof" --delete-generations +"$keep" || true
         done
 
-        # 清理不可达路径（无按代/按时间时默认保留 30 天）
-        nix-collect-garbage --delete-older-than "''${older:-30d}" || true
+        # 回收上一步删掉 generation 后变为不可达的 store 路径。
+        # 不带 --delete-older-than：该参数等价于按时间再删一遍 generation，会突破数量下限。
+        nix-collect-garbage || true
       '';
       serviceConfig.Type = "oneshot";
       startAt = "weekly";
+    };
+
+    # 错过调度点则开机补跑：长期开机的机器 timer 一直 active，无 inactive 窗口，此项对其零影响；
+    # 关机/挂起跨过周一 00:00 的机器（portable/qemu）在开机时补跑一次。
+    # startAt 生成的 timer 只有 OnCalendar=weekly（不带 Persistent），故此处单独覆盖。
+    # RandomizedDelaySec：每次触发（含开机补跑）在窗口内随机延迟，避免与开机 I/O 抢资源。
+    systemd.timers.nix-gc-policy = lib.mkIf (config.nix.gc.keepGenerations != null) {
+      timerConfig = {
+        Persistent = true;
+        RandomizedDelaySec = "1h";
+      };
     };
   };
 }

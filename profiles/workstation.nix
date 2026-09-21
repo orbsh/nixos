@@ -19,9 +19,7 @@
     ../modules/services/numa.nix           # 本地 DNS + 反向代理（workstation 专用，server 用 CoreDNS）
   ];
 
-  # 工作站更新快：按代 10 + 按时间 14d 双重清理
-  nix.gc.keepGenerations = lib.mkForce 10;
-  nix.gc.deleteOlderThan = lib.mkForce "14d";
+  # 工作站更新快：只保留最近 10 代（按数量，不按时间；10 = gc 模块默认值，此处不重复声明）
 
 
   # 默认全直连；要代理出口：手改 ~/.config/singbox/outbounds.kdl 等（systemctl reload singbox 生效）。
