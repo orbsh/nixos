@@ -29,8 +29,7 @@ in {
         ../server/hardware/disk.nix
         ../server/hardware/hardware-configuration.nix
         ../server/hardware/wireguard.nix
-        # Tailscale（自建 headscale）
-        ../server/tailscale.nix
+        ../server/netbird.nix
         # K8s 插件
         ../../modules/services/coredns.nix
       ];
