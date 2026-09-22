@@ -2,9 +2,11 @@
   # 数据库客户端工具 + 数据分析 Python 库
   # 注：polars 等 python 库并入统一 python env（见 python.nix 的 programs.pythonEnv.extraPackages），
   #     不再自建 python3.withPackages 环境（避免多个同名 python3-env 竞争系统 python3 链接）。
-  programs.pythonEnv.extraPackages = [
-    pkgs.python3Packages.polars
-    pkgs.python3Packages.lancedb
+  # pyiceberg: Iceberg catalog 操作；s3fs: S3 文件系统访问（pyiceberg 的 s3 表数据读写依赖它）
+  programs.pythonEnv.extraPackages = with pkgs.python3Packages; [
+    polars
+    pyiceberg
+    s3fs
   ];
 
   environment.systemPackages = [

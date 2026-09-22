@@ -41,9 +41,9 @@
 
     [ui]
     # tmux 风格：无独立边框和外框；pane 间用空行缝隙分隔（共享边框线太占行）
-    pane_borders = false
+    pane_borders = true
     pane_outer_borders = false
-    pane_gaps = true
+    pane_gaps = false
 
     # 鼠标：拖拽调分屏边界 + 滚轮滚动；pane 内应用请求鼠标时仍归应用
     mouse_capture = true
