@@ -18,6 +18,7 @@
       ./orbit/wireguard.nix
       ./orbit/wifi-mt7925.nix
       ./orbit/netbird.nix
+      ./orbit/intranet-dns.nix
       ./wanxiang.nix
       #./vivaldi.nix
       #./nushell.nix
