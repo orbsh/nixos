@@ -120,6 +120,10 @@ in {
     cargo-wasi
     rust-script
     trunk
+    # trunk shells out to wasm-bindgen-cli for the JS glue step; without it
+    # trunk silently downloads a binary from GitHub into ~/.trunk. Pin the
+    # crate side to the same version (mudra workspace: wasm-bindgen =0.2.127).
+    wasm-bindgen-cli
     wasm-tools
     bugstalker
   ];
