@@ -63,10 +63,10 @@
     ../modules/system/assets/certs/mitmproxy-ca-cert.pem
   ];
 
-  # ── SSD 寿命优化：临时构建缓存移入内存 ───────────
-  # 避免 nixos-rebuild 在 /tmp 产生数 GB 高频临时写入磨损 SSD
-  boot.tmp.useTmpfs = true;
-  boot.tmp.tmpfsSize = "50%";  # 分配最大 50% 物理内存给临时盘
+  # ── /tmp 落盘：agent 编译 Rust 产生大量目标文件，tmpfs 常驻内存导致内存吃紧 ───────────
+  # （swap 为 zram，tmpfs 页换出后仍在内存，无泄压）；SSD 顺序写损耗可接受
+  boot.tmp.useTmpfs = false;
+  boot.tmp.cleanOnBoot = true;
 
   # 工作站开发模式：符号链接 + git clone
   programs.developMode = lib.mkForce true;
