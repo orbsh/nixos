@@ -1,4 +1,5 @@
 { pkgs, lib, ... }: {
+  networking.wireless.enable = false;
   # ── NetworkManager（桌面网络管理）──────────────────────
   # 提供 GUI 网络配置、WiFi 管理、VPN 支持等桌面功能
   networking.networkmanager.enable = true;
