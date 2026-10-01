@@ -10,6 +10,7 @@
     ./units/accessibility.nix
     ./units/qutebrowser.nix
     ./units/rbw.nix
+    ./units/herdr-prebuilt.nix   # herdr 官方二进制 overlay（声明 herdr.prebuilt 选项）
   ];
 
   # ── 桌面 Home Manager 配置（base/full 继承） ──────────────

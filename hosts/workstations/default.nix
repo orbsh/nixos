@@ -21,7 +21,8 @@
       ./orbit/intranet-dns.nix
       ./wanxiang.nix
       #./vivaldi.nix
-      #./nushell.nix
+      ./nushell.nix
+      ./herdr.nix
       # ../../modules/dev/units/emacs.nix  # 默认禁用，需时取消注释
       (import ../../libs/registries-gen.nix {
         inherit lib;
