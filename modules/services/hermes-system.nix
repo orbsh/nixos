@@ -5,15 +5,16 @@
 let
   srcDir = "/home/${user}/world/hermes-agent";
 
-  # pyproject.toml 要求 >=3.11,<3.14，固定 python313；
-  # 当 pyproject.toml 提高上限后可切回 pkgs.python3
-  python = pkgs.python313;
+  # 上游 pyproject.toml 依赖已门控 python_version >= '3.14'（openai/certifi 等），
+  # 显式钉住 python314，避免 nixpkgs 默认 python3 漂移时 venv 依赖静默装不上。
+  python = pkgs.python314;
 
-  # 全局依赖库：修复 Python 虚拟环境下各类大模型动态库（C-extensions）缺失造成的 ELF 报错
+  # 全局依赖库：修复 Python 虚拟环境下各类大模型动态库（C-extensions）缺失造成的 ELF 报错。
+  # 注意：不要把 pkgs.glibc 放进来。venv python 自带匹配的 loader/libc，
+  # 经 LD_LIBRARY_PATH 混入另一份 glibc 会触发 GLIBC_PRIVATE 符号错误而崩溃。
   runtimeLibs = [
     pkgs.stdenv.cc.cc.lib
     pkgs.zlib
-    pkgs.glibc
   ];
   ldLibraryPath = pkgs.lib.makeLibraryPath runtimeLibs;
 
@@ -51,7 +52,7 @@ in {
   # 服务公共的基础环境配置项（作为共享模板，不直接实例化）
   systemd.services.hermes-base-env = {
     after = [ "network.target" ];
-    path = with pkgs; [ bash coreutils python313 python313Packages.pip git stdenv.cc.cc nodejs ];
+    path = with pkgs; [ bash coreutils python314 python314Packages.pip git stdenv.cc.cc nodejs ];
     serviceConfig = {
       Type = "simple";
       User = user;
