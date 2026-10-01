@@ -4,7 +4,7 @@ let
 in {
   virtualisation.oci-containers.containers = {
     gitea = {
-      image = "gitea/gitea:1.27";
+      image = "gitea/gitea:28";
       volumes = [
         "${dataDir}/gitea/data:/data"
       ];
