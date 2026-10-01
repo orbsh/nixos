@@ -8,6 +8,11 @@
         key    = "~/.ssh/id_ed25519.pub";
         signByDefault = true;
         format = "ssh";
+        # 不钉 store path：HM 默认注入 pkgs.openssh 的绝对路径，
+        # 与进程环境 LD_LIBRARY_PATH 的 glibc/gcc 版本错配时 ssh-keygen 直接
+        # stack smashing（Nix 二进制 RUNPATH 排在 LD_LIBRARY_PATH 之后）。
+        # PATH 解析让每个 shell 选中与自身环境兼容的那个 ssh-keygen。
+        signer = "ssh-keygen";
       };
 
       settings = {
