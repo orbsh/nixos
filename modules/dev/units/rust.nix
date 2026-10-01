@@ -94,6 +94,42 @@ in {
       rust-bin = inputs.rust-overlay.lib.mkRustBin {
         distRoot = "https://rsproxy.cn/dist";
       } final;
+
+      # trunk：nixpkgs 的 by-name 定义是 buildRustPackage（纯源码编译），
+      # 二进制 cache miss 时就触发全量 crate 树编译，慢。改用 GitHub release
+      # 的 musl 静态二进制（单文件、无运行时依赖，无需 autoPatchelfHook）。
+      # 版本须与 nixpkgs 保持同步升级（trunk-rs/trunk releases）。
+      trunk = final.stdenvNoCC.mkDerivation {
+        pname = "trunk";
+        version = "0.21.14";
+        src = final.fetchurl {
+          url = "https://github.com/trunk-rs/trunk/releases/download/v0.21.14/trunk-x86_64-unknown-linux-musl.tar.gz";
+          hash = "sha256-pn9AVLJJ/prMX6vCXeGuvxl4Oso61v9kvzTX2kTQ6iA=";
+        };
+        dontBuild = true;
+        dontStrip = true;
+        # tar 顶层是单文件，默认 unpackPhase 检查"产出目录"会失败，显式解包
+        unpackPhase = ''
+          runHook preUnpack
+          mkdir src && cd src
+          tar xzf $src
+          cd ..
+          sourceRoot=src
+          runHook postUnpack
+        '';
+        installPhase = ''
+          runHook preInstall
+          install -Dm755 trunk $out/bin/trunk
+          runHook postInstall
+        '';
+        meta = with final.lib; {
+          homepage = "https://github.com/trunk-rs/trunk";
+          description = "Build, bundle & ship your Rust WASM application to the web";
+          mainProgram = "trunk";
+          license = licenses.asl20;
+          platforms = platforms.linux;
+        };
+      };
     })
   ];
 
