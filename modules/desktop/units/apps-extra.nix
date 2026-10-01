@@ -7,7 +7,7 @@
   environment.systemPackages = with pkgs; [
 
     # 媒体
-    smplayer
+    #smplayer
 
     # 创作
     # krita
