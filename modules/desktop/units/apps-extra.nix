@@ -2,6 +2,7 @@
   imports = [
     ./vivaldi.nix          # 浏览器：Vivaldi + Chromium + 缩放修复
     ./blender.nix          # Blender：官方包，不带插件管理
+    ./rustdesk.nix         # 远程桌面：GitHub 预编译二进制
   ];
 
   environment.systemPackages = with pkgs; [

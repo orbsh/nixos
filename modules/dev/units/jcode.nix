@@ -16,7 +16,7 @@
         # curl -sL -o jcode.tar.gz http://box.d/nixos/jcode-linux-x86_64.tar.gz
         # nix-store --add-fixed sha256 jcode.tar.gz && nix hash path --type sha256 jcode.tar.gz
         url = "http://box.d/nixos/jcode-linux-x86_64.tar.gz";
-        narHash = "sha256-FmlYAx8jOk10azMUtPq5Pqc6QgeOqt0VM0nGMDgYGww=";
+        narHash = "sha256-mVG4buhXRB7zSPGqphf9TM+yo84QhfcOybz3+MBhnl4=";
       };
       description = "jcode 预编译包来源（GitHub release，linux-x86_64）";
     };
