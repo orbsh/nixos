@@ -51,11 +51,11 @@ in
   # ── 捆绑本层管理的 DE 与组件（桌面子系统由此一层引入） ──
   imports = [
     ./niri.nix
-    # ./vicinae.nix  # 禁用（2026-08-27）：改回以 walker 为主启动器；文件保留备查
+    # ../../../legacy/desktop/units/de-session/vicinae.nix  # 禁用（2026-08-27）：改回以 walker 为主启动器；文件保留备查
     ./cosmic.nix
-    #./hyprland.nix
-    #./quickshell.nix
-    # ./eww.nix  # 已废弃（2026-08），不再引入；文件保留备查
+    #../../../legacy/desktop/units/de-session/hyprland.nix
+    #../../../legacy/desktop/units/de-session/quickshell.nix
+    # ../../../legacy/desktop/units/de-session/eww.nix  # 已废弃（2026-08），不再引入；文件保留备查
   ];
 
   options.desktop.sessions = lib.mkOption {

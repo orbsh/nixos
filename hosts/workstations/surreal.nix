@@ -1,5 +1,5 @@
 { ... }: {
-  imports = [ ../../modules/dev/units/surrealdb-server.nix ];
+  imports = [ ../../modules/legacy/dev/units/surrealdb-server.nix ];
 
   surrealdb.server = {
     enable = true;

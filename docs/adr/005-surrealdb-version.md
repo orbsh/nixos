@@ -2,6 +2,7 @@
 
 **日期**: 2026-06-02
 **状态**: 已采纳
+**后续（2026-10）**: SurrealDB 服务端已取消，模块移入 `modules/legacy/dev/units/surrealdb-server.nix`；本 ADR 记录的是当时的方案选择，现状见 `modules/legacy/README.md`
 
 ### 问题
 

@@ -2,8 +2,8 @@
 
 **日期**: 2026-08-25
 **状态**: 已采纳
-**涉及**: `modules/services/singbox.nix`、`modules/system/core.nix`、`modules/system/units/nix.nix`、`modules/desktop/units/de-session/vicinae.nix`、`flake.nix`
-**取代**: `modules/services/ladder.nix`（mihomo/podman 容器方案，保留作对照，确认后清理）
+**涉及**: `modules/services/singbox.nix`、`modules/system/core.nix`、`modules/system/units/nix.nix`、`modules/legacy/desktop/units/de-session/vicinae.nix`、`flake.nix`
+**取代**: `modules/services/ladder.nix`（mihomo/podman 容器方案；已移入 `modules/legacy/services/ladder.nix` 保留作对照）
 
 ### 问题
 

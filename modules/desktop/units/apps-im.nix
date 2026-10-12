@@ -2,7 +2,7 @@
 
 {
   imports = [
-    #./feishu.nix
+    #../../legacy/desktop/units/feishu.nix
     ./wechat.nix
   ];
 

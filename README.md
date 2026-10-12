@@ -50,11 +50,13 @@ flake.nix 扫描 hosts/ 目录
 
 **① 链式（层级式）—— 聚合器互相 import，层层叠加**：`desktop/`（`mini ⊂ base ⊂ full`）、`system/`（`core ⊂ extra`）。每层只声明增量，引最外层即得整链，公共层在根定义后由后层继承。
 
-**② 预聚合 flavor（选一）—— 并列、互不重叠、引一个**：`dev/`（backend / data-science / fullstack / infrastructure / rescue / server）。各 flavor 聚合器并列，共用 `dev/units/`，每套是一份完整选配，host 按其角色引其中一个，不引多个。
+**② 预聚合 flavor（选一）—— 并列、互不重叠、引一个**：`dev/`（fullstack / rescue / server，见 `profiles/*.nix`）。各 flavor 聚合器并列，共用 `dev/units/`，每套是一份完整选配，host 按其角色引其中一个，不引多个。（`dev/` 下的 backend / data-science / infrastructure 是占位聚合器——骨架保留、未接入任何 profile，仍在活跃树内。）
 
-**③ 单元式（逐个）—— 自包含模块，含自身依赖，按需独立 import**：`services/`（coredns / harmonia / ladder / gitea / miniflux / qbittorrent / rustfs / virt …）。每个服务是自包含单元，连自己的网络/依赖一起（如 ladder、gitea 各为 `imports = [ ./podman/network.nix ./podman/<app>.nix ]`，引用 podman 内多个基础设施）；`podman/` 是共享容器基础设施（app-net 网络 + 各应用 pod），非独立服务，由外层服务单元引用。逐个独立引入。
+**③ 单元式（逐个）—— 自包含模块，含自身依赖，按需独立 import**：`services/`（coredns / harmonia / gitea / miniflux / qbittorrent / rustfs / virt …）。每个服务是自包含单元，连自己的网络/依赖一起（如 gitea 为 `imports = [ ./podman/network.nix ./podman/gitea.nix ]`，引用 podman 内多个基础设施）；`podman/` 是共享容器基础设施（app-net 网络 + 各应用 pod），非独立服务，由外层服务单元引用。逐个独立引入。
 
 > 判断：被其他聚合器 `import` 成链 → **①**；并列可互换的完整选配、引一个 → **②**；独立自包含能力、逐个引 → **③**。
+
+**禁用模块**：不再引入的模块统一移入 `modules/legacy/`（按原相对路径存放，不做任何 import 源），保留备查。聚合器里原本指向它们的注释行已改指 legacy 路径，取消注释 + 把文件移回原位即可启用——见 `modules/legacy/README.md`。
 
 ---
 
@@ -68,7 +70,7 @@ flake.nix 扫描 hosts/ 目录
 | `base`（便携） | = mini + 增量 | apps-extra, rime |
 | `full`（工作站） | = base + 增量 | apps-im, laptop, networkmanager, walker, wl-clipboard |
 
-**设计原则**：逐层 `import`（`base` imports `mini`，`full` imports `base`），每层只声明自己的增量，公共层在 mini 定义后继承。桌面子系统（cosmic/hyprland/quickshell/eww 及 DE→组件关联表）统一收敛于 `units/de-session/`。
+**设计原则**：逐层 `import`（`base` imports `mini`，`full` imports `base`），每层只声明自己的增量，公共层在 mini 定义后继承。桌面子系统（`cosmic` / `niri` 及 DE→组件关联表）统一收敛于 `units/de-session/`；`hyprland` / `quickshell` / `eww` / `vicinae` 当前未引入，已移入 `legacy/`。
 
 **DE 模型**：纳入由 imports 决定（引 de-session = 装桌面子系统），运行时由 dispatcher 检测活跃会话（cosmic/hyprland）拉起对应 target，组件（quickshell→hyprland、eww→cosmic）只挂自己 DE 的 target，绝不挂 graphical-session.target。切换 DE = 登录选会话，不 rebuild。
 
@@ -76,7 +78,7 @@ flake.nix 扫描 hosts/ 目录
 
 | 单元 | 用途 |
 |------|------|
-| `de-session/` | **桌面子系统**：`default`（DE 层：dispatcher + DE→组件关联表）+ `cosmic` + `hyprland` + `quickshell` + `eww` |
+| `de-session/` | **桌面子系统**：`default`（DE 层：dispatcher + DE→组件关联表）+ `cosmic` + `niri`（`hyprland` / `quickshell` / `eww` / `vicinae` 已移入 legacy） |
 | `greetd.nix` | greetd 登录管理器（会话选择 + 记忆） |
 | `input-method.nix` | fcitx5 中文输入法 |
 | `fonts.nix` | 字体配置 |
@@ -95,44 +97,36 @@ flake.nix 扫描 hosts/ 目录
 ---
 
 ## 📋 Host 加载路径
+
 ### 1. Workstations（orbit / team-alice / team-bob）
 
 ```
-hosts/workstations/default.nix
-  └── profiles/workstation.nix
-        ├── modules/system/core.nix       (核心系统 + Home Manager: sys, base, nix, users, network, extra, container, home-*)
-        ├── modules/system/extra.nix      (工作站扩展工具)
-        ├── modules/system/units/hardware-generic.nix  (通用硬件配置)
-        ├── modules/dev/fullstack.nix     (Python, Rust, JS, Haskell, K8s, WASM 开发工具)
-        ├── modules/desktop/full.nix      (完整桌面预设)
-        │     ├── units/cosmic.nix
-        │     ├── units/greetd.nix
-        │     ├── units/input-method.nix
-        │     ├── units/fonts.nix
-        │     ├── units/accessibility.nix
-        │     ├── units/apps-core.nix
-        │     │     ├── units/vivaldi.nix ❌ (已移至 apps-extra)
-        │     │     ├── units/zed.nix
-        │     │     └── systemPackages: ghostty, alacritty, mpv, ffmpeg, firefox, chromium, flameshot 等
-        │     ├── units/apps-extra.nix
-        │     │     ├── units/vivaldi.nix ✅
-        │     │     └── systemPackages: smplayer, krita, blender, calibre, zathura 等
-        │     ├── units/apps-im.nix
-        │     ├── units/hyprland.nix     (waybar, wofi, grim, slurp, hyprpaper, cliphist 等)
-        │     ├── units/laptop.nix
-        │     ├── units/zed.nix
-        │     ├── units/home-terminals.nix  (内联桌面 HM: ghostty, alacritty, zellij, neovide)
-        │     ├── units/home-xdg.nix        (内联桌面 HM: mimeApps, userDirs, BROWSER)
-        │     └── hyprland.enable = true
-        ├── modules/services/virt.nix              (libvirtd/virt-manager)
-        ├── modules/services/hermes-system.nix     (Hermes Agent)
-        ├── modules/services/harmonia.nix          (本地二进制缓存 :5100)
-        ├── modules/services/ladder.nix            (Podman 代理链)
-        └── modules/services/podman-apps.nix      (Podman 应用全家桶)
+hosts/workstations/default.nix          # 域名 workstations，节点表 { orbit, team-alice, team-bob }
+  ├── 域级 imports: profiles/workstation.nix     # 自动合并到所有成员节点
+  └── orbit（成员示例）
+        ├── profiles/workstation.nix
+        │     ├── modules/system/extra.nix        (core ⊂ extra：sys/kanata/base/nix/gc/users/network/container/nushell/hardware + HM home-*)
+        │     ├── modules/dev/fullstack.nix       (python/rust/javascript/haskell/k8s/wasm/data-tools/net-tools/jcode)
+        │     ├── modules/desktop/full.nix        (base ⊂ full：mini + apps-extra + rime + apps-im/laptop/networkmanager/walker/mudra)
+        │     ├── modules/services/virt.nix       (libvirtd/virt-manager)
+        │     ├── modules/services/hermes-system.nix
+        │     ├── modules/services/harmonia.nix   (本地二进制缓存 :5100)
+        │     ├── modules/services/rustfs.nix
+        │     ├── modules/services/singbox.nix    (代理组件，:7890)
+        │     ├── modules/services/gitea.nix / miniflux.nix / qbittorrent.nix
+        │     ├── modules/services/ferron.nix     (文件下载 + CGI 网关，:8080)
+        │     └── modules/services/numa.nix       (本地 DNS + 反代，工作站专用)
+        ├── ./orbit/{hardware,disk,wireguard,wifi-mt7925,netbird,intranet-dns}.nix
+        ├── ./wanxiang.nix        (RIME 万象模型源：url + narHash)
+        ├── ./nushell.nix         (nushell 预编译二进制源：url + narHash)
+        ├── ./herdr.nix           (herdr 预编译二进制源：url + narHash)
+        └── libs/registries-gen.nix   (容器 registry 配置生成)
 
+节点级覆盖（写在 orbit 块内）：rime.wubi.localPath、services.singbox.{configDir,ruleDir}、services.ferron.dataDir
+team-alice / team-bob：仅 disko + 各自 hardware.nix（域级 profile 同样生效）
 ```
 
-**nushell 配置**：`developMode = true` → symlink 到 `~/Configuration/nushell`（详见 [ADR-003](docs/adr/003-nushell-version-develop-mode.md)）
+**桌面子系统**：`desktop/{mini ⊂ base ⊂ full}`；DE 与组件统一收敛于 `modules/desktop/units/de-session/`（当前启用 `cosmic`、`niri`）。未启用的 `hyprland` / `quickshell` / `eww` / `vicinae` 在 `modules/legacy/`。
 
 ---
 
@@ -141,30 +135,21 @@ hosts/workstations/default.nix
 ```
 hosts/portable/default.nix
   ├── profiles/portable.nix
-  │     ├── modules/system/core.nix       (核心系统 + Home Manager)
+  │     ├── modules/system/core.nix        (核心系统 + Home Manager)
   │     ├── modules/dev/rescue.nix
-  │     ├── modules/desktop/base.nix      (基础桌面预设)
-  │     │     ├── units/cosmic.nix
-  │     │     ├── units/greetd.nix
-  │     │     ├── units/input-method.nix
-  │     │     ├── units/fonts.nix
-  │     │     ├── units/accessibility.nix
-  │     │     ├── units/apps-core.nix
-  │     │     ├── units/hyprland.nix
-  │     │     ├── units/home-terminals.nix  (内联桌面 HM)
-  │     │     ├── units/home-xdg.nix        (内联桌面 HM)
-  │     │     └── 桌面子系统经 units/de-session/ 引入（cosmic/hyprland/quickshell/eww，无独立 enable）
-  │     └── modules/services/ladder.nix    (Podman 代理)
-  └── modules/services/harmonia.nix         (本地二进制缓存 :5100，节点级单独引入)
+  │     ├── modules/desktop/base.nix       (mini + apps-extra + rime-pinyin/rime-wubi)
+  │     ├── modules/services/singbox.nix
+  │     └── modules/services/ferron.nix
+  ├── ./disk.nix, ./hardware-configuration.nix
+  └── modules/services/harmonia.nix, modules/services/hermes-system.nix   (节点级单独引入)
 ```
 
 **与 workstation 的区别**：
-- 无 `dev/fullstack.nix`（无开发工具链）
-- 无 `podman/full.nix`（仅 ladder 代理）
-- 使用 `base.nix` 而非 `full.nix`（无 apps-im/laptop/networkmanager/walker）
-- nushell `developMode = false` → 通过 flake input 部署（详见 [ADR-003](docs/adr/003-nushell-version-develop-mode.md)）
-- 启用 `udisks2`（可移动设备自动挂载）
-- 启用 `getty.autologinUser`（自动登录）
+- 无 `dev/fullstack.nix`（无开发工具链），改引 `dev/rescue.nix`
+- 用 `base.nix` 而非 `full.nix`（无 apps-im / laptop / networkmanager / walker / mudra）
+- 移动盘：`boot.loader.efi.canTouchEfiVariables = false`（避免写到宿主机 EFI）
+- 启用 `udisks2`（可移动设备自动挂载）与 `getty.autologinUser`
+- nushell `developMode = false` → 经 flake input 部署（详见 [ADR-003](docs/adr/003-nushell-version-develop-mode.md)）
 
 ---
 
@@ -174,22 +159,15 @@ hosts/portable/default.nix
 hosts/qemu/default.nix
   └── profiles/qemu.nix
         ├── disko.nixosModules.disko
-        ├── modules/system/core.nix       (核心系统 + Home Manager)
-        ├── modules/desktop/mini.nix      (最小桌面预设)
-        │     ├── units/cosmic.nix
-        │     ├── units/greetd.nix
-        │     ├── units/input-method.nix
-        │     ├── units/fonts.nix
-        │     ├── units/accessibility.nix
-        │     ├── units/home-terminals.nix  (内联桌面 HM)
-        │     └── units/home-xdg.nix        (内联桌面 HM)
-        │     (无 hyprland，无 apps)
-        └── modules/dev/server.nix        (开发工具)
+        ├── modules/system/core.nix
+        ├── modules/desktop/mini.nix      (COSMIC + greetd + 输入法/字体/无障碍)
+        ├── modules/dev/server.nix
+        ├── modules/services/singbox.nix
+        └── modules/services/ferron.nix
+      ./disk.nix, ./hardware-configuration.nix（由 hosts/qemu/default.nix 引入）
 ```
 
-**特殊配置**：
-- `services.spice-vdagentd.enable = true`（SPICE 剪贴板/分辨率自适应）
-- 无开发工具，无 Hyprland
+**特殊配置**：`services.spice-vdagentd`（剪贴板/分辨率自适应）；`greetd.settings.initial_session` 直接进 `cosmic-session`；用户初始密码为空（免密自动登录）。
 
 ---
 
@@ -197,32 +175,35 @@ hosts/qemu/default.nix
 
 ```
 hosts/server/default.nix
-  └── profiles/server.nix
-        ├── modules/system/core.nix       (核心系统 + Home Manager)
-        ├── modules/dev/server.nix        (服务器开发工具)
-        ├── modules/services/virt.nix     (libvirtd/virt-manager)
-        └── modules/services/harmonia.nix (本地二进制缓存 :5100)
+  ├── profiles/server.nix
+  │     ├── modules/system/core.nix        (核心系统 + Home Manager)
+  │     ├── modules/dev/server.nix         (服务器开发工具)
+  │     ├── modules/services/virt.nix      (libvirtd/virt-manager)
+  │     ├── modules/services/harmonia.nix  (本地二进制缓存 :5100)
+  │     ├── modules/services/singbox.nix
+  │     └── modules/services/ferron.nix
+  └── ./hardware/*, ./tailscale.nix, ./netbird.nix
 ```
 
-**特点**：无桌面环境，无图形界面，headless 模式。
+**特点**：无桌面环境，headless；`nix.gc.keepGenerations = 20`（按代保留，完整回滚）；关闭 HM 的 `programs.neovim`（nvim 由系统级提供，插件走 lazy.nvim）。
 
 ---
 
-### 5. K8s 集群（k8s-dev / k8s-small-cluster / k8s-large-cluster）
+### 5. K8s 集群（k8s-dev / k8s-small / k8s-nscc / k8s-large）
 
 K8s 节点通过 `modules/k8s/k8s-libs.nix` 的 `expandCluster` 函数构建，自动注入：
 
 ```
 modules/k8s/k8s-libs.nix → expandCluster → buildNode
-  ├── profiles/server.nix           ← 所有 K8s 节点自动继承服务器预设
-  ├── k8sRoleModules             ← control / worker / combo 角色模块
+  ├── profiles/server.nix           ← 所有节点自动继承（imports = [ profiles/server.nix ] ++ ...）
+  ├── k8sRoleModules                ← control / worker / combo 角色模块
   │     ├── control: k8s-control.nix
   │     ├── worker: k8s-worker.nix
   │     └── combo: k8s-control.nix + k8s-worker.nix + 移除 taint
-  ├── clusterModules             ← 域级共享模块（如 registries-gen）
-  ├── runtimeModules             ← crio / containerd
-  ├── k8s 配置模块               (kubernetes, apiserver SANs, cert sync 等)
-  └── node.imports               ← 节点特有导入（硬件、wireguard 等）
+  ├── clusterModules                ← 域级共享模块（如 registries-gen）
+  ├── runtimeModules                ← crio / containerd
+  ├── k8s 配置模块                  (kubernetes、apiserver SANs、cert sync；k8s-common.nix 内引 dev/server.nix)
+  └── node.imports                  ← 节点特有导入（硬件、wireguard、netbird 等）
 ```
 
 **证书管理**：证书权限 0600，kubeconfig 通过脚本自动生成。详见 [ADR-013: K8s 证书管理](docs/adr/013-k8s-certificate-management.md)。
@@ -236,11 +217,12 @@ hosts/k8s-dev/default.nix
         │     ├── modules/dev/server.nix
         │     ├── modules/services/virt.nix
         │     └── modules/services/harmonia.nix
-        ├── k8s-role: combo            (control + worker 合一)
+        ├── k8s-role: combo               (control + worker 合一)
         ├── runtime: containerd
         ├── server/hardware/disk.nix
         ├── server/hardware/hardware-configuration.nix
         ├── server/hardware/wireguard.nix
+        ├── server/netbird.nix
         └── modules/services/coredns.nix    (内网 DNS)
 ```
 
@@ -248,14 +230,15 @@ hosts/k8s-dev/default.nix
 
 ### 6. ISO（nixos-anywhere 专用 Live 镜像）
 
-```n
-profiles/iso/default.nix          ← ISO 入口（不依赖 installation-cd-minimal）
-  ├── iso-image.nix               ← NixOS 最小 ISO 构建器
-  ├── modules/system/units/nix.nix        ← Nix 生态工具（nh, nixos-anywhere, cachix 等）
-  └── 用户配置（内联 HM 模块）
+```
+flake.nix → .#iso （nixosSystem，specialArgs 注入 my-* 配置源）
+  └── profiles/iso/default.nix
+        ├── nixpkgs iso-image.nix        ← 最小 ISO 构建器（不依赖 installation-cd-minimal）
+        ├── disko.nixosModules.disko + home-manager.nixosModules.home-manager
+        ├── modules/system/units/nix.nix         ← Nix 生态工具（nh, nixos-anywhere 等）
         ├── modules/system/units/home-nvim.nix   ← Neovim（系统级，HM 模块关闭）
         ├── modules/system/units/home-helix.nix  ← Helix 主题 + LSP + 快捷键
-        └── modules/system/units/home-git.nix   ← Git 配置（用户名/邮箱）
+        └── modules/system/units/home-git.nix    ← Git 配置（用户名/邮箱）
 ```
 
 **设计原则**：
@@ -309,7 +292,7 @@ nixos/
 │   ├── desktop/                  # 桌面预设
 │   │   ├── mini.nix              # 最小桌面（QEMU）
 │   │   ├── base.nix              # 基础桌面（portable）
-│   │   ├── full.nix              # 完整桌面（COSMIC + Hyprland + QS）
+│   │   ├── full.nix              # 完整桌面（base + apps-im/laptop/networkmanager/walker 增量）
 │   │   └── units/                # 桌面组件单元 + HM 单元（home-terminals, home-xdg）
 │   ├── dev/                      # 开发工具模块
 │   │   ├── server.nix            # 服务器开发工具
@@ -324,17 +307,17 @@ nixos/
 │   │   ├── k8s-addons.nix        # 集群组件（flannel, metrics-server 等）
 │   │   ├── cert-manager.nix
 │   │   ├── containerd.nix / crio.nix
-│   │   ├── envoy-gateway.nix / istio-gateway.nix
+│   │   ├── envoy-gateway.nix     # istio-gateway 已移入 legacy（两者互斥）
 │   │   └── assets/               # K8s 资源清单 + 脚本
-│   └── services/                 # 系统服务模块
-│       ├── virt.nix              # 虚拟机
-│       ├── harmonia.nix          # 本地二进制缓存
-│       ├── hermes-system.nix     # Hermes Agent
-│       ├── ladder.nix            # Podman 代理链
-│       ├── numa.nix              # 本地 DNS + 反向代理
-│       ├── rustfs.nix            # RustFS
-│       ├── coredns.nix           # CoreDNS
-│       └── podman/               # Podman 应用（gitea, aria2, mihomo 等）
+│   ├── services/                 # 系统服务模块
+│   │   ├── virt.nix              # 虚拟机
+│   │   ├── harmonia.nix          # 本地二进制缓存
+│   │   ├── hermes-system.nix     # Hermes Agent
+│   │   ├── numa.nix              # 本地 DNS + 反向代理
+│   │   ├── rustfs.nix            # RustFS
+│   │   ├── coredns.nix           # CoreDNS
+│   │   └── podman/               # Podman 应用（gitea, mihomo, qbittorrent, miniflux 等）
+│   └── legacy/                   # 未启用模块存放区（已废弃/被替代/暂时禁用；镜像原相对路径，见其 README）
 └── profiles/                     # 入口（被 flake.nix 或 hosts/ 消费）
     ├── portable.nix              # 便携系统预设
     ├── qemu.nix                  # QEMU 虚拟机预设

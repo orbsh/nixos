@@ -24,8 +24,8 @@
 ### 实现
 
 - `my-*` input 留在 `flake.nix`，通过 `commonArgs` 注入模块
-- 社区模块在对应 unit 文件内用 `builtins.fetchGit` + `flake-compat` 导入
-- 用 `let useGitOverlay = true/false` 开关控制是否启用，无需删除代码
+- 社区模块在对应 unit 文件内自包含 fetch（`builtins.fetchGit` / `builtins.fetchTarball`），不导入即不拉取
+- 曾用 `let useGitOverlay = true/false` 开关控制 nixos-cosmic 是否启用；上游稳定进 nixpkgs 后，开关与 fetch 逻辑随案例一并删除
 - 上游 hash 问题时通过 `nixpkgs.overlays` 在同文件内修正
 
 ### 理由
@@ -38,6 +38,6 @@
 ### 后果
 
 - `flake.nix` 不再有 `nixos-cosmic` input
-- `modules/desktop/units/cosmic.nix` 内通过 `useGitOverlay` 开关 + `builtins.fetchGit` 自包含 Git 版 COSMIC
-- COSMIC 稳定进入 nixpkgs 后：设 `useGitOverlay = false`，无需其他变动
-- `builtins.fetchGit` 无 `flake.lock` 锁定，需手动 pin `rev` 以保证可复现性（当前未 pin）
+- `modules/desktop/units/de-session/cosmic.nix` 曾以 `useGitOverlay` 开关 + `builtins.fetchGit` 自包含 Git 版 COSMIC；COSMIC 稳定进 nixpkgs（现为 1.9.x）后开关置 `false`，随后（2026-10）开关、`builtins.fetchGit` 与上游 hash 修正一并删除，模块只留 pipewire / portal / pop-launcher 等实际配置
+- 第二类（社区/临时依赖在模块内自包含 fetch）目前没有在用实例：唯一候选 `modules/legacy/dev/units/surrealdb-server.nix` 已随 SurrealDB 服务端取消而停用（原 `modules/dev/units/surrealdb-server.nix`，2026-10 移入 legacy）
+- 模块内 fetch 不受 `flake.lock` 锁定，需显式钉 `url` / `rev` / `sha256` 保证可复现

@@ -3,7 +3,7 @@
     ./k8s-common.nix
     ./k8s-addons.nix
     ./envoy-gateway.nix
-    # ./istio-gateway.nix
+    # ../legacy/k8s/istio-gateway.nix
     ./cert-manager.nix
     ./k8s-cfssl-hostname-fix.nix
   ];

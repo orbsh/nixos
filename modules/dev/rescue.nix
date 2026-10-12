@@ -5,8 +5,8 @@
     ./units/data-tools.nix
     ./units/net-tools.nix
     ./units/jcode.nix
-    # ./units/mysql-server.nix
+    # ../legacy/dev/units/mysql-server.nix
     # ./units/postgresql-server.nix
-    # ./units/surrealdb-server.nix
+    # ../legacy/dev/units/surrealdb-server.nix
   ];
 }

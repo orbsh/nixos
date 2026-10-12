@@ -2,6 +2,7 @@
 
 ## 状态
 已采纳
+**后续（2026-10）**：Emacs 路线已放弃，`modules/system/units/lsp-bridge.nix` 与 `modules/dev/units/emacs.nix` 均已停止引入并移入 `modules/legacy/`；本 ADR 记录的是当时的归属与依赖模式决策。
 
 ## 背景
 lsp-bridge 是一个远程代码智能工具，通过 SSH 在服务端启动 Python 后端，与本地 Emacs 通信。它需要一组 Python 包（epc、orjson、sexpdata 等）作为运行时依赖。

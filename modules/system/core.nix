@@ -26,8 +26,8 @@
     ./units/home-base.nix
     ./units/home-shell.nix
     ./units/home-nvim.nix
-    #./units/home-kakoune.nix
+    #../legacy/system/units/home-kakoune.nix
     ./units/home-git.nix
-    # ./units/lsp-bridge.nix  # 已停用（lsp-bridge 为 emacs/elisp LSP 客户端；emacs 已放弃，不再需要其 Python 运行时）
+    # ../legacy/system/units/lsp-bridge.nix  # 已停用（lsp-bridge 为 emacs/elisp LSP 客户端；emacs 已放弃，不再需要其 Python 运行时）
   ];
 }
