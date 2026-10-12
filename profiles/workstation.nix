@@ -36,7 +36,7 @@
     useDynamicConfig = false; # 纯声明式：直接读 store 静态配置（不再允许 REST API 动改，避免动态文件挡住声明式服务）
     src = {
       url = "http://box.d/nixos/numa-linux-x86_64.tar.gz";
-      narHash = "sha256-a0tZ3N4Pa+kWGGvFP2XmnrG4rTDkYZbYa+2td+foH9M=";
+      narHash = "sha256-7lNyRbWXdWj0sR1ONrviwAA0G86qa9fG+nLXqXjXrC8=";
     };
 
     # ── Tailscale MagicDNS 分流：*.t 走 tailscale stub（100.100.100.100） ──
