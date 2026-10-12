@@ -60,6 +60,13 @@
       cp -r usr/share/icons $out/share/icons
     '';
 
+    # 手动维护的版本 + hash：nu scripts/upstream.nu bump rustdesk --write
+    passthru.updateScript = [
+      "${pkgs.nushell}/bin/nu"
+      "${../../../scripts/upstream.nu}"
+      "bump" "rustdesk" "--write"
+    ];
+
     meta.mainProgram = "rustdesk";
   };
 in

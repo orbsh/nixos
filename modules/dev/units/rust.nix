@@ -122,6 +122,13 @@ in {
           install -Dm755 trunk $out/bin/trunk
           runHook postInstall
         '';
+        # 手动维护的版本 + hash：nu scripts/upstream.nu bump trunk --write
+        passthru.updateScript = [
+          "${pkgs.nushell}/bin/nu"
+          "${../../../scripts/upstream.nu}"
+          "bump" "trunk" "--write"
+        ];
+
         meta = with final.lib; {
           homepage = "https://github.com/trunk-rs/trunk";
           description = "Build, bundle & ship your Rust WASM application to the web";

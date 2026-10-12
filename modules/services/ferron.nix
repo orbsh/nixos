@@ -13,12 +13,12 @@
 let
   cfg = config.services.ferron;
 
-  ferronVersion = "3.0.0-beta.10";
+  ferronVersion = "3.0.0-rc.9";
 
   # Ferron 3.x 静态二进制来源
   ferronSrc = pkgs.fetchurl {
     url = "https://github.com/ferronweb/ferron/releases/download/${ferronVersion}/ferron-${ferronVersion}-x86_64-unknown-linux-musl.tar.gz";
-    hash = "sha256-aGfkSzGC02elK4hjuQeTFlMsC4kZqFNwSKL/UB7DTo4=";
+    hash = "sha256-xkyjzbbv02wDABgJqe14jof3o+IjXHCVA2w1u01I0r8=";
   };
 
   # Ferron 脚本目录（Nix store，含 box.conf / box.nu / ...）
@@ -116,6 +116,13 @@ in {
             done
             chmod +x $out/bin/*
           '';
+
+          # 手动维护的版本 + hash：用清单工具改写（scripts/upstream.yml 的 ferron 条目）
+          passthru.updateScript = [
+            "${pkgs.nushell}/bin/nu"
+            "${../../scripts/upstream.nu}"
+            "bump" "ferron" "--write"
+          ];
 
           meta = {
             description = "Ferron web server (musl static binary)";

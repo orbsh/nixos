@@ -265,6 +265,31 @@ nixos 项目中的脚本，语言优先级：
 - **交互优先 Nushell** —— 用户可能直接调用的命令可用 Nushell，交互／自动补全体验更好。
 - **尽量避免 Bash** —— 仅在短胶水／辅助片段保留 bash（如 Nix 构建期未声明 python 依赖时，默认 shell 即为 bash）；用户态脚本不以 bash 实现。
 
+## 🔧 上游版本维护（手动维护版不能自动跟 nixpkgs 的包）
+
+集中在这两个文件：清单 `scripts/upstream.yml`（每个包的上游来源、当前版本、需要改写的站点文件与锚点）+ 工具 `scripts/upstream.nu`。
+
+```sh
+nu scripts/upstream.nu check [name]    # release/doc：上游最新 tag vs 清单 current
+nu scripts/upstream.nu audit [name]    # mirror：box.d 本地文件 hash vs Nix 文件里记录的值
+nu scripts/upstream.nu fetch <name>    # 按 upstream 模板下载镜像文件到 dest（缺文件时）
+nu scripts/upstream.nu hash  <name>    # 打印本地文件的 hash
+nu scripts/upstream.nu bump  <name> [--to V] [--write]   # 默认 dry-run，--write 才落盘
+```
+
+三类来源与 hash 约定（对应该包在 Nix 侧的消费方式）：
+
+| 场景 | Nix 侧消费 | hash 算法 |
+|------|-----------|-----------|
+| `fetchurl`（GitHub release 资产） | `pkgs.fetchurl { url; hash; }` | `nix hash file`（flat） |
+| box.d 单文件 / 模型 | `builtins.fetchTree { type = "file"; narHash; }` | `nix hash path`（单文件 NAR） |
+| box.d 上的 tarball | `builtins.fetchTree { type = "tarball"; narHash; }` | `nix-prefetch-url --unpack`（解包后的树） |
+
+- `release` 类的 ferron / rustdesk / trunk 在 derivation 上挂了 `passthru.updateScript`，指向 `upstream.nu bump <name> --write`（按 nixpkgs 约定；这两个脚本文件被 git 跟踪后 flake 才认）。
+- GitHub 取最新 tag 与下载资产走清单里的 `settings.proxy`（本机 7890）。
+- 工具自身支持从子目录或仓库外调用（先看 `$env.UPSTREAM_REPO`，再从 cwd 向上找 `scripts/upstream.yml`）。
+- **替换同名镜像文件后构建可能仍命中旧内容**：nix 的 fetcher cache 按 URL 记录，URL 不变（文件名不含版本，如 numa）时会沿用缓存结果，报 NAR hash mismatch。用 `nix build --refresh`（或 `--option tarball-ttl 0`）取新内容；文件名带版本号的条目（如 nushell 的 `nu-{v}-…`）换 URL 后天然避开。
+
 ## 📁 目录结构
 
 ```
