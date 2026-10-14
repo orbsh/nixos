@@ -4,7 +4,7 @@
     ./units/python.nix
     ./units/rust.nix
     ./units/c-cpp.nix
-    ./units/javascript.nix
+    ./units/nodejs.nix
     ./units/haskell.nix
     ./units/data-tools.nix
     ./units/net-tools.nix
