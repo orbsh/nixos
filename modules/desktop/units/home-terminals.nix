@@ -23,7 +23,7 @@
       theme                 = "Gruvbox Light";
       font-family           = "Lilex";
       font-style            = "Regular";
-      font-size             = 11;
+      font-size             = 12;
       # background-opacity    = 0.8;
       shell-integration     = "none";
       # nvim 在 herdr pane 里用 OSC 52 写系统剪贴板（默认 ask 会拦）
@@ -38,6 +38,11 @@
       keybind = [
         "clear"
         "ctrl+shift+comma=reload_config"
+        "ctrl+shift+r=reload_config"
+        # clear 把 Ghostty 默认的字体缩放也清掉了，补回来
+        "ctrl+shift+equal=increase_font_size:1"
+        "ctrl+shift+minus=decrease_font_size:1"
+        "ctrl+shift+0=reset_font_size"
         "ctrl+shift+v=paste_from_clipboard"
         "ctrl+shift+p=paste_from_selection"
         "ctrl+shift+m=toggle_maximize"
