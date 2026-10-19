@@ -1,5 +1,7 @@
 # Tailscale/Headscale 注册流程
 
+> **状态**：已退役（2026-10-19）——tailscale/headscale 在本仓全节点停用（orbit 于 2026-09-20 改走 netbird，dxserver 于 2026-10-19 停用），客户端模块归档在 `modules/legacy/services/tailscale.nix`。本文记录当年的注册流程，保留备查；现行方案见 [ADR-023: NetBird 客户端位置](adr/023-netbird-client-placement.md)。
+
 自建 headscale 部署在阿里云 K8s `tunnel` 命名空间，控制面 `https://headscale.xinminghui.com`。客户端节点（orbit / dxserver / …）通过 preauthkey 注册。注册流程的关键点：**服务端建用户 + 发 key，客户端 up**，两端分属不同的操作环境（headscale 在 K8s，客户端在各自机器）。
 
 ## 服务端（headscale，通过 kubectl）
@@ -23,7 +25,7 @@ kubectl exec deploy/headscale -n tunnel -- headscale nodes list
 
 ## 客户端（NixOS 节点）
 
-节点侧统一走 `modules/services/tailscale.nix`（`services.myTailscale`）。启用方式：节点目录下建 `tailscale.nix` 引入模块（参考 `hosts/server/tailscale.nix`），并在节点 `default.nix` 的 imports 里加上。
+节点侧统一走 `modules/services/tailscale.nix`（`services.myTailscale`，现归档于 `modules/legacy/services/tailscale.nix`）。启用方式：节点目录下建 `tailscale.nix` 引入模块（参考 `hosts/server/tailscale.nix`），并在节点 `default.nix` 的 imports 里加上。
 
 ```nix
 services.myTailscale = {

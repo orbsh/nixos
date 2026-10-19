@@ -33,12 +33,15 @@
 | `dev/units/zed.nix` | dev/units | 已禁用 | 编辑器改用 neovim / helix |
 | `dev/units/surrealdb-server.nix` | dev/units | 已取消 | 服务端不再使用；`hosts/workstations/surreal.nix` 是它的孤儿实例文件 |
 | `k8s/istio-gateway.nix` | k8s | 未引入 | 与 envoy-gateway 互斥，当前用后者 |
-| `services/headscale.nix` | services | 无引用 | 控制面在 K8s 侧部署，本机仅作 Tailscale 客户端 |
+| `services/headscale.nix` | services | 无引用 | 控制面部署在 K8s tunnel 命名空间，本机从未启用 |
 | `services/ladder.nix` | services | 已被替代 | ADR-022：singbox 取代 mihomo/podman 容器方案 |
 | `services/podman/aria2.nix` | services/podman | 无引用 | 从未接入 |
+| `services/tailscale.nix` | services | 已退役（2026-10-19） | 节点 VPN 改用 netbird：orbit 于 2026-09-20 迁走，dxserver 2026-10-19 停用 |
 | `system/units/home-kakoune.nix` | system/units | 未引入 | core 中已注释 |
 | `system/units/lsp-bridge.nix` | system/units | 已停用 | lsp-bridge 是 emacs 侧 LSP，emacs 已放弃 |
 
 ## 不在本目录的
 
 `dev/` 下的 `backend.nix` / `data-science.nix` / `infrastructure.nix` 与 `dev/units/postgresql-server.nix` 是**占位**（骨架保留、暂未接入任何 profile），仍留在 `modules/` 活跃树内，不在 legacy。
+
+被弃用模块的 **host 实例文件**（定义"哪个节点用哪个模块"的那一层）按约定留在 `hosts/` 下作孤儿——节点 `imports` 里已无人引用它们：`hosts/workstations/surreal.nix`、`hosts/workstations/vivaldi.nix`、`hosts/server/tailscale.nix`、`hosts/workstations/orbit/tailscale.nix`。其中指向已归档模块的实例文件（surreal 与 tailscale 两份）已把文件内的 `imports` 路径改指 legacy 位置，恢复时在对应节点的 `imports` 里加回该文件即可。

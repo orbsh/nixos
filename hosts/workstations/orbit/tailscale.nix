@@ -1,8 +1,10 @@
 # 连自建 headscale（公网域名，headscale 部署在阿里云 K8s tunnel 命名空间）
 # 注册方式：preauthkey（headscale 服务端生成，tailscale up 时 --authkey 传入）
+# 已退役：2026-09-20 起 orbit 改用 netbird（./netbird.nix），2026-10-19 全节点停用；
+# 模块归档在 modules/legacy/services/tailscale.nix（要恢复：在节点 imports 里加回本文件）。
 { ... }:
 {
-  imports = [ ../../../modules/services/tailscale.nix ];
+  imports = [ ../../../modules/legacy/services/tailscale.nix ];
 
   services.myTailscale = {
     enable = true;

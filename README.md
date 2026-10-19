@@ -182,7 +182,7 @@ hosts/server/default.nix
   │     ├── modules/services/harmonia.nix  (本地二进制缓存 :5100)
   │     ├── modules/services/singbox.nix
   │     └── modules/services/ferron.nix
-  └── ./hardware/*, ./tailscale.nix, ./netbird.nix
+  └── ./hardware/*, ./netbird.nix
 ```
 
 **特点**：无桌面环境，headless；`nix.gc.keepGenerations = 20`（按代保留，完整回滚）；关闭 HM 的 `programs.neovim`（nvim 由系统级提供，插件走 lazy.nvim）。

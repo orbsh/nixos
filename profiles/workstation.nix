@@ -39,12 +39,6 @@
       narHash = "sha256-7lNyRbWXdWj0sR1ONrviwAA0G86qa9fG+nLXqXjXrC8=";
     };
 
-    # ── Tailscale MagicDNS 分流：*.t 走 tailscale stub（100.100.100.100） ──
-    # 其它域（.d / 公共域名）照常走默认 upstream，tailscale 异常不拖累本机 DNS
-    forwarding = [
-      { suffix = "t"; upstream = "100.100.100.100"; }
-    ];
-
     # ── 本机 web 服务 → *.d 域名（numa 本地 DNS + 反向代理） ──
     # 注意：端口全部引用各服务模块的 port 选项，避免重复硬编码
     services = [

@@ -1,8 +1,10 @@
 # dxserver 连自建 headscale（与 orbit 同一控制面）
 # 注册方式：preauthkey（服务端生成，tailscale up 时 --authkey 传入）
+# 已退役（2026-10-19）：tailscale 全节点停用，hosts/server/default.nix 里的引入已摘掉；
+# 模块归档在 modules/legacy/services/tailscale.nix（要恢复：把引入加回节点 imports）。
 { ... }:
 {
-  imports = [ ../../modules/services/tailscale.nix ];
+  imports = [ ../../modules/legacy/services/tailscale.nix ];
 
   services.myTailscale = {
     enable = true;

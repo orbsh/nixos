@@ -12,7 +12,7 @@ in {
       hardware/disk.nix
       hardware/hardware-configuration.nix
       hardware/wireguard.nix
-      ./tailscale.nix
+      # ./tailscale.nix   # 已退役（2026-10-19）：tailscale 全节点停用，模块归档在 modules/legacy/services/tailscale.nix
       ./netbird.nix
 
       # 角色预设

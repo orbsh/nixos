@@ -2,9 +2,8 @@
 # 各节点按需引入；注册方式：手动 `netbird-wt0 up --setup-key <key>`（setup key
 # 从管理端生成，不落配置/不落 store）。
 # MagicDNS：客户端内建 resolver 监听 `dnsResolverAddress`；把它注册成 numa 的
-# suffix 转发（如 *.n）由引入方负责——与 tailscale 的 *.t → 100.100.100.100 同在
-# profile/host 的 numa forwarding 列表里。模块不碰 numa，无 numa 的节点（server）
-# 才能直接复用。
+# suffix 转发（如 hosts/workstations/orbit/netbird.nix 的 *.n.b）由引入方负责。
+# 模块不碰 numa，无 numa 的节点（server）才能直接复用。
 { config, lib, ... }:
 let
   cfg = config.services.myNetbird;
