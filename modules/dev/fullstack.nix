@@ -9,6 +9,7 @@
     ./units/data-tools.nix
     ./units/net-tools.nix
     ./units/k8s.nix
+    ./units/nomad.nix   # Nomad CLI（只命令行，不跑 agent）
     ./units/wasm.nix
     # ../legacy/dev/units/zed.nix   # 已禁用（Zed 编辑器）
     ./units/jcode.nix
