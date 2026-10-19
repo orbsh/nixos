@@ -1,4 +1,7 @@
 { pkgs, ... }: {
+  # moli：面向 agent 的 headless 浏览器，全 host 基础工具
+  imports = [./moli.nix];
+
   # ── 额外工具（从 base.nix 拆分） ──────────────────────
   environment.systemPackages = with pkgs; [
     # 终端增强

@@ -61,7 +61,7 @@ entries:
     url: "https://github.com/lexmount/moli/releases/download/v{v}/moli-x86_64-unknown-linux-gnu.tar.gz"
     hash: flat
     current: "1.1.18"
-    site: modules/dev/units/moli.nix
+    site: modules/system/units/moli.nix
     version-line: 'version = "{v}"'
     hash-line: 'hash = "{h}"'
 
