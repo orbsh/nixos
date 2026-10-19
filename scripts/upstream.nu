@@ -166,6 +166,7 @@ def download [e: record, ver: string, force: bool] {
 
 def "main fetch" [name: string, --force] {
   let e = (entry $name)
+  if ($e.kind != "mirror") { error make { msg: $"($name) 是 ($e.kind) 条目，没有要下载到 dest 的产物（release 由 Nix 的 fetchurl 取，doc 只有版本串），fetch 只用于 mirror" } }
   if ($e.upstream? | default null) == null { error make { msg: $"($name) 没配 upstream，无法下载" } }
   download $e ($e.current | default '' | into string) $force
 }
@@ -227,9 +228,17 @@ def "main bump" [name: string, --to: string, --write, --force] {
     let h = (hash-url $url)
     print $"  hash: ($h)"
     if not $write { print "  (dry-run，未落盘)"; return }
+    mut ok = true
     for s in $sites {
       let f = ((repo-root) | path join $s)
-      replace-line $f ($e.version-line | str replace --all --regex '\{v\}' $e.current) ($e.version-line | str replace --all --regex '\{v\}' $ver) ($e.context? | default "") | ignore
+      let oldVerline = ($e.version-line | str replace --all --regex '\{v\}' $e.current)
+      let newVerline = ($e.version-line | str replace --all --regex '\{v\}' $ver)
+      if (replace-line $f $oldVerline $newVerline ($e.context? | default "")) {
+        print $"  已更新 ($s) 版本行：($oldVerline) -> ($newVerline)"
+      } else {
+        print $"  警告：($s) 里没找到 ($oldVerline)，版本行未改写（核对 version-line 模板与 current）"
+        $ok = false
+      }
       if ($e.url-line? | default null) != null {
         replace-line $f ($e.url-line | str replace --all --regex '\{u\}' ($e.url | str replace --all --regex '\{v\}' $e.current)) ($e.url-line | str replace --all --regex '\{u\}' $url) ($e.context? | default "") | ignore
       }
@@ -238,8 +247,41 @@ def "main bump" [name: string, --to: string, --write, --force] {
         replace-line $f ($e.hash-line | str replace --all --regex '\{h\}' $oldh) ($e.hash-line | str replace --all --regex '\{h\}' $h) ($e.context? | default "") | ignore
       }
     }
-    print $"  已写入：($sites | str join ', ')"
-    set-manifest-current $name $ver
+    if $ok {
+      print $"  已写入：($sites | str join ', ')"
+      set-manifest-current $name $ver
+    } else {
+      print "  有站点文件的版本行未改写，清单 current 保持不动（避免台账与实际版本脱节）"
+    }
+    return
+  }
+
+  if $kind == "doc" {
+    # doc 条目：版本串只出现在站点文件的脚本文本里（无产物可下载），bump = 改写那一行
+    if ($e.version-line? | default null) == null { error make { msg: $"($name) 没配 version-line" } }
+    let ver = ($to | default (latest-tag $e))
+    if $ver == null { error make { msg: "取不到上游最新版本，用 --to 指定" } }
+    if $ver == ($e.current) { print $"($name) 已是最新（($ver)）"; return }
+    let oldVerline = ($e.version-line | str replace --all --regex '\{v\}' ($e.current | default '' | into string))
+    let newVerline = ($e.version-line | str replace --all --regex '\{v\}' $ver)
+    print $"($name)：($e.current) -> ($ver)"
+    print $"  站点行: ($oldVerline) -> ($newVerline)"
+    if not $write { print "  (dry-run，未落盘)"; return }
+    mut ok = true
+    for s in $sites {
+      let f = ((repo-root) | path join $s)
+      if (replace-line $f $oldVerline $newVerline ($e.context? | default "")) {
+        print $"  已更新 ($s)：($oldVerline) -> ($newVerline)"
+      } else {
+        print $"  警告：($s) 里没找到 ($oldVerline)，版本行未改写（核对 version-line 模板与 current）"
+        $ok = false
+      }
+    }
+    if $ok {
+      set-manifest-current $name $ver
+    } else {
+      print "  站点文件的版本行未改写，清单 current 保持不动（避免台账与实际版本脱节）"
+    }
     return
   }
 

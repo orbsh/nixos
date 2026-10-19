@@ -4,7 +4,7 @@
 # kind:
 #   release = GitHub release 资产，用 fetchurl 拉取（版本 + hash 写在 Nix 文件里）
 #   mirror  = 预编译二进制/模型文件，镜像在 box.d（本地文件为权威，Nix 侧记 url + narHash）
-#   doc     = 不在 Nix 里，只是脚本文本中的版本串
+#   doc     = 不在 Nix 里，只是脚本文本中的版本串（bump 改写站点文件里的那一行；没有产物可 fetch）
 #
 # hash（Nix 消费者的校验方式，决定怎么算）:
 #   flat = pkgs.fetchurl              → nix hash file
@@ -54,15 +54,27 @@ entries:
     version-line: 'version = "{v}"'
     hash-line: 'hash = "{h}"'
 
-  # ── doc（只在脚本里出现的版本串）────────────────────────
+  moli:
+    kind: release
+    repo: lexmount/moli
+    tag: "v{v}"
+    url: "https://github.com/lexmount/moli/releases/download/v{v}/moli-x86_64-unknown-linux-gnu.tar.gz"
+    hash: flat
+    current: "1.1.18"
+    site: modules/dev/units/moli.nix
+    version-line: 'version = "{v}"'
+    hash-line: 'hash = "{h}"'
+
   cert-manager:
-    kind: doc
+    kind: release
     repo: cert-manager/cert-manager
     tag: "v{v}"
-    hash: none
+    url: "https://github.com/cert-manager/cert-manager/releases/download/v{v}/cert-manager.yaml"
+    hash: flat
     current: "1.18.2"
     site: modules/k8s/cert-manager.nix
-    version-line: 'certManagerVersion = "{v}"'
+    version-line: 'certManagerVersion = "v{v}"'   # 站点文件里的值是带 v 的 tag，别按纯版本号写模板
+    hash-line: 'hash = "{h}"'
 
   # ── mirror（box.d 上的文件，narHash）────────────────────
   nushell:
