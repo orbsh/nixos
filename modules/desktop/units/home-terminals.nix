@@ -23,7 +23,7 @@
       theme                 = "Gruvbox Light";
       font-family           = "Lilex";
       font-style            = "Regular";
-      font-size             = 13;
+      font-size             = 11;
       # background-opacity    = 0.8;
       shell-integration     = "none";
       # nvim 在 herdr pane 里用 OSC 52 写系统剪贴板（默认 ask 会拦）
