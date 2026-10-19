@@ -12,6 +12,7 @@
     ./units/wasm.nix
     # ../legacy/dev/units/zed.nix   # 已禁用（Zed 编辑器）
     ./units/jcode.nix
+    ./units/moli.nix
     # ../legacy/dev/units/emacs.nix  # 默认禁用，需在 host 定义中显式引入
     # 服务端（按需：容器化/独立部署场景取消注释）
     # ../legacy/dev/units/mysql-server.nix
