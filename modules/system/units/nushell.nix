@@ -1,7 +1,21 @@
 { pkgs, lib, config, ... }:
 
-{
+let
+  # 原始定义：官方 musl 二进制的固定钉。
+  # 下面 version / url / narHash 三行由 scripts/upstream.yml 的 nushell 条目自动改写（host 可覆盖）。
+  pinned = {
+    version = "0.116.1";
+    url = "http://box.d/k8s/nu-0.116.1-x86_64-unknown-linux-musl.tar.gz";
+    narHash = "sha256-w9qBxjdu/Re2+VfM6yxFOu648FyTtwo0L94u13VwhVM=";
+  };
+in {
   options.nushell.musl = {
+    version = lib.mkOption {
+      type = lib.types.str;
+      default = pinned.version;
+      description = "musl 二进制的版本号（原始定义在模块的 pinned，tools 自动改写；host 可覆盖）";
+    };
+
     src = lib.mkOption {
       type = lib.types.nullOr (lib.types.submodule {
         options = {
@@ -9,8 +23,8 @@
           narHash = lib.mkOption { type = lib.types.str; };
         };
       });
-      default = null;
-      description = "Nushell musl 二进制文件来源（指定 url 和 narHash）。设置后启用 overlay 替换 nixpkgs 版本。";
+      default = { inherit (pinned) url narHash; };
+      description = "Nushell musl 二进制文件来源（原始定义在模块的 pinned）。置 null 则回到 nixpkgs 版本。";
     };
   };
 
@@ -27,7 +41,7 @@
       (final: prev: {
         nushell = prev.stdenv.mkDerivation {
           pname = "nushell";
-          version = "0.0.0";
+          version = cfg.version;
 
           src = prev.runCommand "nu.tar.gz" {}
             ''

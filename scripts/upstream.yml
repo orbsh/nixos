@@ -91,9 +91,12 @@ entries:
     file: "nu-{v}-x86_64-unknown-linux-musl.tar.gz"
     hash: file
     current: "0.116.1"
-    site: hosts/workstations/nushell.nix
+    sites:                              # 两处：模块原始定义 + 工作站覆盖层
+      - default: modules/system/units/nushell.nix
+      - hosts: hosts/workstations/nushell.nix
     url-line: 'url = "{u}"'
     hash-line: 'narHash = "{h}"'
+    version-line: 'version = "{v}"'
 
   herdr:
     kind: mirror

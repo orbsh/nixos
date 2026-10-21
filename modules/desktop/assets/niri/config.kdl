@@ -16,7 +16,7 @@ prefer-no-csd
 layout {
     empty-workspace-above-first
 
-    gaps 4
+    gaps 0
     focus-ring {
         off
         width 3
