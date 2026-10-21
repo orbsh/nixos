@@ -164,26 +164,37 @@ def "main hash" [name: string] {
 
 def download [e: record, ver: string, force: bool] {
   let d = dest-path ($e | merge { current: $ver })
-  if ($d | path exists) and (not $force) { print $"已存在，跳过：($d)"; return $d }
+  if ($d | path exists) and (not $force) { print $"  已存在，跳过下载：($d)"; return $d }
   mkdir ($d | path dirname)
   let url = $e.upstream | str replace --all --regex '\{v\}' $ver
-  print $"下载：($url)"
+  print $"  下载：($url)"
+  print $"    目标：($d)（force=($force)）"
   curl-run [ "-fL" "--create-dirs" "-o" $d $url ] | ignore
-  print $"完成：($d)"
+  let sz = try { ls $d | get 0.size } catch { 0 }
+  print $"  下载完成：($d)（($sz | into filesize)）"
   $d
 }
 
 # 可更新条目：判定与 check 同一套（pinned-tag、无 repo 的 mirror 一律不参与）
-def stale-entries [] {
+# verbose=true 时逐条打印扫描进度（scan 要打 13 次网络请求，不打印就像卡死）
+def stale-entries [verbose: bool] {
   manifest | get entries | columns | each {|n|
     let e = entry $n
     let pinned = $e.pinned-tag? | default false
     let blind = ($e.kind == "mirror") and (($e.repo? | default null) == null)
     if $pinned or $blind {
+      if $verbose {
+        let why = if $pinned { 'pinned-tag' } else { '无 repo，不查版本' }
+        print $"  跳过 ($n)（($why)）"
+      }
       null
     } else {
-      let latest = try { latest-tag $e } catch { null }
       let cur = $e.current | default '' | into string
+      if $verbose { print -n $"  检查 ($n)：($cur) → " }
+      let latest = try { latest-tag $e } catch { null }
+      if $verbose {
+        if $latest == null { print '?' } else if $latest == $cur { print $"($latest) ok" } else { print $"($latest) 可更新" }
+      }
       if $latest == null or $latest == $cur { null } else { { name: $n, entry: $e, latest: $latest } }
     }
   } | compact
@@ -217,7 +228,7 @@ def "main fetch" [name?: string, --force] {
     download $e ($e.current | default '' | into string) $force
     return
   }
-  let targets = stale-entries | where {|x| $x.entry.kind == "mirror" }
+  let targets = stale-entries true | where {|x| $x.entry.kind == "mirror" }
   if ($targets | is-empty) { print "没有可更新的 mirror 条目"; return }
   for x in $targets {
     if ($x.entry.upstream? | default null) == null { print $"($x.name)：没配 upstream，跳过"; continue }
@@ -268,6 +279,40 @@ def replace-line [file: path, old: string, new: string, context: string] {
   true
 }
 
+# 按模板改写行内"引号值"，不要求文件里是清单 current 的那一版。
+# 模板里的 {v}/{h}/{u} 位置视为任意现有值：清单与站点文件漂移时也能一次收敛，
+# 否则 old 串匹配不上就永远改不动（current 与文件互为前提的死锁）。
+def set-template-line [file: path, template: string, value: string, context: string] {
+  let parts = $template | split row --regex '\{[vhu]\}'
+  if ($parts | length) != 2 { error make { msg: $"模板里缺 \{v\}/\{h\}/\{u\} 占位：($template)" } }
+  let pre = $parts.0
+  let post = $parts.1
+  let lines = (open $file --raw | lines)
+  let start = if ($context | is-empty) { 0 } else {
+    let ci = $lines | enumerate | where {|x| $x.item | str contains $context } | get index? | default []
+    if ($ci | length) == 0 { return false }
+    $ci | first
+  }
+  let hits = $lines | enumerate | skip $start | where {|x| $x.item | str contains $pre } | get index? | default []
+  if ($hits | length) == 0 { return false }
+  # 有 context 锚点时只改锚点后的第一处；无锚点时改全部（与原 replace-line 的 --all 语义一致）
+  let targets = if ($context | is-empty) { $hits } else { [ ($hits | first) ] }
+  let preLen = $pre | str length
+  let patched = $lines | enumerate | each {|x|
+    if $x.index in $targets {
+      let line = $x.item
+      let i1 = $line | str index-of $pre
+      let after = $line | str substring ($i1 + $preLen)..
+      let i2 = $after | str index-of $post
+      if $i2 < 0 { $line } else {
+        ($line | str substring ..<($i1 + $preLen)) + $value + ($after | str substring $i2..)
+      }
+    } else { $x.item }
+  }
+  $patched | str join (char nl) | save -f $file
+  true
+}
+
 def bump-entry [name: string, ver: string, write: bool, force: bool] {
   let e = entry $name
   let kind = $e.kind
@@ -275,30 +320,36 @@ def bump-entry [name: string, ver: string, write: bool, force: bool] {
   if ($sites | is-empty) { error make { msg: $"($name) 没配 site" } }
 
   if $kind == "release" {
-    if $ver == ($e.current | default '' | into string) { print $"($name) 已是最新（($ver)）"; return }
+    if $ver == ($e.current | default '' | into string) { print $"  ($name) 已是最新（($ver)）"; return }
     let url = $e.url | str replace --all --regex '\{v\}' $ver
-    print $"($name)：($e.current) -> ($ver)"
     print $"  url : ($url)"
+    print "  计算 hash（下载资产，稍等）…"
     let h = hash-url $url
     print $"  hash: ($h)"
     if not $write { print "  (dry-run，未落盘)"; return }
     mut ok = true
     for s in $sites {
       let f = (repo-root) | path join $s
-      let oldVerline = $e.version-line | str replace --all --regex '\{v\}' $e.current
-      let newVerline = $e.version-line | str replace --all --regex '\{v\}' $ver
-      if (replace-line $f $oldVerline $newVerline ($e.context? | default "")) {
-        print $"  已更新 ($s) 版本行：($oldVerline) -> ($newVerline)"
+      let ctx = $e.context? | default ""
+      if (set-template-line $f $e.version-line $ver $ctx) {
+        print $"  ($s) 版本行 → ($ver)"
       } else {
-        print $"  警告：($s) 里没找到 ($oldVerline)，版本行未改写（核对 version-line 模板与 current）"
+        print $"  ⚠ ($s) 找不到版本行（模板 ($e.version-line)）"
         $ok = false
       }
       if ($e.url-line? | default null) != null {
-        replace-line $f ($e.url-line | str replace --all --regex '\{u\}' ($e.url | str replace --all --regex '\{v\}' $e.current)) ($e.url-line | str replace --all --regex '\{u\}' $url) ($e.context? | default "") | ignore
+        if (set-template-line $f $e.url-line $url $ctx) {
+          print $"  ($s) url → ($url)"
+        } else {
+          print $"  ⚠ ($s) 找不到 url 行（模板 ($e.url-line)）"
+          $ok = false
+        }
       }
-      let oldh = recorded-hash $s ($e.context? | default "")
-      if $oldh != null {
-        replace-line $f ($e.hash-line | str replace --all --regex '\{h\}' $oldh) ($e.hash-line | str replace --all --regex '\{h\}' $h) ($e.context? | default "") | ignore
+      if (set-template-line $f $e.hash-line $h $ctx) {
+        print $"  ($s) hash → ($h)"
+      } else {
+        print $"  ⚠ ($s) 找不到 hash 行（模板 ($e.hash-line)）"
+        $ok = false
       }
     }
     if $ok {
@@ -316,16 +367,15 @@ def bump-entry [name: string, ver: string, write: bool, force: bool] {
     if $ver == ($e.current | default '' | into string) { print $"($name) 已是最新（($ver)）"; return }
     let oldVerline = $e.version-line | str replace --all --regex '\{v\}' ($e.current | default '' | into string)
     let newVerline = $e.version-line | str replace --all --regex '\{v\}' $ver
-    print $"($name)：($e.current) -> ($ver)"
     print $"  站点行: ($oldVerline) -> ($newVerline)"
     if not $write { print "  (dry-run，未落盘)"; return }
     mut ok = true
     for s in $sites {
       let f = (repo-root) | path join $s
-      if (replace-line $f $oldVerline $newVerline ($e.context? | default "")) {
-        print $"  已更新 ($s)：($oldVerline) -> ($newVerline)"
+      if (set-template-line $f $e.version-line $ver ($e.context? | default "")) {
+        print $"  ($s) 版本行 → ($ver)"
       } else {
-        print $"  警告：($s) 里没找到 ($oldVerline)，版本行未改写（核对 version-line 模板与 current）"
+        print $"  ⚠ ($s) 找不到版本行（模板 ($e.version-line)）"
         $ok = false
       }
     }
@@ -340,7 +390,6 @@ def bump-entry [name: string, ver: string, write: bool, force: bool] {
   if $kind == "mirror" {
     let oldVer = $e.current | default '' | into string
     if $ver == '' { error make { msg: $"($name) 清单没有 current，按需用 --to 指定版本" } }
-    print $"($name)：($oldVer) -> ($ver)"
     # 版本变了（或 --force）先取新版文件；文件名不含 {v} 的条目同名覆盖，必须 force
     if $ver != $oldVer or $force {
       if ($e.upstream? | default null) == null { error make { msg: $"($name) 没配 upstream，无法下载；手工放好文件后再 bump" } }
@@ -361,26 +410,27 @@ def bump-entry [name: string, ver: string, write: bool, force: bool] {
     mut ok = true
     for s in $sites {
       let file = (repo-root) | path join $s
-      if ($e.version-line? | default null) != null and $ver != $oldVer {
-        let oldVerline = $e.version-line | str replace --all --regex '\{v\}' $oldVer
-        let newVerline = $e.version-line | str replace --all --regex '\{v\}' $ver
-        if (replace-line $file $oldVerline $newVerline ($e.context? | default "")) {
-          print $"  已更新 ($s) 版本行：($oldVerline) -> ($newVerline)"
+      let ctx = $e.context? | default ""
+      if ($e.version-line? | default null) != null {
+        if (set-template-line $file $e.version-line $ver $ctx) {
+          print $"  ($s) 版本行 → ($ver)"
         } else {
-          print $"  警告：($s) 里没找到 ($oldVerline)，版本行未改写（核对 version-line 模板与 current）"
+          print $"  ⚠ ($s) 找不到版本行（模板 ($e.version-line)）"
           $ok = false
         }
       }
-      let oldh = recorded-hash $s ($e.context? | default "")
-      if $oldh != null and $oldh != $h {
-        replace-line $file ($e.hash-line | str replace --all --regex '\{h\}' $oldh) ($e.hash-line | str replace --all --regex '\{h\}' $h) ($e.context? | default "") | ignore
-        print $"  已更新 ($s) hash：($oldh) -> ($h)"
-      } else { print $"  ($s) hash 已是该值" }
+      if (set-template-line $file $e.hash-line $h $ctx) {
+        print $"  ($s) hash → ($h)"
+      } else {
+        print $"  ⚠ ($s) 找不到 hash 行（模板 ($e.hash-line)）"
+        $ok = false
+      }
       if ($e.url-line? | default null) != null {
-        let oldUrl = mirror-url $e | str replace --all --regex '\{v\}' $oldVer
-        if $oldUrl != $newUrl {
-          replace-line $file ($e.url-line | str replace --all --regex '\{u\}' $oldUrl) ($e.url-line | str replace --all --regex '\{u\}' $newUrl) ($e.context? | default "") | ignore
-          print $"  已更新 ($s) url：($oldUrl) -> ($newUrl)"
+        if (set-template-line $file $e.url-line $newUrl $ctx) {
+          print $"  ($s) url → ($newUrl)"
+        } else {
+          print $"  ⚠ ($s) 找不到 url 行（模板 ($e.url-line)）"
+          $ok = false
         }
       }
     }
@@ -401,16 +451,19 @@ def "main bump" [name?: string, --to: string, --write, --force] {
     let e = entry $name
     let ver = target-version $e $to
     if $ver == null or $ver == '' { error make { msg: "取不到目标版本，用 --to 指定" } }
+    print $"== ($name)（($e.kind)）($e.current) → ($ver) =="
     bump-entry $name $ver $write $force
     return
   }
-  let targets = stale-entries
+  print "扫描可更新条目（逐条查上游，网络请求，稍等）"
+  let targets = stale-entries true
   if ($targets | is-empty) { print "全部条目已是最新"; return }
   print $"可更新：($targets | get name | str join ', ')"
   for x in $targets {
-    try {
-      bump-entry $x.name $x.latest $write $force
-    } catch {|err| print $"($x.name)：失败 — ($err.msg)" }
+    print ""
+    print $"== ($x.name)（($x.entry.kind)）($x.entry.current) → ($x.latest) =="
+    let err = try { bump-entry $x.name $x.latest $write $force; null } catch {|e| $e.msg }
+    if $err != null { print $"  ⚠ 失败：($err)" }
   }
 }
 
@@ -419,16 +472,20 @@ def "main update" [name?: string, --write, --force] {
     let e = entry $name
     let ver = target-version $e
     if $ver == null or $ver == '' { error make { msg: "取不到目标版本" } }
+    print $"== ($name)（($e.kind)）($e.current) → ($ver) =="
     bump-entry $name ($ver | default '') $write $force
     return
   }
-  let targets = stale-entries
+  print $"全流程更新（write=($write)，逐条查上游并处理）"
+  let targets = stale-entries true
   if ($targets | is-empty) { print "全部条目已是最新"; return }
-  print $"全流程更新：( $targets | get name | str join ', ') （write=($write)）"
+  print $"可更新：($targets | get name | str join ', ')"
   mut failed = []
   for x in $targets {
+    print ""
+    print $"== ($x.name)（($x.entry.kind)）($x.entry.current) → ($x.latest) =="
     let err = try { bump-entry $x.name $x.latest $write $force; null } catch {|e| $e.msg }
-    if $err != null { print $"($x.name)：失败 — ($err)"; $failed = ($failed | append $x.name) }
+    if $err != null { print $"  ⚠ 失败：($err)"; $failed = ($failed | append $x.name) }
   }
   if not $write { print "dry-run：加 --write 落盘" } else {
     print "已写入。下一步（人工）：nix flake check / nh os switch；mirror 条目换版本后记得重启对应服务（herdr server 等）。"
