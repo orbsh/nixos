@@ -4,10 +4,14 @@
 #   nu scripts/upstream.nu check [name]     # release/doc：上游最新 tag vs 清单 current
 #   nu scripts/upstream.nu audit [name]     # mirror：本地文件 hash vs Nix 文件里记录的值
 #   nu scripts/upstream.nu hash <name>      # 打印本地文件的 hash（按清单的 hash 类型）
-#   nu scripts/upstream.nu fetch <name>     # 按 upstream 下载到 dest（镜像缺文件时用）
-#   nu scripts/upstream.nu bump <name> [--to V] [--write]
+#   nu scripts/upstream.nu fetch [name]     # 按 upstream 下载到 dest；无 name = 遍历可更新的 mirror 条目
+#   nu scripts/upstream.nu bump [name] [--to V] [--write] [--force]
 #                                          # release：查最新(或 --to)→ 算 hash → 改写 version/url/hash 行
-#                                          # mirror ：用本地文件重算 hash（+ 换版本时改 url/file 名）
+#                                          # mirror ：取新版文件 → 重算 hash → 改写 version/url/narHash 行
+#                                          # doc    ：只改写版本串行
+#                                          # 无 name = 遍历全部可更新条目（判定同 check）
+#   nu scripts/upstream.nu update [name] [--write] [--force]
+#                                          # 全流程：预检 → 取文件 → 改文件 → 推进清单 current
 #   默认 dry-run，只有 --write 才落盘。
 
 def here [] { $env.FILE_PWD? | default (pwd) }
@@ -118,7 +122,12 @@ def "main check" [name?: string] {
   print "条目               当前          上游最新      状态"
   for n in $names {
     let e = entry $n
-    if $e.kind == "mirror" and ($e.repo? | default null) == null { continue }
+    if $e.kind == "mirror" and ($e.repo? | default null) == null {
+      # 不静默：漏填 repo 的条目要看得见（vivaldi/wechat 属设计内，上游不在 GitHub）
+      let st = "无 repo，不查版本"
+      print $"($n | fill -w 18)($e.current | default '-' | fill -w 14)('-' | fill -w 14)($st)"
+      continue
+    }
     if ($e.pinned-tag? | default false) {
       let note = "固定 tag：" + ($e.tag | into string)
       print $"($n | fill -w 18)($e.current | default '-' | fill -w 14)($note | fill -w 14)—"
@@ -164,11 +173,57 @@ def download [e: record, ver: string, force: bool] {
   $d
 }
 
-def "main fetch" [name: string, --force] {
-  let e = entry $name
-  if $e.kind != "mirror" { error make { msg: $"($name) 是 ($e.kind) 条目，没有要下载到 dest 的产物（release 由 Nix 的 fetchurl 取，doc 只有版本串），fetch 只用于 mirror" } }
-  if ($e.upstream? | default null) == null { error make { msg: $"($name) 没配 upstream，无法下载" } }
-  download $e ($e.current | default '' | into string) $force
+# 可更新条目：判定与 check 同一套（pinned-tag、无 repo 的 mirror 一律不参与）
+def stale-entries [] {
+  manifest | get entries | columns | each {|n|
+    let e = entry $n
+    let pinned = $e.pinned-tag? | default false
+    let blind = ($e.kind == "mirror") and (($e.repo? | default null) == null)
+    if $pinned or $blind {
+      null
+    } else {
+      let latest = try { latest-tag $e } catch { null }
+      let cur = $e.current | default '' | into string
+      if $latest == null or $latest == $cur { null } else { { name: $n, entry: $e, latest: $latest } }
+    }
+  } | compact
+}
+
+# 文件名不含 {v} 的条目（jcode/wechat 类）：换版本时同名覆盖，需要 force
+def unversioned-file [e: record] {
+  (($e.file? | default "") | str contains '{v}') == false
+}
+
+# 镜像地址：条目写了完整 url 就用它（个别覆盖）；否则 <settings.mirror-base>/<dest 目录名>/<file>
+def mirror-url [e: record] {
+  let explicit = $e.url? | default null
+  if $explicit != null {
+    $explicit
+  } else {
+    let base = manifest | get settings.mirror-base? | default null
+    if $base == null { error make { msg: "清单没配 settings.mirror-base，且该条目也没写 url" } }
+    let dest = $e.dest? | default null
+    if $dest == null { error make { msg: "条目没有 dest，无法推导镜像地址" } }
+    let sub = $dest | str replace --all --regex '^~' $env.HOME | path basename
+    $"($base | str trim --char '/')/($sub)/($e.file)"
+  }
+}
+
+def "main fetch" [name?: string, --force] {
+  if $name != null {
+    let e = entry $name
+    if $e.kind != "mirror" { error make { msg: $"($name) 是 ($e.kind) 条目，没有要下载到 dest 的产物（release 由 Nix 的 fetchurl 取，doc 只有版本串），fetch 只用于 mirror" } }
+    if ($e.upstream? | default null) == null { error make { msg: $"($name) 没配 upstream，无法下载" } }
+    download $e ($e.current | default '' | into string) $force
+    return
+  }
+  let targets = stale-entries | where {|x| $x.entry.kind == "mirror" }
+  if ($targets | is-empty) { print "没有可更新的 mirror 条目"; return }
+  for x in $targets {
+    if ($x.entry.upstream? | default null) == null { print $"($x.name)：没配 upstream，跳过"; continue }
+    print $"($x.name)：($x.entry.current) -> ($x.latest)"
+    download ($x.entry | merge { current: $x.latest }) $x.latest ((unversioned-file $x.entry) or $force) | ignore
+  }
 }
 
 # 清单里条目的 current 行改写成新版本（其余行不动）
@@ -207,21 +262,20 @@ def replace-line [file: path, old: string, new: string, context: string] {
   let hit = $tail | enumerate | where {|x| $x.item | str contains $old } | get index? | default []
   if ($hit | length) == 0 { return false }
   let at = $start + ($hit | first)
-  let patched = $lines | enumerate | each {|x| if $x.index == $at { $new } else { $x.item } }
+  # 只替换行内命中片段：保留缩进与行尾分号（整行替换会把它们吃掉，生成非法 nix）
+  let patched = $lines | enumerate | each {|x| if $x.index == $at { $x.item | str replace --all $old $new } else { $x.item } }
   $patched | str join (char nl) | save -f $file
   true
 }
 
-def "main bump" [name: string, --to: string, --write, --force] {
+def bump-entry [name: string, ver: string, write: bool, force: bool] {
   let e = entry $name
   let kind = $e.kind
   let sites = site-files $e
   if ($sites | is-empty) { error make { msg: $"($name) 没配 site" } }
 
   if $kind == "release" {
-    let ver = $to | default (latest-tag $e)
-    if $ver == null { error make { msg: "取不到上游最新版本，用 --to 指定" } }
-    if $ver == $e.current { print $"($name) 已是最新（($ver)）"; return }
+    if $ver == ($e.current | default '' | into string) { print $"($name) 已是最新（($ver)）"; return }
     let url = $e.url | str replace --all --regex '\{v\}' $ver
     print $"($name)：($e.current) -> ($ver)"
     print $"  url : ($url)"
@@ -259,9 +313,7 @@ def "main bump" [name: string, --to: string, --write, --force] {
   if $kind == "doc" {
     # doc 条目：版本串只出现在站点文件的脚本文本里（无产物可下载），bump = 改写那一行
     if ($e.version-line? | default null) == null { error make { msg: $"($name) 没配 version-line" } }
-    let ver = $to | default (latest-tag $e)
-    if $ver == null { error make { msg: "取不到上游最新版本，用 --to 指定" } }
-    if $ver == $e.current { print $"($name) 已是最新（($ver)）"; return }
+    if $ver == ($e.current | default '' | into string) { print $"($name) 已是最新（($ver)）"; return }
     let oldVerline = $e.version-line | str replace --all --regex '\{v\}' ($e.current | default '' | into string)
     let newVerline = $e.version-line | str replace --all --regex '\{v\}' $ver
     print $"($name)：($e.current) -> ($ver)"
@@ -287,43 +339,103 @@ def "main bump" [name: string, --to: string, --write, --force] {
 
   if $kind == "mirror" {
     let oldVer = $e.current | default '' | into string
-    let ver = $to | default $oldVer
     if $ver == '' { error make { msg: $"($name) 清单没有 current，按需用 --to 指定版本" } }
-    # 版本变了（或 --force）先取新版文件；文件名不含 {v} 的条目必须 --force 覆盖
+    print $"($name)：($oldVer) -> ($ver)"
+    # 版本变了（或 --force）先取新版文件；文件名不含 {v} 的条目同名覆盖，必须 force
     if $ver != $oldVer or $force {
       if ($e.upstream? | default null) == null { error make { msg: $"($name) 没配 upstream，无法下载；手工放好文件后再 bump" } }
-      if not $write { print $"将下载新版本 ($ver)（dry-run 不下载）" } else {
-        download ($e | merge { current: $ver }) $ver ($ver == $oldVer or $force) | ignore
+      if not $write {
+        print $"  将下载新版本 ($ver)（dry-run 不下载；hash 待新文件就位后再算）"
+        return
       }
+      download ($e | merge { current: $ver }) $ver ($ver == $oldVer or $force or (unversioned-file $e)) | ignore
     }
     let f = dest-path ($e | merge { current: $ver })
-    if $f == null or not ($f | path exists) { error make { msg: $"本地文件不存在：($f)" } }
+    if $f == null or not ($f | path exists) { error make { msg: $"本地文件不存在：($f)；先 nu scripts/upstream.nu fetch ($name)" } }
     let h = hash-of $f $e.hash
-    let newUrl = if ($e.url? | default null) == null { null } else { $e.url | str replace --all --regex '\{v\}' $ver }
-    print $"($name)：($oldVer) -> ($ver)"
+    let newUrl = mirror-url $e | str replace --all --regex '\{v\}' $ver
     print $"  本地文件: ($f)"
     print $"  新 hash : ($h)（kind=($e.hash)）"
-    if ($newUrl != null) and $newUrl != ($e.url | str replace --all --regex '\{v\}' $oldVer) { print $"  新 url  : ($newUrl)" }
+    if $newUrl != (mirror-url $e | str replace --all --regex '\{v\}' $oldVer) { print $"  新 url  : ($newUrl)" }
     if not $write { print "  (dry-run，未落盘)"; return }
+    mut ok = true
     for s in $sites {
       let file = (repo-root) | path join $s
+      if ($e.version-line? | default null) != null and $ver != $oldVer {
+        let oldVerline = $e.version-line | str replace --all --regex '\{v\}' $oldVer
+        let newVerline = $e.version-line | str replace --all --regex '\{v\}' $ver
+        if (replace-line $file $oldVerline $newVerline ($e.context? | default "")) {
+          print $"  已更新 ($s) 版本行：($oldVerline) -> ($newVerline)"
+        } else {
+          print $"  警告：($s) 里没找到 ($oldVerline)，版本行未改写（核对 version-line 模板与 current）"
+          $ok = false
+        }
+      }
       let oldh = recorded-hash $s ($e.context? | default "")
       if $oldh != null and $oldh != $h {
         replace-line $file ($e.hash-line | str replace --all --regex '\{h\}' $oldh) ($e.hash-line | str replace --all --regex '\{h\}' $h) ($e.context? | default "") | ignore
         print $"  已更新 ($s) hash：($oldh) -> ($h)"
       } else { print $"  ($s) hash 已是该值" }
-      if ($e.url-line? | default null) != null and $newUrl != null {
-        let oldUrl = $e.url | str replace --all --regex '\{v\}' $oldVer
+      if ($e.url-line? | default null) != null {
+        let oldUrl = mirror-url $e | str replace --all --regex '\{v\}' $oldVer
         if $oldUrl != $newUrl {
           replace-line $file ($e.url-line | str replace --all --regex '\{u\}' $oldUrl) ($e.url-line | str replace --all --regex '\{u\}' $newUrl) ($e.context? | default "") | ignore
           print $"  已更新 ($s) url：($oldUrl) -> ($newUrl)"
         }
       }
     }
-    set-manifest-current $name $ver
+    if $ok { set-manifest-current $name $ver } else { print "  版本行未改写，清单 current 保持不动（避免台账与实际版本脱节）" }
   }
 }
 
+# ── 条目级入口 ──────────────────────────────────────────────
+# 目标版本：--to > 上游最新 > mirror 的 current（无 repo 的 mirror 只能重算 hash）
+def target-version [e: record, to?: string] {
+  let cur = $e.current | default '' | into string
+  let latest = try { latest-tag $e } catch { null }
+  $to | default ($latest | default $cur)
+}
+
+def "main bump" [name?: string, --to: string, --write, --force] {
+  if $name != null {
+    let e = entry $name
+    let ver = target-version $e $to
+    if $ver == null or $ver == '' { error make { msg: "取不到目标版本，用 --to 指定" } }
+    bump-entry $name $ver $write $force
+    return
+  }
+  let targets = stale-entries
+  if ($targets | is-empty) { print "全部条目已是最新"; return }
+  print $"可更新：($targets | get name | str join ', ')"
+  for x in $targets {
+    try {
+      bump-entry $x.name $x.latest $write $force
+    } catch {|err| print $"($x.name)：失败 — ($err.msg)" }
+  }
+}
+
+def "main update" [name?: string, --write, --force] {
+  if $name != null {
+    let e = entry $name
+    let ver = target-version $e
+    if $ver == null or $ver == '' { error make { msg: "取不到目标版本" } }
+    bump-entry $name ($ver | default '') $write $force
+    return
+  }
+  let targets = stale-entries
+  if ($targets | is-empty) { print "全部条目已是最新"; return }
+  print $"全流程更新：( $targets | get name | str join ', ') （write=($write)）"
+  mut failed = []
+  for x in $targets {
+    let err = try { bump-entry $x.name $x.latest $write $force; null } catch {|e| $e.msg }
+    if $err != null { print $"($x.name)：失败 — ($err)"; $failed = ($failed | append $x.name) }
+  }
+  if not $write { print "dry-run：加 --write 落盘" } else {
+    print "已写入。下一步（人工）：nix flake check / nh os switch；mirror 条目换版本后记得重启对应服务（herdr server 等）。"
+  }
+  if ($failed | is-empty) == false { print $"失败条目：($failed | str join ', ')" }
+}
+
 def main [] {
-  print "用法：nu scripts/upstream.nu <check|audit|hash|fetch|bump> [name] [--to V] [--write]"
+  print "用法：nu scripts/upstream.nu <check|audit|hash|fetch|bump|update> [name] [--to V] [--write] [--force]"
 }

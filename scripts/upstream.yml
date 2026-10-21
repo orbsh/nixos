@@ -3,7 +3,8 @@
 #
 # kind:
 #   release = GitHub release 资产，用 fetchurl 拉取（版本 + hash 写在 Nix 文件里）
-#   mirror  = 预编译二进制/模型文件，镜像在 box.d（本地文件为权威，Nix 侧记 url + narHash）
+#   mirror  = 预编译二进制/模型文件，镜像在 box.d（本地文件为权威，Nix 侧记 url + narHash）。
+#             下载地址默认由 settings.mirror-base + dest 目录名 + file 推导；条目里写 url 可覆盖。
 #   doc     = 不在 Nix 里，只是脚本文本中的版本串（bump 改写站点文件里的那一行；没有产物可 fetch）
 #
 # hash（Nix 消费者的校验方式，决定怎么算）:
@@ -16,6 +17,9 @@
 
 settings:
   proxy: "http://127.0.0.1:7890"     # GitHub 取最新 tag / 下载资产走本机代理
+  # 镜像站前缀：mirror 条目的下载地址默认 = <mirror-base>/<dest 目录名>/<file>，
+  # 只有一处；个别条目要指别处就在条目里写完整的 url（覆盖推导值）。
+  mirror-base: "http://box.d"
 
 entries:
   # ── release（fetchurl，flat hash）────────────────────────
@@ -48,11 +52,12 @@ entries:
     tag: "v{v}"
     url: "https://github.com/trunk-rs/trunk/releases/download/v{v}/trunk-x86_64-unknown-linux-musl.tar.gz"
     hash: flat
-    current: "0.21.14"
+    current: "0.22.0"
     site: modules/dev/units/rust.nix
     context: 'pname = "trunk";'        # rust.nix 里 version 行不唯一，用上下文行定位
     version-line: 'version = "{v}"'
     hash-line: 'hash = "{h}"'
+    url-line: 'url = "{u}"'
 
   moli:
     kind: release
@@ -71,7 +76,7 @@ entries:
     tag: "v{v}"
     url: "https://github.com/cert-manager/cert-manager/releases/download/v{v}/cert-manager.yaml"
     hash: flat
-    current: "1.18.2"
+    current: "1.21.2"
     site: modules/k8s/cert-manager.nix
     version-line: 'certManagerVersion = "v{v}"'   # 站点文件里的值是带 v 的 tag，别按纯版本号写模板
     hash-line: 'hash = "{h}"'
@@ -84,7 +89,6 @@ entries:
     upstream: "https://github.com/nushell/nushell/releases/download/{v}/nu-{v}-x86_64-unknown-linux-musl.tar.gz"
     dest: "~/pub/Assets/k8s"
     file: "nu-{v}-x86_64-unknown-linux-musl.tar.gz"
-    url: "http://box.d/k8s/nu-{v}-x86_64-unknown-linux-musl.tar.gz"
     hash: file
     current: "0.116.1"
     site: hosts/workstations/nushell.nix
@@ -93,12 +97,13 @@ entries:
 
   herdr:
     kind: mirror
-    upstream: null
+    repo: herdrdev/herdr               # 仓库从 ogulcancelik/herdr 迁来（旧名 301）
+    tag: "v{v}"
+    upstream: "https://github.com/herdrdev/herdr/releases/download/v{v}/herdr-linux-x86_64"
     dest: "~/pub/Assets/nixos"
     file: "herdr-{v}-linux-x86_64"
-    url: "http://box.d/nixos/herdr-{v}-linux-x86_64"
     hash: file
-    current: "0.9.3"
+    current: "0.9.5"
     site: hosts/workstations/herdr.nix
     url-line: 'url = "{u}"'
     hash-line: 'narHash = "{h}"'
@@ -112,7 +117,6 @@ entries:
     upstream: "https://github.com/amzxyz/RIME-LMDG/releases/download/LTS/wanxiang-lts-zh-hans.gram"
     dest: "~/pub/Assets/nixos"
     file: "wanxiang-lts-zh-hans.gram"
-    url: "http://box.d/nixos/wanxiang-lts-zh-hans.gram"
     hash: file
     current: null
     site: hosts/workstations/wanxiang.nix
@@ -125,7 +129,6 @@ entries:
     upstream: "https://github.com/razvandimescu/numa/releases/download/v{v}/numa-linux-x86_64.tar.gz"
     dest: "~/pub/Assets/nixos"
     file: "numa-linux-x86_64.tar.gz"
-    url: "http://box.d/nixos/numa-linux-x86_64.tar.gz"
     hash: file
     current: "0.24.1"
     sites:                              # 两处：profile 覆盖 + 模块默认值
@@ -135,12 +138,13 @@ entries:
 
   jcode:
     kind: mirror
-    upstream: null
+    repo: 1jehuang/jcode
+    tag: "v{v}"
+    upstream: "https://github.com/1jehuang/jcode/releases/download/v{v}/jcode-linux-x86_64.tar.gz"
     dest: "~/pub/Assets/nixos"
-    file: "jcode-linux-x86_64.tar.gz"    # 文件名不带版本
-    url: "http://box.d/nixos/jcode-linux-x86_64.tar.gz"
+    file: "jcode-linux-x86_64.tar.gz"    # 文件名不带版本（换版本时 bump 需 --force 覆盖）
     hash: file
-    current: "0.83.0"
+    current: "0.99.0"
     site: modules/dev/units/jcode.nix
     hash-line: 'narHash = "{h}"'
     version-line: 'version = "{v}"'
@@ -152,7 +156,6 @@ entries:
     upstream: "https://github.com/doy/rbw/releases/download/{v}/rbw_{v}_linux_amd64.tar.gz"
     dest: "~/pub/Assets/nixos"
     file: "rbw_{v}_linux_amd64.tar.gz"
-    url: "http://box.d/nixos/rbw_{v}_linux_amd64.tar.gz"
     hash: tree                          # fetchTree type = "tarball"，hash 是解包后的树
     current: "1.15.0"
     site: modules/desktop/units/rbw.nix
@@ -164,7 +167,6 @@ entries:
     upstream: "https://downloads.vivaldi.com/stable/vivaldi-stable_{v}-1_amd64.deb"
     dest: "~/pub/Assets/nixos"
     file: "vivaldi-stable_{v}-1_amd64.deb"
-    url: "http://box.d/nixos/vivaldi-stable_{v}-1_amd64.deb"
     hash: file
     current: "8.1.4087.61"              # 只有孤儿实例文件 hosts/workstations/vivaldi.nix 在用
     site: hosts/workstations/vivaldi.nix
@@ -176,7 +178,6 @@ entries:
     upstream: "https://dldir1v6.qq.com/weixin/Universal/Linux/WeChatLinux_x86_64.AppImage"
     dest: "~/pub/Assets/nixos"
     file: "WeChatLinux_x86_64.AppImage"
-    url: "http://box.d/nixos/WeChatLinux_x86_64.AppImage"
     hash: file
     current: null
     site: modules/desktop/units/wechat.nix
