@@ -16,29 +16,30 @@ prefer-no-csd
 layout {
     empty-workspace-above-first
 
-    gaps 0
+    gaps 2
     focus-ring {
-        off
-        width 3
-        // 焦点环渐变：浅蓝 → 浅桃，对角渐变，色空间 oklch 长色相角
-        active-gradient from="#94bbf4" to="#f8b791" angle=45 in="oklch longer hue"
-        active-color "#f1bb88" // 渐变回退纯色
-        // inactive：别的显示器上仍带焦点的窗口（单屏不显示）
-        inactive-color "#00000000"
-    }
-    border {
         // off
         width 2
+        // 焦点环渐变：浅蓝 → 浅桃，对角渐变，色空间 oklch 长色相角
         active-gradient from="#94bbf4" to="#f8b791" angle=35 in="oklch longer hue"
         active-color "#f1bb88" // 渐变回退纯色
+        // inactive：别的显示器上仍带焦点的窗口（单屏不显示）
         inactive-color "#75524a"
+        urgent-color "#c0392b"
+    }
+    border {
+        off
+        width 4
+        active-gradient from="#94bbf4" to="#f8b791" angle=35 in="oklch longer hue"
+        active-color "#f1bb88" // 渐变回退纯色
+        inactive-color "#00000000"
         urgent-color "#c0392b"
     }
 }
 
 // 所有窗口圆角（激活 + 非激活）
 window-rule {
-    geometry-corner-radius 8 // 12
+    geometry-corner-radius 10
     clip-to-geometry true
 }
 
