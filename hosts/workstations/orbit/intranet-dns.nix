@@ -2,6 +2,7 @@
 { lib, ... }:
 {
   services.numa.forwarding = lib.mkAfter [
-    { suffix = "s"; upstream = "172.178.5.123"; }
+    #{ suffix = "s"; upstream = "172.178.5.123"; }
+    { suffix = "s"; upstream = "100.65.7.13"; }
   ];
 }
