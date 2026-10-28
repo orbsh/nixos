@@ -83,13 +83,48 @@ export def build-remote [
     host:string@cmpl-hosts
     --target: string
     --build: string = 'localhost'
+    --inputs(-i)   # 追加推构建输入（flake inputs + drv 闭包，含 eval 期取的 box.d 源）
+    --switch       # 推完用已构建产物在目标机激活（--store-path，跳过 eval 与构建）
 ] {
+    if ($inputs or $switch) and ($target | is-empty) {
+        error make { msg: '--inputs / --switch 需要 --target（目标机）' }
+    }
+    let attr = $".#nixosConfigurations.($host).config.system.build.toplevel"
     mut args = [
         --flake $".#($host)"
         --target-host $target
         --build-host $build
     ]
     nixos-rebuild build ...$args
+    if $inputs {
+        # target-host 只推运行时闭包。目标机要自己 eval+build 还缺两样：
+        #   1) flake 及其 inputs —— nix flake archive 一次性塞进目标 store（eval 不再拉 nixpkgs）
+        #   2) box.d 上的镜像文件 —— 它们是 FOD 的输出，不在 drv 闭包里，必须单独推产物。
+        #      FOD 的判定是 isValidPath(output)，产物在就不会再下载；
+        #      builtins.fetchTree 那种 eval 期取物做不到（它认的是本机 fetcher 缓存）。
+        nix flake archive --to $"ssh://($target)"
+        let drv = (nix eval --raw $"($attr).drvPath")
+        let mirror = (
+            ^nix-store -qR $drv
+            | lines
+            | where {|p| $p | str ends-with '.drv' }
+            | each {|d|
+                if (open --raw $d | str contains 'box.d') {
+                    ^nix-store -q --outputs $d | str trim
+                }
+            }
+            | compact
+        )
+        if ($mirror | is-not-empty) {
+            ^nix copy --to $"ssh://($target)" ...$mirror
+            print $"推送镜像产物 ($mirror | length) 个（box.d 源）"
+        }
+        print $"在 ($target) 上检查变更：nh os build .#($host)；确认后再加 --switch 激活"
+    }
+    if $switch {
+        # --store-path 跳过 eval 和构建，直接把已推过去的闭包切过去
+        nixos-rebuild switch --store-path (nix eval --raw $attr) --target-host $target --use-remote-sudo
+    }
 }
 
 export module mount {

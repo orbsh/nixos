@@ -29,11 +29,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1789770686,
-        "narHash": "sha256-uZkBR7yHdIKUFB5SZdfgh1qkGfI3XmYmI/lTiquxbck=",
+        "lastModified": 1792526520,
+        "narHash": "sha256-3hSJlv8mUVnZPMWK2+CM7a9O+nR6Z4mCh27NfLCmTPc=",
         "owner": "nix-community",
         "repo": "disko",
-        "rev": "725ea35e410ad83be4931d1bff7e090eacaf3563",
+        "rev": "cedd626e11b635470fa6f9fdb8ad79b0075dd7f9",
         "type": "github"
       },
       "original": {
@@ -50,10 +50,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1793124281,
-        "narHash": "sha256-KdGTOgYXgMDA/ymTV10yLMt9tOjz9EmTgnTvaD+bhe4=",
+        "lastModified": 1793193205,
+        "narHash": "sha256-X6xa6sGA7RnJQuZGbFMC+K+KToWAlBDCCjJXfTwEPsw=",
         "ref": "refs/heads/master",
-        "rev": "1e3ebeb683d055d1675d3f64e6d2b186cb2ee504",
+        "rev": "095fef2f265c3c0da4fe315efba8f8a04495ab34",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/nix-community/home-manager"
@@ -82,10 +82,10 @@
     },
     "my-mudra-config": {
       "locked": {
-        "lastModified": 1792863396,
-        "narHash": "sha256-jT50YcTgYkeed2fjdobuDq8+T+SHU+eF0NuhbRJALqc=",
+        "lastModified": 1793328263,
+        "narHash": "sha256-+Qmo8YzIcfXJBnq9lcxpqtEkXME3VGhgaoGPBdMyw+M=",
         "ref": "refs/heads/main",
-        "rev": "fd7024f7f28b1fdf5057df82d2ed62b7e38b23c8",
+        "rev": "1d93ef850f7d78028a730b65a833b8cf0ca5e20c",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/orbsh/mudra"
@@ -156,10 +156,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1792225367,
-        "narHash": "sha256-Uz/SQyKSOQc/ZsIgLTOr+pWGqhzcemyEA2vBAL6KGZM=",
+        "lastModified": 1793342482,
+        "narHash": "sha256-poBaF2bJUH3yGMav3TSOi7k84jy8BnU8HD6PONQAwak=",
         "ref": "refs/heads/master",
-        "rev": "535166ecac3fcdff43787aa958dd7e954770581d",
+        "rev": "42d1df94f001a9416ef08be7b305144074aca9d2",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/nlewo/nix2container"
@@ -182,10 +182,10 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1792567263,
-        "narHash": "sha256-TS1U/deeX1o65ZqFvi1vo9I7hVReqv2dOwV0tgO8TUw=",
+        "lastModified": 1793171667,
+        "narHash": "sha256-8h9MU32SjnFWIWRdtP9vYVNV5QrVbai8Oo1LW1rAmwc=",
         "ref": "refs/heads/main",
-        "rev": "92b94751fc010eab62d07de40972cffa6937cafd",
+        "rev": "58132e1d1f813b845382a2aeca4203b18d2ac807",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/nix-community/nixos-anywhere"
@@ -275,11 +275,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1793086596,
-        "narHash": "sha256-ObKS44vw4IIVpQ69YJzUGjZ0IwnpWoUlwjJSY7gefdo=",
+        "lastModified": 1793261817,
+        "narHash": "sha256-fAvtOccUXHVAH5wXK+ABYUUC47W2qTb9T9EefLcS9ME=",
         "owner": "oxalica",
         "repo": "rust-overlay",
-        "rev": "c7e9d512653a35ef4d5879c3df4d44d7b78d0e6d",
+        "rev": "afcefd09c71e63663a46e4ce5e09968584f2c709",
         "type": "github"
       },
       "original": {
