@@ -81,9 +81,9 @@
       # nix-daemon 代理统一取共享 proxy.address（core.nix），null= 直连；noProxy 白名单见下方 nixSubstituters.noProxy
       nixSubstituters = {
         substituters = [
-          "https://mirrors.ustc.edu.cn/nix-channels/store"
           "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
           "https://mirrors.sjtug.sjtu.edu.cn/nix-channels/store"
+          "https://mirrors.ustc.edu.cn/nix-channels/store"
           "https://cache.nixos.org"
         ];
         # noProxy 白名单（不经本地代理，直连）：镜像 + 本地地址。官网不列入，保持走代理
