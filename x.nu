@@ -1,13 +1,42 @@
 const ROOT = path self .
+const OFFICIAL_SUBSTITUTER = 'https://cache.nixos.org'
 
 def cmpl-hosts [] {
     cd $ROOT
     nix flake show --json | from json | get nixosConfigurations | columns
 }
 
+# substituter 覆盖参数（空=不传，沿用 flake.nix 声明的 nixSubstituters）
+# 源挂掉时靠它救急：替换整表（--option substituters）才能剔除坏源，
+# extra-substituters 只能追加，管不了"某个源不可用"。
+def substituter-args [
+    substituters?: list<string>   # 替换整表，顺序即尝试顺序
+    harmonia?: list<string>       # 追加，在替换结果之上叠加
+    official: bool = false        # 强制官方源，压过上面两个
+]: nothing -> list<string> {
+    # 强制官方源：镜像全挂/首选用官方时的最短路径，-s 和 --harmonia 一律不生效
+    if $official {
+        return [--option substituters $OFFICIAL_SUBSTITUTER]
+    }
+    # 未传 flag 时 nu 给的是 nothing，不能直接进 list 参数
+    let substituters = $substituters | default []
+    let harmonia = $harmonia | default []
+    mut a = []
+    if ($substituters | is-not-empty) {
+        $a ++= [--option substituters ($substituters | str join ' ')]
+    }
+    if ($harmonia | is-not-empty) {
+        $a ++= [--option extra-substituters ($harmonia | str join ' ')]
+    }
+    $a
+}
+
 export def switch [
     host: string@cmpl-hosts = 'workstations_orbit'
     --remote: string
+    --official(-o)                          # 只用官方源 cache.nixos.org，忽略 -s/--harmonia
+    --substituters(-s): list<string> = []   # 临时替换 substituter 列表（默认源全挂时仍能构建）
+    --harmonia: list<string> = []           # 临时追加 harmonia 缓存
 ] {
     cd $ROOT
     $env.NIXOS_LABEL = (git log -1 --pretty=format:"%s" | sed 's/ /_/g')
@@ -15,6 +44,7 @@ export def switch [
         switch
         --flake $".#($host)"
     ]
+    $args ++= (substituter-args $substituters $harmonia $official)
     if ($remote | is-not-empty) {
         # 远程：本机只做评估+构建，不需要 root；SSH 以当前用户运行，直接读 ~/.ssh/config
         $args ++= [--target-host $remote --use-remote-sudo]
@@ -27,12 +57,14 @@ export def switch [
 
 export def build [
     host: string@cmpl-hosts = 'workstations_orbit'
-    --harmonia: list<string>
+    --official(-o)                          # 只用官方源 cache.nixos.org，忽略 -s/--harmonia
+    --substituters(-s): list<string> = []   # 临时替换 substituter 列表（默认源全挂时仍能构建）
+    --harmonia: list<string> = []           # 临时追加 harmonia 缓存
 ] {
+    let opts = substituter-args $substituters $harmonia $official
     mut args = []
-    if ($harmonia | is-not-empty) {
-        $args ++= [-- --option extra-substituters ($harmonia | str join ' ')]
-    }
+    # nh 用 `--` 把后续参数透传给 nix build
+    if not ($opts | is-empty) { $args ++= [-- ...$opts] }
     nh os build $"($ROOT)#($host)" ...$args
 }
 
