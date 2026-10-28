@@ -20,34 +20,41 @@ options.desktop.vivaldi = {
     type = lib.types.nullOr (lib.types.submodule {
       options = {
         url = lib.mkOption { type = lib.types.str; };
-        narHash = lib.mkOption { type = lib.types.str; };
+        hash = lib.mkOption { type = lib.types.str; };
       };
     });
     default = null;
-    description = "安装包来源（指定 url 和 narHash）。非空时覆盖 nixpkgs 默认版本。";
+    description = "安装包来源（指定 url 和 flat hash）。非空时覆盖 nixpkgs 默认版本。";
   };
 };
 ```
 
-### 2. 使用 builtins.fetchTree 获取文件
+### 2. 用 pkgs.fetchurl 取文件（固定输出 derivation）
 
 ```nix
 config = let
   cfg = config.desktop.vivaldi;
   srcPath = if cfg.src != null
-    then (builtins.fetchTree {
-      type = "file";  # 或 "tarball"
-      inherit (cfg.src) url narHash;
-    }).outPath
+    then pkgs.fetchurl { inherit (cfg.src) url hash; }
     else null;
 in { ... };
 ```
 
 **要点**：
-- `type = "file"` 用于单个文件（如 `.deb`、二进制）
-- `type = "tarball"` 用于压缩包（如 `.tar.gz`）
-- `narHash` 必须是 SRI 格式：`sha256-...`
-- `.outPath` 返回的是字符串类型
+- 一律用 `pkgs.fetchurl`（压缩包也一样；stdenv 会自动解包），不要用 `builtins.fetchTree`
+- `hash` 是 **flat sha256**（SRI 格式 `sha256-...`），不是 narHash
+- `srcPath` 现在本身就是 derivation，可以直接当 `src` 用，不需要 `.outPath`
+
+为什么不用 `builtins.fetchTree`：
+
+| | `builtins.fetchTree` | `pkgs.fetchurl`（FOD） |
+|---|---|---|
+| 取物时机 | eval 期 | 构建期 |
+| 是否需要重新下载 | 由本机 `~/.cache/nix/fetcher-cache` 的 URL 记录决定 | 由 store 里有没有该产物决定 |
+| 产物推给别的机器 | 推了也没用（缓存不在 store 里），目标机照样联网 | 推过去就跳过下载（`isValidPath(output)`） |
+| 跨机器部署 | 目标机必须能访问那个 URL | 可以先在工作站取好再推 |
+
+镜像在 box.d（只有工作站能解析）这类场景必须走 FOD，否则服务器或节点 eval 时必然卡在取物上。
 
 ### 3. 创建 overlay 覆盖包
 
@@ -56,9 +63,7 @@ nixpkgs.overlays = [
   (final: prev: let
     base = if srcPath != null
       then prev.<package>.overrideAttrs (old: {
-        src = prev.runCommandLocal "<name>.deb" {} ''
-          ln -s ${srcPath} $out
-        '';
+        src = srcPath;  # 已经是 derivation，直接给
       })
       else prev.<package>;
   in {
@@ -73,42 +78,50 @@ nixpkgs.overlays = [
 
 ### ⚠️ src 必须是 derivation，不能是字符串
 
-**错误示例**：
 ```nix
-src = srcPath;  # ❌ srcPath 是字符串，会被当作 URL 处理
+src = "/nix/store/xxx";   # ❌ 字符串会被当成 URL 处理
+src = pkgs.fetchurl { url = ...; hash = ...; };  # ✅
 ```
 
-**正确做法**：用 `runCommandLocal` 包装成 derivation：
+`builtins.fetchTree {...}.outPath` 之所以要包一层 `runCommandLocal`，就是因为它返回的是字符串；换成 `fetchurl` 之后这一层包装可以去掉。
+
+### ⚠️ 解包行为与 sourceRoot
+
+`pkgs.fetchurl` 拿到的是压缩包本体，stdenv 会走 `unpackPhase`。压缩包**没有顶层目录**时（如 rbw 的 tarball 根下直接是 `rbw`/`completion/`），stdenv 的 sourceRoot 推断会选错目录，需要显式钉住：
+
 ```nix
-src = prev.runCommandLocal "name.deb" {} ''
+src = pkgs.fetchurl { url = ...; hash = ...; };
+sourceRoot = ".";
+```
+
+需要自己控制解包时用 `dontUnpack = true` + 在 `installPhase` 里 `tar xzf $src`（jcode、numa 是这种形态）。
+
+### ⚠️ runCommandLocal 现在只用于改名场景
+
+`src` 是 tarball 或 `.deb` 时，store 路径名已经是 `xxx.tar.gz` / `xxx.deb`，上游的 `unpackCmd` 认得，不需要包装。只有当上游要求特定文件名、而 hash 来源路径名不匹配时才用：
+
+```nix
+src = prev.runCommandLocal "vivaldi.deb" {} ''
   ln -s ${srcPath} $out
 '';
 ```
 
-### ⚠️ runCommand vs runCommandLocal
-
-| 函数 | 构建位置 | 是否尝试远程 substitute | 推荐场景 |
-|------|---------|------------------------|---------|
-| `runCommand` | 可远程 | ✅ 会尝试，可能卡住 | 需要分布式构建 |
-| `runCommandLocal` | 强制本地 | ❌ 不尝试 | **本地文件包装（推荐）** |
-
-**问题**：`runCommand` 会尝试从 binary cache substitute，如果 derivation 名称匹配远程缓存中的包，会卡住等待网络。
-
-**解决**：使用 `runCommandLocal` 强制本地构建，避免网络等待。
-
 ### ⚠️ symlink vs copy
 
-- **symlink**（`ln -s`）：快，不占用额外空间，推荐用于大文件
-- **copy**（`cp`）：慢，占用额外空间，但在某些特殊场景可能需要
+- **symlink**（`ln -s`）：快，不占额外空间，推荐用于大文件
+- **copy**（`cp`）：慢，占额外空间，特殊场景才需要
 
-### ⚠️ narHash 的获取
+### ⚠️ flat hash 的获取
 
 ```bash
-# 对本地文件计算 narHash
-nix hash file --type sha256 /path/to/file
-
-# 输出格式：sha256-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx=
+# 单个文件（FOD 用这个）
+nix hash file --type sha256 --sri /path/to/file
+# 或者直接看 URL 的规范值
+nix store prefetch-file --json http://box.d/nixos/<file>
+# → {"hash":"sha256-...","storePath":"..."}
 ```
+
+narHash（`nix hash path`，NAR 哈希）只在继续用 `builtins.fetchTree` 的少数条目上需要（当前仅 `modules/desktop/units/rime-wubi.nix` 的 git 源，git 取物没有 rev 就没法做 FOD）。
 
 ### ⚠️ 文件 URL 格式
 
@@ -134,7 +147,7 @@ url = "file:///nix/store/xxxxx-package.deb";
       type = lib.types.nullOr (lib.types.submodule {
         options = {
           url = lib.mkOption { type = lib.types.str; };
-          narHash = lib.mkOption { type = lib.types.str; };
+          hash = lib.mkOption { type = lib.types.str; };
         };
       });
       default = null;
@@ -144,20 +157,13 @@ url = "file:///nix/store/xxxxx-package.deb";
   config = let
     cfg = config.desktop.vivaldi;
     srcPath = if cfg.src != null
-      then (builtins.fetchTree {
-        type = "file";
-        inherit (cfg.src) url narHash;
-      }).outPath
+      then pkgs.fetchurl { inherit (cfg.src) url hash; }
       else null;
   in {
     nixpkgs.overlays = [
       (final: prev: {
         vivaldi = if srcPath != null
-          then prev.vivaldi.overrideAttrs (old: {
-            src = prev.runCommandLocal "vivaldi.deb" {} ''
-              ln -s ${srcPath} $out
-            '';
-          })
+          then prev.vivaldi.overrideAttrs (old: { src = srcPath; })
           else prev.vivaldi;
       })
     ];
@@ -241,7 +247,7 @@ src = prev.runCommandLocal "name" {} ''
 ## 总结
 
 制作 overlay 的核心流程：
-1. 定义配置选项（url + narHash）
+1. 定义配置选项（url + flat hash）
 2. 用 `builtins.fetchTree` 获取文件到 store
 3. 用 `runCommandLocal` 包装成 derivation（**关键**）
 4. 在 overlay 中用 `overrideAttrs` 覆盖 `src`

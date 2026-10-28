@@ -7,7 +7,7 @@
 #   nu scripts/upstream.nu fetch [name]     # 按 upstream 下载到 dest；无 name = 遍历可更新的 mirror 条目
 #   nu scripts/upstream.nu bump [name] [--to V] [--write] [--force]
 #                                          # release：查最新(或 --to)→ 算 hash → 改写 version/url/hash 行
-#                                          # mirror ：取新版文件 → 重算 hash → 改写 version/url/narHash 行
+#                                          # mirror ：取新版文件 → 重算 hash → 改写 version/url/hash 行
 #                                          # doc    ：只改写版本串行
 #                                          # 无 name = 遍历全部可更新条目（判定同 check）
 #   nu scripts/upstream.nu update [name] [--write] [--force]
@@ -62,7 +62,7 @@ def local-file [e: record] {
   if $p == null or not ($p | path exists) { null } else { $p }
 }
 
-# ── hash 计算（三种约定）────────────────────────────────────
+# ── hash 计算（三种约定；mirror 条目现在统一用 flat + pkgs.fetchurl）──
 def hash-of [p: path, kind: string] {
   match $kind {
     "flat" => (^nix hash file --type sha256 --sri $p | str trim)

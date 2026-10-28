@@ -8,15 +8,15 @@
       type = lib.types.submodule {
         options = {
           url = lib.mkOption { type = lib.types.str; };
-          narHash = lib.mkOption { type = lib.types.str; };
+          hash = lib.mkOption { type = lib.types.str; };
         };
       };
       default = {
-        # 包放 box.d/nixos/（同 open-interpreter 模式）；升级时：下载→add-fixed→更新 narHash
+        # 包放 box.d/nixos/（同 open-interpreter 模式）；升级时：下载→更新 flat hash
         # curl -sL -o jcode.tar.gz http://box.d/nixos/jcode-linux-x86_64.tar.gz
-        # nix-store --add-fixed sha256 jcode.tar.gz && nix hash path --type sha256 jcode.tar.gz
+        # nix hash file --type sha256 --sri jcode.tar.gz
         url = "http://box.d/nixos/jcode-linux-x86_64.tar.gz";
-        narHash = "sha256-gABwmn5yKnJ6I37uwE1Fc+E6/7zmFQd/gJedBDrRWIg=";
+        hash = "sha256-1ZXji/hilzBIfafyw+7Xm5k11ELOtq9MyJ/0ntcBPPc=";
       };
       description = "jcode 预编译包来源（GitHub release，linux-x86_64）";
     };
@@ -30,10 +30,8 @@
         pname = "jcode";
         version = "0.99.0";
 
-        src = builtins.fetchTree {
-          type = "file";
-          inherit (cfg.src) url narHash;
-        };
+        # FOD（fetchurl）：产物在 store 即跳过下载，可随闭包推送
+        src = pkgs.fetchurl { inherit (cfg.src) url hash; };
 
         nativeBuildInputs = with pkgs; [
           autoPatchelfHook

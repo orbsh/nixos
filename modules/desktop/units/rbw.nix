@@ -8,23 +8,21 @@
       type = lib.types.submodule {
         options = {
           url = lib.mkOption { type = lib.types.str; };
-          narHash = lib.mkOption { type = lib.types.str; };
+          hash = lib.mkOption { type = lib.types.str; };
         };
       };
       default = {
         url = "http://box.d/nixos/rbw_1.15.0_linux_amd64.tar.gz";
-        narHash = "sha256-HulxqTwSeB+//jIL0QsG25rYAEdZKvTqHjVexpvgjR4=";
+        hash = "sha256-2BdLCurMvNgDIspB+0i/LbrY/E1dnFCcQru0bV4ZU5U=";
       };
-      description = "rbw 预编译包来源（指定 url 和 narHash）";
+      description = "rbw 预编译包来源（指定 url 和 flat hash）";
     };
   };
 
   config = let
     cfg = config.desktop.rbw;
-    srcPath = (builtins.fetchTree {
-      type = "tarball";
-      inherit (cfg.src) url narHash;
-    }).outPath;
+    # FOD（fetchurl）：产物在 store 即跳过下载，可随闭包推送
+    srcPath = pkgs.fetchurl { inherit (cfg.src) url hash; };
   in {
     environment.systemPackages = [
       (pkgs.stdenv.mkDerivation {
@@ -32,6 +30,9 @@
         version = "1.15.0";
 
         src = srcPath;
+
+        # tarball 没有顶层目录，stdenv 的 sourceRoot 猜成 completion/ → 显式钉在解包根
+        sourceRoot = ".";
 
         nativeBuildInputs = [ pkgs.autoPatchelfHook ];
         buildInputs = [ pkgs.stdenv.cc.cc.lib ];

@@ -47,11 +47,8 @@ let
   # Dynamic config path — Numa REST API can write here at runtime
   configFile = "${cfg.dataDir}/numa.toml";
 
-  # Pre-built binary from GitHub releases
-  srcPath = (builtins.fetchTree {
-    type = "file";
-    inherit (cfg.src) url narHash;
-  }).outPath;
+  # Pre-built binary from GitHub releases（FOD：产物在 store 即跳过下载，可随闭包推送）
+  srcPath = pkgs.fetchurl { inherit (cfg.src) url hash; };
 in {
   options.services.numa = {
     enable = lib.mkEnableOption "Numa local DNS resolver and reverse proxy";
@@ -124,10 +121,10 @@ in {
 
     src = lib.mkOption {
       type = lib.types.attrsOf lib.types.str;
-      description = "Pre-built binary source. Format: { url = ...; narHash = \"sha256-...\"; }";
+      description = "Pre-built binary source. Format: { url = ...; hash = \"sha256-...\"; }";
       example = {
         url = "https://github.com/razvandimescu/numa/releases/latest/download/numa-linux-x86_64.tar.gz";
-        narHash = "sha256-7lNyRbWXdWj0sR1ONrviwAA0G86qa9fG+nLXqXjXrC8=";
+        hash = "sha256-6Sau5QpJ5dY/ZNyKpEJSW1DeCrbJQGSitrDEFEv/wu8=";
       };
     };
   };

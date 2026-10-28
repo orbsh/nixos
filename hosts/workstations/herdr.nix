@@ -4,7 +4,7 @@
     version = "0.9.5";
     src = {
       url = "http://box.d/nixos/herdr-0.9.5-linux-x86_64";
-      narHash = "sha256-Oii5/dTdw54oSRTnFhezO+XQU8vek8K+jrLUpMiTWRA=";
+      hash = "sha256-FNnovItKngEY13wyJm921GHwm0A0LrI3UpYL2J9Zkp0=";
     };
   };
 }

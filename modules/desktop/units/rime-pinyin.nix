@@ -8,11 +8,9 @@ let
   octCfg = config.rime.pinyin.octagram;
   wanxiangCfg = config.rime.pinyin.wanxiang;
 
+  # FOD（fetchurl）：产物在 store 即跳过下载，可随闭包推送
   wanxiangSrcPath = if wanxiangCfg.src != null then
-    (builtins.fetchTree {
-      type = "file";
-      inherit (wanxiangCfg.src) url narHash;
-    }).outPath
+    pkgs.fetchurl { inherit (wanxiangCfg.src) url hash; }
   else null;
 
   wanxiangModel = wanxiangSrcPath;
@@ -60,11 +58,11 @@ in {
       type = lib.types.nullOr (lib.types.submodule {
         options = {
           url = lib.mkOption { type = lib.types.str; };
-          narHash = lib.mkOption { type = lib.types.str; };
+          hash = lib.mkOption { type = lib.types.str; };
         };
       });
       default = null;
-      description = "万象模型来源（指定 url 和 narHash）。为空时不启用万象模型。";
+      description = "万象模型来源（指定 url 和 flat hash）。为空时不启用万象模型。";
     };
   };
 

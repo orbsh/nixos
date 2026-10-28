@@ -117,9 +117,9 @@ hosts/workstations/default.nix          # 域名 workstations，节点表 { orbi
         │     ├── modules/services/ferron.nix     (文件下载 + CGI 网关，:8080)
         │     └── modules/services/numa.nix       (本地 DNS + 反代，工作站专用)
         ├── ./orbit/{hardware,disk,wireguard,wifi-mt7925,netbird,intranet-dns}.nix
-        ├── ./wanxiang.nix        (RIME 万象模型源：url + narHash)
-        ├── ./nushell.nix         (nushell 预编译二进制源：url + narHash)
-        ├── ./herdr.nix           (herdr 预编译二进制源：url + narHash)
+        ├── ./wanxiang.nix        (RIME 万象模型源：url + flat hash)
+        ├── ./nushell.nix         (nushell 预编译二进制源：url + flat hash)
+        ├── ./herdr.nix           (herdr 预编译二进制源：url + flat hash)
         └── libs/registries-gen.nix   (容器 registry 配置生成)
 
 节点级覆盖（写在 orbit 块内）：rime.wubi.localPath、services.singbox.{configDir,ruleDir}、services.ferron.dataDir
@@ -282,8 +282,9 @@ nu scripts/upstream.nu bump  <name> [--to V] [--write]   # 默认 dry-run，--wr
 | 场景 | Nix 侧消费 | hash 算法 |
 |------|-----------|-----------|
 | `fetchurl`（GitHub release 资产） | `pkgs.fetchurl { url; hash; }` | `nix hash file`（flat） |
-| box.d 单文件 / 模型 | `builtins.fetchTree { type = "file"; narHash; }` | `nix hash path`（单文件 NAR） |
-| box.d 上的 tarball | `builtins.fetchTree { type = "tarball"; narHash; }` | `nix-prefetch-url --unpack`（解包后的树） |
+| box.d 单文件 / 模型（旧约定，仅 rime-wubi 的 git 源仍在用） | `builtins.fetchTree { type = "file"; narHash; }` | `nix hash path`（单文件 NAR） |
+| box.d 单文件 / 模型（现行约定，可随闭包推送） | `pkgs.fetchurl { url; hash; }` | `nix hash file`（flat SRI） |
+| box.d 上的 tarball | 直接用 `pkgs.fetchurl`（stdenv 解包；无顶层目录时 `sourceRoot = "."`） | `nix hash file`（flat SRI） |
 
 - `release` 类的 ferron / rustdesk / trunk 在 derivation 上挂了 `passthru.updateScript`，指向 `upstream.nu bump <name> --write`（按 nixpkgs 约定；这两个脚本文件被 git 跟踪后 flake 才认）。
 - GitHub 取最新 tag 与下载资产走清单里的 `settings.proxy`（本机 7890）。

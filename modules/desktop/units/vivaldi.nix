@@ -6,21 +6,19 @@
       type = lib.types.nullOr (lib.types.submodule {
         options = {
           url = lib.mkOption { type = lib.types.str; };
-          narHash = lib.mkOption { type = lib.types.str; };
+          hash = lib.mkOption { type = lib.types.str; };
         };
       });
       default = null;
-      description = "Vivaldi 安装包来源（指定 url 和 narHash）。非空时覆盖 nixpkgs 默认版本。";
+      description = "Vivaldi 安装包来源（指定 url 和 flat hash）。非空时覆盖 nixpkgs 默认版本。";
     };
   };
 
   config = let
     cfg = config.desktop.vivaldi;
+    # FOD（fetchurl）：产物在 store 即跳过下载，可随闭包推送
     srcPath = if cfg.src != null
-      then (builtins.fetchTree {
-        type = "file";
-        inherit (cfg.src) url narHash;
-      }).outPath
+      then pkgs.fetchurl { inherit (cfg.src) url hash; }
       else null;
   in {
     # ── Vivaldi Overlay：修复 COSMIC 200% 缩放下界面放大 ──

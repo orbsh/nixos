@@ -3,7 +3,7 @@
 #
 # kind:
 #   release = GitHub release 资产，用 fetchurl 拉取（版本 + hash 写在 Nix 文件里）
-#   mirror  = 预编译二进制/模型文件，镜像在 box.d（本地文件为权威，Nix 侧记 url + narHash）。
+#   mirror  = 预编译二进制/模型文件，镜像在 box.d（本地文件为权威，Nix 侧记 url + flat hash，走 FOD）。
 #             下载地址默认由 settings.mirror-base + dest 目录名 + file 推导；条目里写 url 可覆盖。
 #   doc     = 不在 Nix 里，只是脚本文本中的版本串（bump 改写站点文件里的那一行；没有产物可 fetch）
 #
@@ -81,7 +81,9 @@ entries:
     version-line: 'certManagerVersion = "v{v}"'   # 站点文件里的值是带 v 的 tag，别按纯版本号写模板
     hash-line: 'hash = "{h}"'
 
-  # ── mirror（box.d 上的文件，narHash）────────────────────
+  # ── mirror（box.d 上的文件）──────────────────────────────
+  #   hash: file  → narHash，Nix 侧 builtins.fetchTree（eval 期取物，换机器要重新下载）
+  #   hash: flat  → flat sha256，Nix 侧 pkgs.fetchurl（FOD，产物可随闭包推送）
   nushell:
     kind: mirror
     repo: nushell/nushell
@@ -89,13 +91,13 @@ entries:
     upstream: "https://github.com/nushell/nushell/releases/download/{v}/nu-{v}-x86_64-unknown-linux-musl.tar.gz"
     dest: "~/pub/Assets/k8s"
     file: "nu-{v}-x86_64-unknown-linux-musl.tar.gz"
-    hash: file
+    hash: flat                          # FOD（fetchurl）要 flat sha256，不是 narHash
     current: "0.116.1"
     sites:                              # 两处：模块原始定义 + 工作站覆盖层
       - default: modules/system/units/nushell.nix
       - hosts: hosts/workstations/nushell.nix
     url-line: 'url = "{u}"'
-    hash-line: 'narHash = "{h}"'
+    hash-line: 'hash = "{h}"'
     version-line: 'version = "{v}"'
 
   herdr:
@@ -105,11 +107,11 @@ entries:
     upstream: "https://github.com/herdrdev/herdr/releases/download/v{v}/herdr-linux-x86_64"
     dest: "~/pub/Assets/nixos"
     file: "herdr-{v}-linux-x86_64"
-    hash: file
+    hash: flat
     current: "0.9.5"
     site: hosts/workstations/herdr.nix
     url-line: 'url = "{u}"'
-    hash-line: 'narHash = "{h}"'
+    hash-line: 'hash = "{h}"'
     version-line: 'version = "{v}"'
 
   wanxiang:
@@ -120,10 +122,10 @@ entries:
     upstream: "https://github.com/amzxyz/RIME-LMDG/releases/download/LTS/wanxiang-lts-zh-hans.gram"
     dest: "~/pub/Assets/nixos"
     file: "wanxiang-lts-zh-hans.gram"
-    hash: file
+    hash: flat
     current: null
     site: hosts/workstations/wanxiang.nix
-    hash-line: 'narHash = "{h}"'
+    hash-line: 'hash = "{h}"'
 
   numa:
     kind: mirror
@@ -132,12 +134,12 @@ entries:
     upstream: "https://github.com/razvandimescu/numa/releases/download/v{v}/numa-linux-x86_64.tar.gz"
     dest: "~/pub/Assets/nixos"
     file: "numa-linux-x86_64.tar.gz"
-    hash: file
+    hash: flat
     current: "0.24.1"
     sites:                              # 两处：profile 覆盖 + 模块默认值
       - hosts: profiles/workstation.nix
       - default: modules/services/numa.nix
-    hash-line: 'narHash = "{h}"'
+    hash-line: 'hash = "{h}"'
 
   jcode:
     kind: mirror
@@ -146,10 +148,10 @@ entries:
     upstream: "https://github.com/1jehuang/jcode/releases/download/v{v}/jcode-linux-x86_64.tar.gz"
     dest: "~/pub/Assets/nixos"
     file: "jcode-linux-x86_64.tar.gz"    # 文件名不带版本（换版本时 bump 需 --force 覆盖）
-    hash: file
+    hash: flat
     current: "0.99.0"
     site: modules/dev/units/jcode.nix
-    hash-line: 'narHash = "{h}"'
+    hash-line: 'hash = "{h}"'
     version-line: 'version = "{v}"'
 
   rbw:
@@ -159,29 +161,29 @@ entries:
     upstream: "https://github.com/doy/rbw/releases/download/{v}/rbw_{v}_linux_amd64.tar.gz"
     dest: "~/pub/Assets/nixos"
     file: "rbw_{v}_linux_amd64.tar.gz"
-    hash: tree                          # fetchTree type = "tarball"，hash 是解包后的树
+    hash: flat                          # 改成 FOD 后按 flat 算（原 tree 约定已废）
     current: "1.15.0"
     site: modules/desktop/units/rbw.nix
     url-line: 'url = "{u}"'
-    hash-line: 'narHash = "{h}"'
+    hash-line: 'hash = "{h}"'
 
   vivaldi:
     kind: mirror
     upstream: "https://downloads.vivaldi.com/stable/vivaldi-stable_{v}-1_amd64.deb"
     dest: "~/pub/Assets/nixos"
     file: "vivaldi-stable_{v}-1_amd64.deb"
-    hash: file
+    hash: flat
     current: "8.1.4087.61"              # 只有孤儿实例文件 hosts/workstations/vivaldi.nix 在用
     site: hosts/workstations/vivaldi.nix
     url-line: 'url = "{u}"'
-    hash-line: 'narHash = "{h}"'
+    hash-line: 'hash = "{h}"'
 
   wechat:
     kind: mirror
     upstream: "https://dldir1v6.qq.com/weixin/Universal/Linux/WeChatLinux_x86_64.AppImage"
     dest: "~/pub/Assets/nixos"
     file: "WeChatLinux_x86_64.AppImage"
-    hash: file
+    hash: flat
     current: null
     site: modules/desktop/units/wechat.nix
-    hash-line: 'narHash = "{h}"'
+    hash-line: 'hash = "{h}"'

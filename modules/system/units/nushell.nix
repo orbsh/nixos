@@ -2,11 +2,11 @@
 
 let
   # 原始定义：官方 musl 二进制的固定钉。
-  # 下面 version / url / narHash 三行由 scripts/upstream.yml 的 nushell 条目自动改写（host 可覆盖）。
+  # 下面 version / url / hash 三行由 scripts/upstream.yml 的 nushell 条目自动改写（host 可覆盖）。
   pinned = {
     version = "0.116.1";
     url = "http://box.d/k8s/nu-0.116.1-x86_64-unknown-linux-musl.tar.gz";
-    narHash = "sha256-w9qBxjdu/Re2+VfM6yxFOu648FyTtwo0L94u13VwhVM=";
+    hash = "sha256-E+913wjfMPjXsDHfU46CpSxudM6DmxqQkcOj8ZacN0I=";
   };
 in {
   options.nushell.musl = {
@@ -20,33 +20,31 @@ in {
       type = lib.types.nullOr (lib.types.submodule {
         options = {
           url = lib.mkOption { type = lib.types.str; };
-          narHash = lib.mkOption { type = lib.types.str; };
+          hash = lib.mkOption { type = lib.types.str; };
         };
       });
-      default = { inherit (pinned) url narHash; };
-      description = "Nushell musl 二进制文件来源（原始定义在模块的 pinned）。置 null 则回到 nixpkgs 版本。";
+      default = { inherit (pinned) url hash; };
+      description = ''
+        Nushell musl 二进制来源（原始定义在模块的 pinned）。置 null 则回到 nixpkgs 版本。
+        url + hash（flat sha256）构成固定输出 derivation：store 里已有该产物就跳过下载，
+        可以随 drv 闭包推到别的机器，不像 builtins.fetchTree 那样依赖本机 fetcher 缓存。
+      '';
     };
   };
 
   config = let
     cfg = config.nushell.musl;
-    srcPath = if cfg.src != null
-      then (builtins.fetchTree {
-        type = "file";
-        inherit (cfg.src) url narHash;
-      }).outPath
-      else null;
   in {
-    nixpkgs.overlays = lib.optional (srcPath != null)
+    nixpkgs.overlays = lib.optional (cfg.src != null)
       (final: prev: {
         nushell = prev.stdenv.mkDerivation {
           pname = "nushell";
           version = cfg.version;
 
-          src = prev.runCommand "nu.tar.gz" {}
-            ''
-              ln -s ${srcPath} $out
-            '';
+          # 固定输出 derivation（FOD）。用 builtins.fetchTree 会在 eval 期取物，
+          # 命中与否取决于本机 ~/.cache/nix/fetcher-cache 的 URL 记录，换台机器照样下载；
+          # FOD 的判定是 isValidPath(output)，所以推过去就不必再取。
+          src = prev.fetchurl { inherit (cfg.src) url hash; };
 
           installPhase = ''
             mkdir -p $out/bin

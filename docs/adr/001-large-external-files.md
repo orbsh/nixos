@@ -70,11 +70,19 @@ nix store add-file ~/Downloads/model.gram
 # -> /nix/store/...-model.gram
 ```
 ```nix
-# 直接传入 url 和 narHash，模块内部处理 fetchTree
+# 直接传入 url 和 flat hash，模块内部用 pkgs.fetchurl（FOD）
 rime.wanxiang.src = {
   url = "file:///nix/store/...-model.gram";
-  narHash = "sha256-...";
+  hash = "sha256-...";   # nix hash file --type sha256 --sri
 };
 ```
 
 > **注意**：早期版本需要手动包装 `(builtins.fetchTree { ... }).outPath`，现在模块已封装此细节。
+
+## Update（2026-10-28）：取物从 eval 期改到构建期
+
+原方案用 `builtins.fetchTree { type = "file"; narHash; }`，取物发生在 eval 期。它的“命中”依赖**本机** `~/.cache/nix/fetcher-cache` 的 URL 记录，不在 store 里——store 里明明有那个路径，换台机器 eval 仍会重新下载。镜像地址是 `http://box.d`（只有工作站能解析）时，任何在服务器上 eval 的路径都必然失败，而且把产物推过去也无效。
+
+现统一改为 `pkgs.fetchurl { url; hash; }`：固定输出 derivation 的判定是 `isValidPath(output)`，产物推过去就跳过下载，可作为构建输入随闭包分发。代价是 hash 从 narHash（`nix hash path`）改用 flat sha256（`nix hash file --sri`），`scripts/upstream.yml` 的 mirror 条目因此统一为 `hash: flat`。
+
+唯一例外：`modules/desktop/units/rime-wubi.nix` 取的是 git 仓库（`fetchTree type = "git"`），没有 rev 就无法表达成 FOD，继续保留 eval 期取物。
