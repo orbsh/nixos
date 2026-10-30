@@ -19,18 +19,15 @@ let
   ldLibraryPath = pkgs.lib.makeLibraryPath runtimeLibs;
 
   # 1. 注入加强版系统级 `hermes` 命令行包装器
+  #    依赖环境由 Hermes PM 维护（~/.hermes/installs/<id>/environments/<gen>/venv），
+  #    launcher 由 `hermes pm install` 生成；不要在 in-tree 自建 .venv ——
+  #    PM 提交首个 generation 后会删掉它，且它绑死的解释器会随系统升级漂移。
   hermes-cli = pkgs.writeScriptBin "hermes" ''
     #!/usr/bin/env bash
-    if [ ! -d "${srcDir}/.venv" ]; then
-      echo "检测到未初始化的环境，正在构建 NixOS 专用的独立 Python venv..."
-      ${python}/bin/python -m venv ${srcDir}/.venv
-      ${srcDir}/.venv/bin/python -m ensurepip --upgrade 2>/dev/null || true
-    fi
-
     # 注入全局动态链接库路径
     export LD_LIBRARY_PATH="${ldLibraryPath}:$LD_LIBRARY_PATH"
 
-    exec ${srcDir}/.venv/bin/hermes --no-restore-cwd "$@"
+    exec ${srcDir}/.hermes/bin/hermes --no-restore-cwd "$@"
   '';
 
   # 2. `oi` 固定为 hermes 的别名（原 open-interpreter symlink，OI 已移除后回收此快捷键）
@@ -63,15 +60,17 @@ in {
         "LD_LIBRARY_PATH=${ldLibraryPath}"
         "PYTHONUNBUFFERED=1"
       ];
+      # 依赖环境由 PM 维护；服务启动只校验 launcher，不在启动时解析依赖。
+      # 原实现在每次启动跑 pip install -e ".[web]"，而 pip 无法表达 pyproject 的
+      # [tool.uv] override：hermes-agent 钉 Pillow==13.0.0、browser-harness 钉
+      # pillow==12.3.0，pip 必然 ResolutionImpossible，prep 退出 1 让服务永远起不来。
       ExecStartPre = pkgs.writeShellScript "hermes-init-prep" ''
         set -e
         cd ${srcDir}
-        if [ ! -d ".venv" ]; then
-          ${python}/bin/python -m venv .venv
+        if [ ! -x ".hermes/bin/hermes" ]; then
+          echo "缺少 ${srcDir}/.hermes/bin/hermes；先在源码目录执行 hermes pm install 生成 PM 环境与 launcher" >&2
+          exit 1
         fi
-        .venv/bin/python -m ensurepip --upgrade 2>/dev/null || true
-        export LD_LIBRARY_PATH="${ldLibraryPath}:$LD_LIBRARY_PATH"
-        .venv/bin/python -m pip install -q -e ".[web]"
       '';
     };
   };
@@ -82,28 +81,17 @@ in {
     wantedBy = [ "multi-user.target" ];
     inherit (config.systemd.services.hermes-base-env) after path;
     serviceConfig = config.systemd.services.hermes-base-env.serviceConfig // {
-      # 每次启动前先清理残留的 gateway 进程/PID 文件，避免 --replace 导致的竞态冲突
+      # 启动前清理残留的 gateway 进程/PID 文件，避免两个实例抢同一端口
       ExecStartPre = pkgs.writeShellScript "hermes-gateway-prep" ''
         set -e
         cd ${srcDir}
-        # 尝试优雅停止已有 gateway
-        .venv/bin/hermes gateway stop 2>/dev/null || true
-        sleep 1
-        # 强制清理可能残留的 python gateway 进程
-        pkill -f "hermes_cli.main gateway run" 2>/dev/null || true
-        pkill -f "hermes gateway run" 2>/dev/null || true
+        # 重启即重启：--yes 允许在有活跃会话时停掉旧实例（否则旧实例占着 8642，新实例永远绑不上）
+        .hermes/bin/hermes gateway stop --yes 2>/dev/null || true
         sleep 1
         # 清理 PID/lock 文件
         rm -f ${srcDir}/*.pid ${srcDir}/.hermes*.pid ${srcDir}/gateway/*.pid 2>/dev/null || true
-        # 运行基础初始化（venv + pip install）
-        if [ ! -d ".venv" ]; then
-          ${python}/bin/python -m venv .venv
-        fi
-        .venv/bin/python -m ensurepip --upgrade 2>/dev/null || true
-        export LD_LIBRARY_PATH="${ldLibraryPath}:$LD_LIBRARY_PATH"
-        .venv/bin/python -m pip install -q -e ".[web]"
       '';
-      ExecStart = "${srcDir}/.venv/bin/hermes gateway run";
+      ExecStart = "${srcDir}/.hermes/bin/hermes gateway run";
     };
   };
 
@@ -116,7 +104,7 @@ in {
     inherit (config.systemd.services.hermes-base-env) path;
     serviceConfig = config.systemd.services.hermes-base-env.serviceConfig // {
       # 本地使用 127.0.0.1 可跳过 OAuth 认证要求；如需局域网访问改用 0.0.0.0 并配置 auth 或加 --insecure
-      ExecStart = "${srcDir}/.venv/bin/hermes dashboard --host 127.0.0.1 --port 9119 --no-open --skip-build";
+      ExecStart = "${srcDir}/.hermes/bin/hermes dashboard --host 127.0.0.1 --port 9119 --no-open --skip-build";
     };
   };
 }

@@ -53,8 +53,10 @@ sudo systemctl enable hermes-dashboard hermes-gateway
 
 ## 更新
 
+依赖环境由 Hermes PM 维护（`~/.hermes/installs/<id>/environments/<gen>/venv`），源码目录下的 `.venv` 不再使用；服务启动只校验 PM launcher，不再解析依赖。
+
 ```bash
-# 拉取最新代码后重启服务即可自动重建 .venv
-cd ~/world/hermes-agent && git pull
+# 拉取最新代码：用 hermes update（同时同步 PM 依赖环境与 .hermes/bin launcher）
+cd ~/world/hermes-agent && hermes update
 sudo systemctl restart hermes-dashboard hermes-gateway
 ```
