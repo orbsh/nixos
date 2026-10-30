@@ -30,7 +30,7 @@ entries:
     tag: "{v}"
     url: "https://github.com/ferronweb/ferron/releases/download/{v}/ferron-{v}-x86_64-unknown-linux-musl.tar.gz"
     hash: flat
-    current: "3.0.0-rc.9"
+    current: "3.0.0-rc.10"
     site: modules/services/ferron.nix
     version-line: 'ferronVersion = "{v}"'
     hash-line: 'hash = "{h}"'
@@ -52,7 +52,7 @@ entries:
     tag: "v{v}"
     url: "https://github.com/trunk-rs/trunk/releases/download/v{v}/trunk-x86_64-unknown-linux-musl.tar.gz"
     hash: flat
-    current: "0.22.0"
+    current: "0.22.1"
     site: modules/dev/units/rust.nix
     context: 'pname = "trunk";'        # rust.nix 里 version 行不唯一，用上下文行定位
     version-line: 'version = "{v}"'
@@ -65,7 +65,7 @@ entries:
     tag: "v{v}"
     url: "https://github.com/lexmount/moli/releases/download/v{v}/moli-x86_64-unknown-linux-gnu.tar.gz"
     hash: flat
-    current: "1.1.18"
+    current: "1.1.19"
     site: modules/system/units/moli.nix
     version-line: 'version = "{v}"'
     hash-line: 'hash = "{h}"'
@@ -76,7 +76,7 @@ entries:
     tag: "v{v}"
     url: "https://github.com/cert-manager/cert-manager/releases/download/v{v}/cert-manager.yaml"
     hash: flat
-    current: "1.21.2"
+    current: "1.21.3"
     site: modules/k8s/cert-manager.nix
     version-line: 'certManagerVersion = "v{v}"'   # 站点文件里的值是带 v 的 tag，别按纯版本号写模板
     hash-line: 'hash = "{h}"'
@@ -135,7 +135,7 @@ entries:
     dest: "~/pub/Assets/nixos"
     file: "numa-linux-x86_64.tar.gz"
     hash: flat
-    current: "0.24.1"
+    current: "0.25.0"
     sites:                              # 两处：profile 覆盖 + 模块默认值
       - hosts: profiles/workstation.nix
       - default: modules/services/numa.nix
@@ -149,7 +149,7 @@ entries:
     dest: "~/pub/Assets/nixos"
     file: "jcode-linux-x86_64.tar.gz"    # 文件名不带版本（换版本时 bump 需 --force 覆盖）
     hash: flat
-    current: "0.99.0"
+    current: "0.99.1"
     site: modules/dev/units/jcode.nix
     hash-line: 'hash = "{h}"'
     version-line: 'version = "{v}"'

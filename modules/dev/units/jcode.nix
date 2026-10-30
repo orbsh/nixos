@@ -16,7 +16,7 @@
         # curl -sL -o jcode.tar.gz http://box.d/nixos/jcode-linux-x86_64.tar.gz
         # nix hash file --type sha256 --sri jcode.tar.gz
         url = "http://box.d/nixos/jcode-linux-x86_64.tar.gz";
-        hash = "sha256-1ZXji/hilzBIfafyw+7Xm5k11ELOtq9MyJ/0ntcBPPc=";
+        hash = "sha256-CyphLel8bgGubeHAz/VVs0YM+DZNGhHS+GSfwMnXoeY=";
       };
       description = "jcode 预编译包来源（GitHub release，linux-x86_64）";
     };
@@ -28,7 +28,7 @@
     environment.systemPackages = with pkgs; [
       (stdenv.mkDerivation {
         pname = "jcode";
-        version = "0.99.0";
+        version = "0.99.1";
 
         # FOD（fetchurl）：产物在 store 即跳过下载，可随闭包推送
         src = pkgs.fetchurl { inherit (cfg.src) url hash; };

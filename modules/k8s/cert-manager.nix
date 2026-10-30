@@ -24,12 +24,12 @@
         kubectl = "${pkgs.kubectl}/bin/kubectl --kubeconfig /etc/kubernetes/cluster-admin.kubeconfig";
         # 版本与 hash 由 scripts/upstream.yml 的 cert-manager 条目维护（kind = release，flat hash）：
         #   nu scripts/upstream.nu bump cert-manager --write
-        certManagerVersion = "v1.21.2";
+        certManagerVersion = "v1.21.3";
         # 清单在 Nix 侧钉住（url + flat hash），激活时 apply store 里的文件——
         # 节点不再向 GitHub 现抓未校验的清单（ADR-001 远端源方式 A）
         certManagerManifest = pkgs.fetchurl {
           url = "https://github.com/cert-manager/cert-manager/releases/download/${certManagerVersion}/cert-manager.yaml";
-          hash = "sha256-4DtmjshnUhSvawpnFpnQiPJgH6OHjg2+G0HT/q/Rh58=";
+          hash = "sha256-wEpRKVrdorGndRRnUflz54cZB3jH81GAhh2WeIduXHQ=";
         };
       in ''
         if ! ${kubectl} get namespace cert-manager &>/dev/null; then

@@ -13,12 +13,12 @@
 let
   cfg = config.services.ferron;
 
-  ferronVersion = "3.0.0-rc.9";
+  ferronVersion = "3.0.0-rc.10";
 
   # Ferron 3.x 静态二进制来源
   ferronSrc = pkgs.fetchurl {
     url = "https://github.com/ferronweb/ferron/releases/download/${ferronVersion}/ferron-${ferronVersion}-x86_64-unknown-linux-musl.tar.gz";
-    hash = "sha256-xkyjzbbv02wDABgJqe14jof3o+IjXHCVA2w1u01I0r8=";
+    hash = "sha256-PVzLx7n2P0zFX8yMp23hi+c/gthjfmaIOSFzhn9alG8=";
   };
 
   # Ferron 脚本目录（Nix store，含 box.conf / box.nu / ...）

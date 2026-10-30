@@ -124,7 +124,7 @@ in {
       description = "Pre-built binary source. Format: { url = ...; hash = \"sha256-...\"; }";
       example = {
         url = "https://github.com/razvandimescu/numa/releases/latest/download/numa-linux-x86_64.tar.gz";
-        hash = "sha256-6Sau5QpJ5dY/ZNyKpEJSW1DeCrbJQGSitrDEFEv/wu8=";
+        hash = "sha256-AhtoKC2XEF7XdX5UkDCFtWh7SQIBAHJC3TUji6/keho=";
       };
     };
   };

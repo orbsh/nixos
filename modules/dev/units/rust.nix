@@ -101,10 +101,10 @@ in {
       # 版本须与 nixpkgs 保持同步升级（trunk-rs/trunk releases）。
       trunk = final.stdenvNoCC.mkDerivation {
         pname = "trunk";
-        version = "0.22.0";
+        version = "0.22.1";
         src = final.fetchurl {
-          url = "https://github.com/trunk-rs/trunk/releases/download/v0.22.0/trunk-x86_64-unknown-linux-musl.tar.gz";
-          hash = "sha256-chDFB86g7oySlog4As585QwIo45+1nmTwupB/924m3k=";
+          url = "https://github.com/trunk-rs/trunk/releases/download/v0.22.1/trunk-x86_64-unknown-linux-musl.tar.gz";
+          hash = "sha256-of5c1rBT9advZrWY0pYCKn8G9W3vYBPMFs1ol9U/U2M=";
         };
         dontBuild = true;
         dontStrip = true;
