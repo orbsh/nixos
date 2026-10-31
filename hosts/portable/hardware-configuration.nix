@@ -21,16 +21,11 @@
     "sdhci_pci"    # 内置 SD 卡读卡器控制器
   ];
 
-  # 注意：portable 作为 USB 移动系统盘，必须禁用 systemd initrd。
-  # 原因：USB 设备枚举慢，systemd initrd 的 udev 事件驱动机制可能错过设备就绪信号，
-  # 导致 .device unit 超时，阻塞所有依赖 initrd-root-fs.target 的服务。
-  # stage-1 init 的阻塞等待机制天然适配慢速 USB 设备。
-  # （commit 44da8c8 曾启用此项导致启动失败，详见 ADR-010）
-  #
-  # Deprecation warning（26.05+）：scripted initrd 将在 26.11 移除。
-  # 决策：保持现状，忽略 warning。portable 是维护/救援用途，稳定性优先。
-  # 详见 ADR-010「关于 scripted initrd deprecation warning」章节。
-  boot.initrd.systemd.enable = false;
+  # 注意：portable 作为 USB 移动系统盘，启动时 USB 设备枚举慢（USB 3.0 初始化、分区表读取）。
+  # 历史上靠禁用 systemd initrd、退回 scripted initrd 规避（commit 44da8c8 启用 systemd initrd 导致
+  # 启动失败，详见 ADR-010）。nixpkgs 已移除 scripted initrd，该选项不再存在，现只能走 systemd initrd，
+  # 因此改为放宽设备等待时间：systemd 默认 DefaultDeviceTimeoutSec=90s，慢速 USB 枚举可能不够。
+  boot.initrd.systemd.settings.Manager.DefaultDeviceTimeoutSec = "180s";
 
   # 初始 RAM 磁盘所需的内核模块
   boot.initrd.kernelModules = [ "dm-snapshot" ];
