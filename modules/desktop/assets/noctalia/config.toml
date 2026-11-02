@@ -41,6 +41,25 @@ label   = "cwd"
 glyph   = "folder"
 global  = false
 
+# ── 会话动作（状态栏 Session 面板 / 启动器 /session / 控制中心 / 锁屏按钮共用同一份列表）──
+# 声明动作数组会整体替换默认五项，故按默认顺序显式列出其余四项：去掉 shutdown。
+# 其余字段留空即取内置默认（图标、样式、锁屏快捷键）。
+[[shell.session.actions]]
+action   = "lock"
+shortcut = "1"
+
+[[shell.session.actions]]
+action   = "logout"
+shortcut = "2"
+
+[[shell.session.actions]]
+action   = "lock_and_suspend"
+shortcut = "3"
+
+[[shell.session.actions]]
+action   = "reboot"
+shortcut = "4"
+
 # ── bar 系统监视折线图（stat 名取自 Noctalia 内置 system.monitor）──
 # show_value=true：折线旁显示实时数值；CPU/内存/swap 为百分比，net 为流量+单位
 [widget.sysmon-cpu]
