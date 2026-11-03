@@ -41,7 +41,7 @@ entries:
     tag: "{v}"
     url: "https://github.com/rustdesk/rustdesk/releases/download/{v}/rustdesk-{v}-x86_64.deb"
     hash: flat
-    current: "1.5.0"
+    current: "1.5.1"
     site: modules/desktop/units/rustdesk.nix
     version-line: 'version = "{v}"'
     hash-line: 'hash = "{h}"'
@@ -65,7 +65,7 @@ entries:
     tag: "v{v}"
     url: "https://github.com/lexmount/moli/releases/download/v{v}/moli-x86_64-unknown-linux-gnu.tar.gz"
     hash: flat
-    current: "1.1.19"
+    current: "1.1.20"
     site: modules/system/units/moli.nix
     version-line: 'version = "{v}"'
     hash-line: 'hash = "{h}"'
