@@ -16,12 +16,13 @@
 
     # 阅读
     # calibre              # 暂时禁用
-    onlyoffice-desktopeditors
+    # gtk2 dependency is unused since 9.4.0: nixpkgs commit 133a1659 removes it, but the
+    # pinned nixos-unstable rev predates it. Drop this override once the pin includes that commit.
+    (onlyoffice-desktopeditors.override { gtk2 = pkgs.emptyDirectory; })
     zathura         # PDF 阅读
     foliate         # 电子书阅读
 
     # 工具
-    peazip        # 压缩包管理（支持 200+ 格式）
     yt-dlp        # 视频/音频下载器
     ddgr          # DuckDuckGo 命令行搜索
     rofi          # 应用启动器（原生支持 Wayland，rofi-wayland 已并入本包）
