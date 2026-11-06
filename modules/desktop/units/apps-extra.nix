@@ -18,7 +18,7 @@
     # calibre              # 暂时禁用
     # gtk2 dependency is unused since 9.4.0: nixpkgs commit 133a1659 removes it, but the
     # pinned nixos-unstable rev predates it. Drop this override once the pin includes that commit.
-    (onlyoffice-desktopeditors.override { gtk2 = pkgs.emptyDirectory; })
+    onlyoffice-desktopeditors
     zathura         # PDF 阅读
     foliate         # 电子书阅读
 
