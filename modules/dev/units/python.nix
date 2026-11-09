@@ -35,8 +35,13 @@
         ++ lib.optionals config.programs.developMode [
           debugpy  # Debugger
           pytest   # Testing
+          # tree-sitter-language-pack 的 zstd-sys 走 pkg-config 探测（上游修复 b99641c4 未进 nixos-unstable），
+          # 不补 pkg-config + 系统 zstd 就 panic 在 build script
+          (tree-sitter-language-pack.overridePythonAttrs (old: {
+            nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.pkg-config ];
+            buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.zstd ];
+          }))
           tree-sitter
-          tree-sitter-language-pack
         ]
         # 其他模块注入（data-tools 的 polars 等）
         ++ config.programs.pythonEnv.extraPackages

@@ -168,7 +168,7 @@ in {
     # crate side to the same version (mudra workspace: wasm-bindgen =0.2.127).
     wasm-bindgen-cli
     wasm-tools
-    bugstalker
+    #bugstalker
   ];
 
   # 注：rust.nu 中另有 cargo-tree / cross / cargo-eval / wit-deps-cli / wit-bindgen-cli，
