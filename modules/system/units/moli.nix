@@ -8,11 +8,11 @@
 }: let
   inherit (pkgs) stdenv;
 
-  version = "1.1.20";
+  version = "1.1.22";
 
   src = pkgs.fetchurl {
     url = "https://github.com/lexmount/moli/releases/download/v${version}/moli-x86_64-unknown-linux-gnu.tar.gz";
-    hash = "sha256-74t7KT2thiGF0DrtWfwxENXb1KSThXOk56w0VQjIUYA=";
+    hash = "sha256-fhD5pbYjcdpWIDshrAFyu+PDYm3hifw3QrkbLiuM3Tk=";
   };
 
   # 官方 release 是 glibc 动态链接的 ELF（DT_NEEDED：libstdc++ / libfontconfig / libz），
