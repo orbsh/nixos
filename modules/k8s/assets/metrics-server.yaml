@@ -214,28 +214,3 @@ spec:
     namespace: kube-system
   version: v1beta1
   versionPriority: 100
----
-# apiserver v1.36 存在 PEM 序列化 bug，requestheader-client-ca-file 换行可能丢失
-# 导致 metrics-server 无法验证代理请求，回退到 front-proxy-client 身份
-# 此 RBAC 作为 fallback，确保 front-proxy-client 能访问 metrics API
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: metrics-server:front-proxy-client
-rules:
-- apiGroups: ["metrics.k8s.io"]
-  resources: [nodes, pods]
-  verbs: [get, list, watch]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: metrics-server:front-proxy-client
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: metrics-server:front-proxy-client
-subjects:
-- apiGroup: rbac.authorization.k8s.io
-  kind: User
-  name: front-proxy-client
