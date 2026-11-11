@@ -53,14 +53,7 @@
   };
 
   # ── rustfs：官方预编译二进制 ────────────────────────────
-  # nixpkgs 源码包在本 rev 构建失败（zstd-sys 缺 pkg-config），且每次 nixpkgs bump 都要全量编译。
-  rustfs.prebuilt = {
-    version = "1.0.4";
-    src = {
-      url = "http://box.d/nixos/rustfs-1.0.4-linux-x86_64-musl.zip";
-      hash = "sha256-SSStS2mbn1mUMFHv7a4tHrbUysUDobA4TEsl98LDG1w=";
-    };
-  };
+  # 钉在 modules/services/rustfs.nix 的 pinned（由 scripts/upstream.yml 维护），此处不覆盖。
 
   # ── Security ─────────────────────────────────────────────
   security.pki.certificateFiles = [

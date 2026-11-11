@@ -10,7 +10,7 @@
 
 ## 临时补丁：等 nixpkgs 修复进 nixos-unstable 后撤销
 
-锁定的 nixpkgs rev `f4a03c0`（2026-11-07 09:04Z）上有三个包构建失败（cache 里也没有替代产物），
+锁定的 nixpkgs rev `f4a03c0`（2026-11-07 09:04Z）上有两个包构建失败（cache 里也没有替代产物），
 修复都已合入 `master`，但 `nixos-unstable` 一直停在同一个 rev。下表的 commit 进入 `nixos-unstable`
 后，删掉对应补丁、回归 nixpkgs 原包。
 
@@ -29,9 +29,11 @@ curl -s https://api.github.com/repos/NixOS/nixpkgs/branches/nixos-unstable   # H
 
 | 包 | 本 rev 现象 | 本地补丁 | 撤销条件（master 上的上游修复） |
 |---|---|---|---|
-| rustfs 1.0.4 | `zstd-sys` build script 报 `Can't probe for zstd in pkg-config`；cache 无替代产物 | `modules/services/rustfs.nix` 的 `rustfs.prebuilt` overlay + `profiles/workstation.nix` 的赋值 + `scripts/upstream.yml` 的 rustfs mirror 条目 | `1243b762`「rustfs: fix build, devendor zstd and aws-lc」（2026-11-07 23:57Z） |
 | mitmproxy 12.3.0 | `test_emudhra` 的 SHA-1 根证书链被 OpenSSL 3.5 拒绝（2 个参数化用例） | `modules/dev/units/net-tools.nix` 的 `disabledTests` 增补 | `88435c45`「mitmproxy: 12.3.0 -> 12.3.1」（2026-11-07 14:32Z） |
 | tree-sitter-language-pack 1.4.1 | 同上，`zstd-sys` 缺 `pkg-config` | `modules/dev/units/python.nix` 补 `pkg-config` + 系统 `zstd` | `b99641c4`「tree-sitter-language-pack: fix build with sys libs」（2026-11-07 16:46Z） |
+
+rustfs 已从本表移出：预编译二进制是常设形态（`modules/services/rustfs.nix` 的 pinned，由 `scripts/upstream.yml` 维护），
+上游配方修好也不回归 nixpkgs——源码包 47 个自研 crate，每次 bump 都要本机全量编译。
 
 不是坏包、不用撤销的一条：`modules/dev/units/data-tools.nix` 把 pyiceberg 的 `nativeCheckInputs` 清空
 （测试 extra 链 geoarrow → geopandas → mapclassify → scikit-learn → narwhals 会拖进 494MB 的 pyspark；

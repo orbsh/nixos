@@ -290,6 +290,7 @@ nu scripts/upstream.nu bump  <name> [--to V] [--write]   # 默认 dry-run，--wr
 - GitHub 取最新 tag 与下载资产走清单里的 `settings.proxy`（本机 7890）。
 - 工具自身支持从子目录或仓库外调用（先看 `$env.UPSTREAM_REPO`，再从 cwd 向上找 `scripts/upstream.yml`）。
 - **替换同名镜像文件后构建可能仍命中旧内容**：nix 的 fetcher cache 按 URL 记录，URL 不变（文件名不含版本，如 numa）时会沿用缓存结果，报 NAR hash mismatch。用 `nix build --refresh`（或 `--option tarball-ttl 0`）取新内容；文件名带版本号的条目（如 nushell 的 `nu-{v}-…`）换 URL 后天然避开。
+- 官方 release 的 `*-musl` 资产不一定是静态链接：用 `readelf -l <bin> | grep INTERP` 确认。duckdb 的 musl CLI 要 `/lib/ld-musl-x86_64.so.1`（NixOS 没有这个 loader，执行报 `cannot execute`），所以 duckdb 取 glibc 资产 + `autoPatchelfHook`。
 
 ## 📁 目录结构
 
@@ -367,6 +368,7 @@ nixos/
 
 - **未设置选项** → overlay 关闭，用 nixpkgs 默认包
 - **设置了选项** → overlay 开启，替换为自定义包
+- **模块默认值即钉**（nushell / duckdb / rustfs）：pinned 块写在模块里，默认就开 overlay；只有显式把 `src` 置 null 才回到 nixpkgs
 
 ### 示例
 
@@ -375,6 +377,8 @@ nixos/
 # hosts/workstations/nushell.nix  — 只设选项值
 # hosts/workstations/vivaldi.nix  — 只设选项值（同模式）
 # hosts/workstations/wanxiang.nix — 只设选项值（同模式）
+# modules/dev/units/duckdb.nix    — 钉在模块 pinned（无 host 覆盖）
+# modules/services/rustfs.nix     — 同模式（pinned 在模块，host 不再赋值）
 ```
 
 ### 选择指南

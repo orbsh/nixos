@@ -5,10 +5,10 @@
   ...
 }: let
   inherit (pkgs) stdenv;
-  version = "1.5.1";
+  version = "1.5.3";
   src = pkgs.fetchurl {
     url = "https://github.com/rustdesk/rustdesk/releases/download/${version}/rustdesk-${version}-x86_64.deb";
-    hash = "sha256-tdaCrZDLdXHsvb8m7vWNPEUU5yanTvbQjOPwsRTvC9k=";
+    hash = "sha256-gQltL2X9QzUlQMNRvKFbsHEqKm+e+kyV6f/yXLl7O4E=";
   };
   deps = with pkgs; [
     gtk3

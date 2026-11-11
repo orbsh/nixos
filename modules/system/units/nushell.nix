@@ -4,9 +4,9 @@ let
   # 原始定义：官方 musl 二进制的固定钉。
   # 下面 version / url / hash 三行由 scripts/upstream.yml 的 nushell 条目自动改写（host 可覆盖）。
   pinned = {
-    version = "0.116.1";
-    url = "http://box.d/k8s/nu-0.116.1-x86_64-unknown-linux-musl.tar.gz";
-    hash = "sha256-E+913wjfMPjXsDHfU46CpSxudM6DmxqQkcOj8ZacN0I=";
+    version = "0.117.0";
+    url = "http://box.d/k8s/nu-0.117.0-x86_64-unknown-linux-musl.tar.gz";
+    hash = "sha256-K4CHhtRK9BFwop+LmhW1ETu26l3akiEJjsqTL4oUmSQ=";
   };
 in {
   options.nushell.musl = {
