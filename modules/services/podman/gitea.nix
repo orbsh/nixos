@@ -14,7 +14,7 @@ in {
         "GITEA__database__NAME" = "gitea";
         "GITEA__database__USER" = "gitea";
         "GITEA__database__PASSWD" = "gitea";
-        "GITEA__webhook__ALLOWED_HOST_LIST" = "ci-eventsource-svc";
+        "GITEA__security__ALLOWED_HOST_LIST" = "ci-eventsource-svc";
       };
       ports = [
         "${toString gitea.port}:3000"

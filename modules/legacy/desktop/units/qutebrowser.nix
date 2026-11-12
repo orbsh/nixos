@@ -1,5 +1,9 @@
-# qutebrowser: Wayland 原生
-# 修复在 COSMIC/Wayland 下访问特定站点时画面狂闪、切走残留元素的问题
+# qutebrowser: Wayland 原生（已弃用 2026-11-12）
+# 弃用原因：nixpkgs 把 qutebrowser-3.7.0 标记为 insecure（eMudhra 中间证书私钥可恢复，
+# QtWebEngine 从不检查 CRLset 吊销），eval 阶段直接拒绝构建；换用 vivaldi（默认浏览器）。
+# 保留本文件备查：恢复时把 mini.nix 的 imports 加回，并按需放行 insecure 包。
+#
+# 原始说明：修复在 COSMIC/Wayland 下访问特定站点时画面狂闪、切走残留元素的问题
 # （裸包会因 XWayland 存在而默认走 xcb，主窗口与 QtWebEngine 子窗口合成不一致导致残影闪烁）
 { pkgs, lib, user, ... }:
 
@@ -41,7 +45,7 @@ in {
 
   # ── qutebrowser 配置文件 ──────────────────────────────────
   home-manager.users.${user} = {
-    xdg.configFile."qutebrowser/config.py".source = ../assets/qutebrowser/config.py;
-    xdg.configFile."qutebrowser/userscripts".source = ../assets/qutebrowser/userscripts;
+    xdg.configFile."qutebrowser/config.py".source = ../../desktop/assets/qutebrowser/config.py;
+    xdg.configFile."qutebrowser/userscripts".source = ../../desktop/assets/qutebrowser/userscripts;
   };
 }

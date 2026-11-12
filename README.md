@@ -66,7 +66,7 @@ flake.nix 扫描 hosts/ 目录
 
 | 预设 | 相对 | 增量 |
 |------|------|------|
-| `mini`（QEMU） | 层级根 | apps-core, de-session（桌面子系统）, greetd, 输入法, 字体, 无障碍, qutebrowser, rbw |
+| `mini`（QEMU） | 层级根 | apps-core, de-session（桌面子系统）, greetd, 输入法, 字体, 无障碍, rbw |
 | `base`（便携） | = mini + 增量 | apps-extra, rime |
 | `full`（工作站） | = base + 增量 | apps-im, laptop, networkmanager, walker, wl-clipboard |
 
@@ -89,7 +89,6 @@ flake.nix 扫描 hosts/ 目录
 | `laptop.nix` | 笔记本电源管理 |
 | `networkmanager.nix` | 网络管理 |
 | `rime.nix` | Rime 输入法（NixOS 级模块） |
-| `qutebrowser.nix` | qutebrowser 浏览器 |
 | `walker.nix` | walker 启动器（备选，不常用） |
 | `home-terminals.nix` | 终端配置（ghostty + alacritty + zellij） |
 | `home-xdg.nix` | XDG 配置（mimeApps + userDirs + BROWSER） |

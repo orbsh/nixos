@@ -82,10 +82,10 @@
     },
     "my-mudra-config": {
       "locked": {
-        "lastModified": 1794364472,
-        "narHash": "sha256-fDcQI8zxT/VyiQtM8/8oN05g45zRB4nKsNl0Umz6Jw8=",
+        "lastModified": 1794449130,
+        "narHash": "sha256-Am4IeMf7UCt1artgpk8IYSoFaZK3FP16Vr1+YCamFAQ=",
         "ref": "refs/heads/main",
-        "rev": "c3dac057ff193907859ea47a2754f927f6fac40f",
+        "rev": "45dcd58ead1d124feb4c1f3496744fcb185f84e6",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/orbsh/mudra"
@@ -239,10 +239,10 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1794042290,
-        "narHash": "sha256-ziZn2PvCJE5JEEpqTdxXwJpPB+L3YqoCpTAMCzyaP3U=",
+        "lastModified": 1794192123,
+        "narHash": "sha256-SvB8u5qaJAOwZZyZciqTVOg/rBoUs2w0sFTU6ED51AQ=",
         "ref": "nixos-unstable",
-        "rev": "f4a03c008967841f2a0b3cb7c436fc6fc31671f6",
+        "rev": "177d0540942fb205af6993b1d5fa0b57799e09f8",
         "shallow": true,
         "type": "git",
         "url": "https://github.com/NixOS/nixpkgs"

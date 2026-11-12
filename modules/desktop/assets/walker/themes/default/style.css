@@ -214,10 +214,3 @@ row:selected .item-box {
 .preview-content.aptpackages {
   font-family: monospace;
 }
-
-/* ── qutebrowser 条目高亮覆盖 ────────────────────────── */
-.qute-item child:selected .item-box,
-.qute-item row:selected .item-box {
-  background: alpha(#8be9fd, 0.15);
-  border-left: 3px solid #8be9fd;
-}

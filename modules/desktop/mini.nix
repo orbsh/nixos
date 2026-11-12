@@ -8,7 +8,7 @@
     ./units/input-method.nix
     ./units/fonts.nix
     ./units/accessibility.nix
-    ./units/qutebrowser.nix
+    # ./units/qutebrowser.nix      # 已弃用（2026-11-12）：nixpkgs 标记 qutebrowser-3.7.0 为 insecure（eMudhra 中间证书事件，QtWebEngine 不检查吊销）；模块归档在 modules/legacy/desktop/units/qutebrowser.nix
     ./units/rbw.nix
     ./units/herdr-prebuilt.nix   # herdr 官方二进制 overlay（声明 herdr.prebuilt 选项）
   ];

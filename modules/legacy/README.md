@@ -26,6 +26,7 @@
 | `desktop/units/de-session/eww.nix` | de-session | 已废弃（2026-08） | cosmic 用自带 shell，监视挂件迁往 Noctalia |
 | `desktop/units/feishu.nix` | desktop/units | 未引入 | apps-im 中已注释 |
 | `desktop/units/nyxt.nix` | desktop/units | 无引用 | 从未接入任何聚合器 |
+| `desktop/units/qutebrowser.nix` | desktop/units | 已弃用（2026-11-12） | nixpkgs 标 qutebrowser-3.7.0 为 insecure（eMudhra 中间证书事件，QtWebEngine 不检查吊销）；浏览器改用 vivaldi |
 | `desktop/units/zellij.nix` | desktop/units | 未引入 | 终端复用改用 herdr |
 | `dev/units/codex.nix` | dev/units | 无引用 | 未被任何 flavor 引入 |
 | `dev/units/emacs.nix` | dev/units | 默认禁用 | 需在 host 定义中显式引入 |
