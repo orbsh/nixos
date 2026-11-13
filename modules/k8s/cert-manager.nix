@@ -23,7 +23,7 @@
       script = let
         kubectl = "${pkgs.kubectl}/bin/kubectl --kubeconfig /etc/kubernetes/cluster-admin.kubeconfig";
         # 版本与 hash 由 scripts/upstream.yml 的 cert-manager 条目维护（kind = release，flat hash）：
-        #   nu scripts/upstream.nu bump cert-manager --write
+        #   python3 scripts/upstream.py bump cert-manager --write
         certManagerVersion = "v1.21.3";
         # 清单在 Nix 侧钉住（url + flat hash），激活时 apply store 里的文件——
         # 节点不再向 GitHub 现抓未校验的清单（ADR-001 远端源方式 A）
