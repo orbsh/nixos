@@ -2,15 +2,12 @@
 # https://github.com/doy/rbw
 { pkgs, lib, config, ... }:
 
-{
+let
+  prebuilt = import ../../../libs/prebuilt.nix { inherit pkgs lib; };
+in {
   options.desktop.rbw = {
-    src = lib.mkOption {
-      type = lib.types.submodule {
-        options = {
-          url = lib.mkOption { type = lib.types.str; };
-          hash = lib.mkOption { type = lib.types.str; };
-        };
-      };
+    src = prebuilt.mkSrcOption {
+      nullable = false;
       default = {
         url = "http://box.d/nixos/rbw_1.15.0_linux_amd64.tar.gz";
         hash = "sha256-2BdLCurMvNgDIspB+0i/LbrY/E1dnFCcQru0bV4ZU5U=";
@@ -21,15 +18,12 @@
 
   config = let
     cfg = config.desktop.rbw;
-    # FOD（fetchurl）：产物在 store 即跳过下载，可随闭包推送
-    srcPath = pkgs.fetchurl { inherit (cfg.src) url hash; };
   in {
     environment.systemPackages = [
-      (pkgs.stdenv.mkDerivation {
+      (prebuilt.mkPrebuilt {
         pname = "rbw";
         version = "1.15.0";
-
-        src = srcPath;
+        src = cfg.src;
 
         # tarball 没有顶层目录，stdenv 的 sourceRoot 猜成 completion/ → 显式钉在解包根
         sourceRoot = ".";
@@ -39,7 +33,9 @@
 
         dontBuild = true;
 
-        installPhase = ''
+        updateScript = "rbw";
+
+        install = ''
           runHook preInstall
           mkdir -p $out/bin $out/share/bash-completion/completions $out/share/zsh/site-functions $out/share/fish/vendor_completions.d
           cp rbw rbw-agent $out/bin/
@@ -50,11 +46,10 @@
           runHook postInstall
         '';
 
-        meta = with lib; {
+        meta = {
           description = "Unofficial command line client for Bitwarden";
           homepage = "https://github.com/doy/rbw";
-          license = licenses.mit;
-          platforms = [ "x86_64-linux" ];
+          license = lib.licenses.mit;
         };
       })
       # pinentry: rbw-agent 解锁密钥环时需要

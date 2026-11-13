@@ -1,14 +1,10 @@
 { pkgs, lib, config, ... }:
 
-{
+let
+  prebuilt = import ../../../libs/prebuilt.nix { inherit pkgs lib; };
+in {
   options.desktop.wechat = {
-    src = lib.mkOption {
-      type = lib.types.nullOr (lib.types.submodule {
-        options = {
-          url = lib.mkOption { type = lib.types.str; };
-          hash = lib.mkOption { type = lib.types.str; };
-        };
-      });
+    src = prebuilt.mkSrcOption {
       default = {
         url = "http://box.d/nixos/WeChatLinux_x86_64.AppImage";
         hash = "sha256-RX26ArkbAxzdRBLu4HT7v/udnQax5Q/Bgi00hw4RSZA=";

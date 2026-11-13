@@ -4,12 +4,15 @@
   pkgs,
   ...
 }: let
-  inherit (pkgs) stdenv;
+  prebuilt = import ../../../libs/prebuilt.nix {inherit pkgs lib;};
+
   version = "1.5.3";
-  src = pkgs.fetchurl {
+
+  src = {
     url = "https://github.com/rustdesk/rustdesk/releases/download/${version}/rustdesk-${version}-x86_64.deb";
     hash = "sha256-gQltL2X9QzUlQMNRvKFbsHEqKm+e+kyV6f/yXLl7O4E=";
   };
+
   deps = with pkgs; [
     gtk3
     glib
@@ -33,11 +36,9 @@
     libpulseaudio
   ];
 
-  # RustDesk 预编译二进制（GitHub releases, v1.5.0 flutter deb）
-  rustdesk = stdenv.mkDerivation {
+  rustdesk = prebuilt.mkPrebuilt {
     pname = "rustdesk";
-    inherit version;
-    inherit src;
+    inherit version src;
 
     nativeBuildInputs = [pkgs.dpkg pkgs.makeWrapper];
 
@@ -45,7 +46,7 @@
       dpkg-deb -x $src .
     '';
 
-    installPhase = ''
+    install = ''
       mkdir -p $out
       mkdir -p $out/libexec
       cp -r usr/share/rustdesk $out/libexec/
@@ -60,14 +61,7 @@
       cp -r usr/share/icons $out/share/icons
     '';
 
-    # 手动维护的版本 + hash：nu scripts/upstream.nu bump rustdesk --write
-    passthru.updateScript = [
-      "${pkgs.nushell}/bin/nu"
-      "${../../../scripts/upstream.nu}"
-      "bump" "rustdesk" "--write"
-    ];
-
-    meta.mainProgram = "rustdesk";
+    updateScript = "rustdesk";
   };
 in
   # 模块必须返回 option/config attrset；derivation 作为模块体返回会与

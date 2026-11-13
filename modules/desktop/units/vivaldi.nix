@@ -1,14 +1,10 @@
 { pkgs, lib, config, ... }:
 
-{
+let
+  prebuilt = import ../../../libs/prebuilt.nix { inherit pkgs lib; };
+in {
   options.desktop.vivaldi = {
-    src = lib.mkOption {
-      type = lib.types.nullOr (lib.types.submodule {
-        options = {
-          url = lib.mkOption { type = lib.types.str; };
-          hash = lib.mkOption { type = lib.types.str; };
-        };
-      });
+    src = prebuilt.mkSrcOption {
       default = null;
       description = "Vivaldi 安装包来源（指定 url 和 flat hash）。非空时覆盖 nixpkgs 默认版本。";
     };

@@ -6,30 +6,30 @@
   pkgs,
   ...
 }: let
-  inherit (pkgs) stdenv;
+  prebuilt = import ../../../libs/prebuilt.nix {inherit pkgs lib;};
 
-  version = "1.1.23";
+  version = "1.1.24";
 
-  src = pkgs.fetchurl {
+  src = {
     url = "https://github.com/lexmount/moli/releases/download/v${version}/moli-x86_64-unknown-linux-gnu.tar.gz";
-    hash = "sha256-3zYMBOVnzi5WqDkaA9xnfXlEZYSLWCH5RNLeEPPx9DA=";
+    hash = "sha256-CeVOSL6RTflZbouQRs0uHGfVkRdhoJsERUiN1dOcVtY=";
   };
 
   # 官方 release 是 glibc 动态链接的 ELF（DT_NEEDED：libstdc++ / libfontconfig / libz），
   # 靠 autoPatchelfHook 改 interpreter + 补 RPATH，无需包装脚本。
-  moli = stdenv.mkDerivation {
+  moli = prebuilt.mkPrebuilt {
     pname = "moli";
     inherit version src;
 
     nativeBuildInputs = [pkgs.autoPatchelfHook];
 
     buildInputs = [
-      stdenv.cc.cc.lib # libstdc++
+      pkgs.stdenv.cc.cc.lib # libstdc++
       pkgs.fontconfig
       pkgs.zlib
     ];
 
-    installPhase = ''
+    install = ''
       runHook preInstall
       install -Dm755 moli $out/bin/moli
       install -Dm644 LICENSE-APACHE $out/share/licenses/moli/LICENSE-APACHE
@@ -37,19 +37,12 @@
       runHook postInstall
     '';
 
-    # 手动维护的版本 + hash：nu scripts/upstream.nu bump moli --write
-    passthru.updateScript = [
-      "${pkgs.nushell}/bin/nu"
-      "${../../../scripts/upstream.nu}"
-      "bump" "moli" "--write"
-    ];
+    updateScript = "moli";
 
     meta = with lib; {
       description = "moli — headless browser for AI agents（DOM-first，按需 layout/paint）";
       homepage = "https://github.com/lexmount/moli";
       license = licenses.asl20;
-      mainProgram = "moli";
-      platforms = ["x86_64-linux"];
     };
   };
 in

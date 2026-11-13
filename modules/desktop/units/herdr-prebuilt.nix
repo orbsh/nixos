@@ -1,14 +1,10 @@
 { pkgs, lib, config, ... }:
 
-{
+let
+  prebuilt = import ../../../libs/prebuilt.nix { inherit pkgs lib; };
+in {
   options.herdr.prebuilt = {
-    src = lib.mkOption {
-      type = lib.types.nullOr (lib.types.submodule {
-        options = {
-          url = lib.mkOption { type = lib.types.str; };
-          hash = lib.mkOption { type = lib.types.str; };
-        };
-      });
+    src = prebuilt.mkSrcOption {
       default = null;
       description = "herdr 官方预编译二进制来源（指定 url 和 flat hash）。设置后启用 overlay 替换 nixpkgs 版本。";
     };
@@ -26,16 +22,14 @@
   config = lib.mkIf (config.herdr.prebuilt.src != null) {
     nixpkgs.overlays = [
       (final: prev: {
-        herdr = prev.stdenv.mkDerivation {
+        herdr = prebuilt.mkPrebuilt {
           pname = "herdr";
           version = config.herdr.prebuilt.version;
-
-          # FOD（fetchurl）：产物在 store 即跳过下载，可随闭包推送
-          src = prev.fetchurl { inherit (config.herdr.prebuilt.src) url hash; };
+          src = config.herdr.prebuilt.src;
 
           dontUnpack = true;
 
-          installPhase = ''
+          install = ''
             mkdir -p $out/bin
             install -m755 $src $out/bin/herdr
           '';
@@ -43,11 +37,12 @@
           doCheck = false;
           doInstallCheck = false;
 
+          updateScript = "herdr";
+
           meta = {
             description = "Agent multiplexer that lives in your terminal (official prebuilt binary)";
             homepage = "https://herdr.dev";
             license = prev.lib.licenses.asl20;
-            platforms = prev.lib.platforms.linux;
           };
         };
       })
