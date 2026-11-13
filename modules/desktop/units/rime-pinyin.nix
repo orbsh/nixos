@@ -3,6 +3,8 @@
 # 默认注册 rime_ice + double_pinyin_flypy 两个 schema。
 { pkgs, lib, config, user, ... }:
 let
+  prebuilt = import ../../../libs/prebuilt.nix { inherit pkgs lib; };
+
   rimeIce = pkgs.rime-ice;
   cfg = config.rime.pinyin;
   octCfg = config.rime.pinyin.octagram;
@@ -54,13 +56,7 @@ in {
 
     octagram.enable = lib.mkEnableOption "Rime Octagram N-Gram 语言模型（提升长句预测准确度）";
 
-    wanxiang.src = lib.mkOption {
-      type = lib.types.nullOr (lib.types.submodule {
-        options = {
-          url = lib.mkOption { type = lib.types.str; };
-          hash = lib.mkOption { type = lib.types.str; };
-        };
-      });
+    wanxiang.src = prebuilt.mkSrcOption {
       default = null;
       description = "万象模型来源（指定 url 和 flat hash）。为空时不启用万象模型。";
     };

@@ -2,15 +2,12 @@
 # https://github.com/1jehuang/jcode
 { pkgs, lib, config, ... }:
 
-{
+let
+  prebuilt = import ../../../libs/prebuilt.nix { inherit pkgs lib; };
+in {
   options.dev.jcode = {
-    src = lib.mkOption {
-      type = lib.types.submodule {
-        options = {
-          url = lib.mkOption { type = lib.types.str; };
-          hash = lib.mkOption { type = lib.types.str; };
-        };
-      };
+    src = prebuilt.mkSrcOption {
+      nullable = false;
       default = {
         # 包放 box.d/nixos/（同 open-interpreter 模式）；升级时：下载→更新 flat hash
         # curl -sL -o jcode.tar.gz http://box.d/nixos/jcode-linux-x86_64.tar.gz
@@ -25,26 +22,21 @@
   config = let
     cfg = config.dev.jcode;
   in {
-    environment.systemPackages = with pkgs; [
-      (stdenv.mkDerivation {
+    environment.systemPackages = [
+      (prebuilt.mkPrebuilt {
         pname = "jcode";
         version = "0.99.1";
+        src = cfg.src;
 
-        # FOD（fetchurl）：产物在 store 即跳过下载，可随闭包推送
-        src = pkgs.fetchurl { inherit (cfg.src) url hash; };
-
-        nativeBuildInputs = with pkgs; [
-          autoPatchelfHook
-        ];
-
-        buildInputs = with pkgs; [
-          stdenv.cc.cc.lib
-        ];
+        nativeBuildInputs = [ pkgs.autoPatchelfHook ];
+        buildInputs = [ pkgs.stdenv.cc.cc.lib ];
 
         dontBuild = true;
         dontUnpack = true;
 
-        installPhase = ''
+        updateScript = "jcode";
+
+        install = ''
           runHook preInstall
           mkdir -p $out/bin
           # tar 内是 wrapper 脚本 + .bin 真 ELF；wrapper 按原始文件名找 .bin，不能改名
@@ -53,11 +45,10 @@
           runHook postInstall
         '';
 
-        meta = with lib; {
+        meta = {
           description = "jcode — 轻量 Rust CLI Agent（Server/Client 解耦，多会话并发）";
           homepage = "https://github.com/1jehuang/jcode";
-          license = licenses.mit;
-          platforms = [ "x86_64-linux" ];
+          license = lib.licenses.mit;
         };
       })
     ];

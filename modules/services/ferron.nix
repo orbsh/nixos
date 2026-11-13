@@ -11,12 +11,14 @@
 { pkgs, lib, config, user, ... }:
 
 let
+  prebuilt = import ../../libs/prebuilt.nix { inherit pkgs lib; };
+
   cfg = config.services.ferron;
 
   ferronVersion = "3.0.0-rc.11";
 
   # Ferron 3.x 静态二进制来源
-  ferronSrc = pkgs.fetchurl {
+  ferronSrc = {
     url = "https://github.com/ferronweb/ferron/releases/download/${ferronVersion}/ferron-${ferronVersion}-x86_64-unknown-linux-musl.tar.gz";
     hash = "sha256-wVSQvelRTSofEhm8otSbyxTvdh4N5y8eP4NUK4466TU=";
   };
@@ -102,13 +104,13 @@ in {
     # ── 覆盖 nixpkgs ferron（2.x）为 3.x musl 静态二进制 ──
     nixpkgs.overlays = [
       (final: prev: {
-        ferron = prev.stdenv.mkDerivation {
+        ferron = prebuilt.mkPrebuilt {
           pname = "ferron";
           version = ferronVersion;
           src = ferronSrc;
           dontBuild = true;
 
-          installPhase = ''
+          install = ''
             mkdir -p $out/bin $out/share/ferron
             tar xzf $src -C $out/share/ferron
             for bin in ferron ferron-fmt ferron-kdl2ferron ferron-passwd ferron-precompress ferron-serve; do
@@ -117,18 +119,12 @@ in {
             chmod +x $out/bin/*
           '';
 
-          # 手动维护的版本 + hash：用清单工具改写（scripts/upstream.yml 的 ferron 条目）
-          passthru.updateScript = [
-            "${pkgs.nushell}/bin/nu"
-            "${../../scripts/upstream.nu}"
-            "bump" "ferron" "--write"
-          ];
+          updateScript = "ferron";
 
           meta = {
             description = "Ferron web server (musl static binary)";
             homepage = "https://github.com/ferronweb/ferron";
             license = prev.lib.licenses.mit;
-            platforms = prev.lib.platforms.linux;
           };
         };
       })

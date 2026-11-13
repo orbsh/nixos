@@ -1,5 +1,6 @@
 { pkgs, inputs, ... }:
 let
+  prebuilt = import ../../../libs/prebuilt.nix { inherit pkgs; lib = pkgs.lib; };
   # —— crate 预热清单：源于 ~/data/docker.io/xy/hub.yaml 的 stacks:rust ——
   # 对齐容器 rust.nu 中 `rust prefetch --stack [experimental frontend ui-leptos
   #   cli codec error meta utils regex parser collections http logging data
@@ -99,13 +100,14 @@ in {
       # 二进制 cache miss 时就触发全量 crate 树编译，慢。改用 GitHub release
       # 的 musl 静态二进制（单文件、无运行时依赖，无需 autoPatchelfHook）。
       # 版本须与 nixpkgs 保持同步升级（trunk-rs/trunk releases）。
-      trunk = final.stdenvNoCC.mkDerivation {
+      trunk = prebuilt.mkPrebuilt {
         pname = "trunk";
         version = "0.22.1";
-        src = final.fetchurl {
+        src = {
           url = "https://github.com/trunk-rs/trunk/releases/download/v0.22.1/trunk-x86_64-unknown-linux-musl.tar.gz";
           hash = "sha256-of5c1rBT9advZrWY0pYCKn8G9W3vYBPMFs1ol9U/U2M=";
         };
+        stdenv = final.stdenvNoCC;
         dontBuild = true;
         dontStrip = true;
         # tar 顶层是单文件，默认 unpackPhase 检查"产出目录"会失败，显式解包
@@ -117,24 +119,17 @@ in {
           sourceRoot=src
           runHook postUnpack
         '';
-        installPhase = ''
+        install = ''
           runHook preInstall
           install -Dm755 trunk $out/bin/trunk
           runHook postInstall
         '';
-        # 手动维护的版本 + hash：nu scripts/upstream.nu bump trunk --write
-        passthru.updateScript = [
-          "${pkgs.nushell}/bin/nu"
-          "${../../../scripts/upstream.nu}"
-          "bump" "trunk" "--write"
-        ];
+        updateScript = "trunk";
 
         meta = with final.lib; {
           homepage = "https://github.com/trunk-rs/trunk";
           description = "Build, bundle & ship your Rust WASM application to the web";
-          mainProgram = "trunk";
           license = licenses.asl20;
-          platforms = platforms.linux;
         };
       };
     })

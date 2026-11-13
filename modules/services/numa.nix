@@ -3,6 +3,8 @@
 # Import only in workstation preset, never on server/k8s
 { pkgs, lib, config, publicDnsServers, ... }:
 let
+  prebuilt = import ../../libs/prebuilt.nix { inherit pkgs lib; };
+
   cfg = config.services.numa;
 
   # Static (declarative) config — Nix store, read-only
@@ -47,8 +49,6 @@ let
   # Dynamic config path — Numa REST API can write here at runtime
   configFile = "${cfg.dataDir}/numa.toml";
 
-  # Pre-built binary from GitHub releases（FOD：产物在 store 即跳过下载，可随闭包推送）
-  srcPath = pkgs.fetchurl { inherit (cfg.src) url hash; };
 in {
   options.services.numa = {
     enable = lib.mkEnableOption "Numa local DNS resolver and reverse proxy";
@@ -119,13 +119,9 @@ in {
       description = "Per-suffix 条件转发。命中的查询转发给 upstream，其余走默认 [upstream]。";
     };
 
-    src = lib.mkOption {
-      type = lib.types.attrsOf lib.types.str;
-      description = "Pre-built binary source. Format: { url = ...; hash = \"sha256-...\"; }";
-      example = {
-        url = "https://github.com/razvandimescu/numa/releases/latest/download/numa-linux-x86_64.tar.gz";
-        hash = "sha256-AhtoKC2XEF7XdX5UkDCFtWh7SQIBAHJC3TUji6/keho=";
-      };
+    src = prebuilt.mkSrcOption {
+      nullable = false;
+      description = "Pre-built binary source（url + flat hash）";
     };
   };
 
@@ -133,14 +129,15 @@ in {
     # ── Numa package (pre-built binary, auto-patchelf) ──
     nixpkgs.overlays = [
       (final: prev: {
-        numa = prev.stdenv.mkDerivation {
+        numa = prebuilt.mkPrebuilt {
           pname = "numa";
           version = "latest";
-          src = srcPath;
+          src = cfg.src;
           dontUnpack = true;
           nativeBuildInputs = [ prev.autoPatchelfHook ];
           buildInputs = [ prev.libgcc.lib ];
-          installPhase = ''
+          updateScript = "numa";
+          install = ''
             mkdir -p $out/bin
             tar xzf $src -C $out/bin
             chmod +x $out/bin/numa
