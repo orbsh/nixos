@@ -63,6 +63,143 @@
     enabled = true
   '';
 
+  # ── hermes agent 状态检测覆盖 ─────────────────────────────────
+  # 上游 manifest（hermes 2026.07.24.1）只认 OSC 标题 ⏳/✓/⚠ 和 "ctrl+c to interrupt"；
+  # 当前 Hermes 0.23 两样都不发（无窗口标题，忙时输入框提示是 locales/en.yaml 的
+  # composer.placeholder_busy_*），于是状态永远落到 idle fallback。这里补 working 规则。
+  # 本地覆盖优先于 remote；改完 `herdr server reload-agent-manifests` 热生效。
+  xdg.configFile."herdr/agent-detection/hermes.toml".text = ''
+    id = "hermes"
+    version = "2026.11.20.1"
+    min_engine_version = 2
+    updated_at = "2026-11-20T08:30:00Z"
+    aliases = ["hermes-agent"]
+
+    [[rules]]
+    id = "osc_title_blocked"
+    state = "blocked"
+    priority = 1100
+    region = "osc_title"
+    visible_blocker = true
+    regex = ['^⚠[\u{fe0e}\u{fe0f}]?(?:\s|$)']
+
+    [[rules]]
+    id = "osc_title_working"
+    state = "working"
+    priority = 1050
+    region = "osc_title"
+    visible_working = true
+    regex = ['^⏳[\u{fe0e}\u{fe0f}]?(?:\s|$)']
+
+    # Hermes 0.23 busy composer placeholders (locales/en.yaml composer.placeholder_busy_*).
+    # The TUI emits no OSC window title and no "ctrl+c to interrupt" hint, so these
+    # three lines are the only live working signal on screen.
+    [[rules]]
+    id = "busy_steer_hint"
+    state = "working"
+    priority = 1060
+    region = "bottom_non_empty_lines(14)"
+    visible_working = true
+    contains = ["type to steer this turn"]
+
+    [[rules]]
+    id = "busy_redirect_hint"
+    state = "working"
+    priority = 1060
+    region = "bottom_non_empty_lines(14)"
+    visible_working = true
+    contains = ["type to redirect this turn"]
+
+    [[rules]]
+    id = "busy_queue_hint"
+    state = "working"
+    priority = 1060
+    region = "bottom_non_empty_lines(14)"
+    visible_working = true
+    contains = ["type to queue a message for after this turn"]
+
+    [[rules]]
+    id = "dangerous_command_approval"
+    state = "blocked"
+    priority = 900
+    region = "bottom_non_empty_lines(14)"
+    visible_blocker = true
+    any = [
+      { contains = ["dangerous"] },
+      { contains = ["approval"] },
+      { contains = ["allow once", "deny"] },
+      { line_regex = ['(?i)^\s*[▸>]?\s*1\.\s*allow'] },
+    ]
+    all = [
+      { any = [{ contains = ["enter confirm"] }, { contains = ["enter to confirm"] }, { contains = ["↑/↓ to select"] }, { contains = ["show full command"] }] },
+    ]
+
+    [[rules]]
+    id = "clarification_prompt"
+    state = "blocked"
+    priority = 900
+    region = "bottom_non_empty_lines(14)"
+    visible_blocker = true
+    any = [
+      { contains = ["hermes needs your"] },
+      { line_regex = ['^\s*ask\s+\S'] },
+      { contains = ["type your answer"] },
+    ]
+    all = [
+      { any = [{ contains = ["enter confirm"] }, { contains = ["enter to confirm"] }, { contains = ["enter send"] }, { contains = ["press enter"] }, { contains = ["↑/↓ select"] }, { contains = ["↑/↓ to select"] }, { contains = ["other (type"] }] },
+    ]
+
+    [[rules]]
+    id = "credential_prompt"
+    state = "blocked"
+    priority = 900
+    region = "bottom_non_empty_lines(14)"
+    visible_blocker = true
+    any = [
+      { contains = ["sudo password"] },
+      { contains = ["skill setup"] },
+      { contains = ["🔑", "for "] },
+    ]
+
+    [[rules]]
+    id = "confirmation_prompt"
+    state = "blocked"
+    priority = 900
+    region = "bottom_non_empty_lines(14)"
+    visible_blocker = true
+    all = [
+      { any = [{ contains = ["approve once", "cancel"] }, { contains = ["start a new session", "keep going"] }] },
+      { any = [{ contains = ["enter to confirm"] }, { contains = ["enter confirm"] }, { contains = ["type 1/2/3"] }, { contains = ["y/n quick"] }] },
+    ]
+
+    [[rules]]
+    id = "interrupt_status_working"
+    state = "working"
+    priority = 950
+    region = "bottom_non_empty_lines(5)"
+    visible_working = true
+    any = [
+      { contains = ["msg=interrupt"] },
+      { contains = ["ctrl+c to interrupt"] },
+    ]
+
+    [[rules]]
+    id = "classic_cancel_working"
+    state = "working"
+    priority = 500
+    region = "bottom_non_empty_lines(5)"
+    visible_working = true
+    contains = ["ctrl+c cancel"]
+
+    [[rules]]
+    id = "osc_title_idle"
+    state = "idle"
+    priority = 100
+    region = "osc_title"
+    visible_idle = true
+    regex = ['^✓[\u{fe0e}\u{fe0f}]?(?:\s|$)']
+  '';
+
   # ── Ghostty 默认启动 herdr ────────────────────────────────────
   programs.ghostty.settings.command = "${pkgs.herdr}/bin/herdr";
 }

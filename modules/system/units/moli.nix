@@ -8,11 +8,11 @@
 }: let
   prebuilt = import ../../../libs/prebuilt.nix {inherit pkgs lib;};
 
-  version = "1.1.25";
+  version = "1.1.27";
 
   src = {
     url = "https://github.com/lexmount/moli/releases/download/v${version}/moli-x86_64-unknown-linux-gnu.tar.gz";
-    hash = "sha256-BMcyBGJgVMnsAGT3/ACrsNz6f4ucPsnfXejir8MBCH8=";
+    hash = "sha256-Lt4TjKEH8WMTGDvgbvE3wHYOrrg1mFcNf0pCY1lc0aY=";
   };
 
   # 官方 release 是 glibc 动态链接的 ELF（DT_NEEDED：libstdc++ / libfontconfig / libz），

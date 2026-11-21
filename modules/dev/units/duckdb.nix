@@ -6,9 +6,9 @@ let
   # 原始定义：DuckDB 官方 CLI 二进制的固定钉。
   # 下面 version / url / hash 三行由 scripts/upstream.yml 的 duckdb 条目自动改写（host 可覆盖）。
   pinned = {
-    version = "2.0.0";
-    url = "http://box.d/nixos/duckdb-cli-2.0.0-linux-amd64.tar.gz";
-    hash = "sha256-xlByBrr3eTxgE9vYI2hGmkXyDcDhem+S8gRgL2Uu0rw=";
+    version = "2.0.1";
+    url = "http://box.d/nixos/duckdb-cli-2.0.1-linux-amd64.tar.gz";
+    hash = "sha256-tnYmi+TTnk5BqQRELJeWyZFOZFzAhcdQXwSPLJkrXso=";
   };
 in {
   options.duckdb.prebuilt = prebuilt.mkPinOptions {

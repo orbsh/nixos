@@ -102,10 +102,10 @@ in {
       # 版本须与 nixpkgs 保持同步升级（trunk-rs/trunk releases）。
       trunk = prebuilt.mkPrebuilt {
         pname = "trunk";
-        version = "0.22.1";
+        version = "0.22.2";
         src = {
-          url = "https://github.com/trunk-rs/trunk/releases/download/v0.22.1/trunk-x86_64-unknown-linux-musl.tar.gz";
-          hash = "sha256-of5c1rBT9advZrWY0pYCKn8G9W3vYBPMFs1ol9U/U2M=";
+          url = "https://github.com/trunk-rs/trunk/releases/download/v0.22.2/trunk-x86_64-unknown-linux-musl.tar.gz";
+          hash = "sha256-SpAhbZPFU/PYt0Afzg3uWI4Psescajeeusgfq+gg8ls=";
         };
         stdenv = final.stdenvNoCC;
         dontBuild = true;

@@ -36,7 +36,7 @@
     useDynamicConfig = false; # 纯声明式：直接读 store 静态配置（不再允许 REST API 动改，避免动态文件挡住声明式服务）
     src = {
       url = "http://box.d/nixos/numa-linux-x86_64.tar.gz";
-      hash = "sha256-gqnChgfTJVFOBN0ERff96uD7L4TyZ8eACh8LzVYH9eE=";
+      hash = "sha256-T1baPuhyg52ya4JRDQR2iLhZ3aFezeEIEs0kyq/aKSo=";
     };
 
     # ── 本机 web 服务 → *.d 域名（numa 本地 DNS + 反向代理） ──
