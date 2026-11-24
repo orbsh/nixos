@@ -13,7 +13,7 @@ in {
         # curl -sL -o jcode.tar.gz http://box.d/nixos/jcode-linux-x86_64.tar.gz
         # nix hash file --type sha256 --sri jcode.tar.gz
         url = "http://box.d/nixos/jcode-linux-x86_64.tar.gz";
-        hash = "sha256-9EpUl4tQPl3Sf6h4HEPsSRbr6cSpTUKqtQ/IaL9PvoY=";
+        hash = "sha256-dK6EoYu5WcfzYOwKH+zz6uCJ/z8tktQABi6rTsMu/FY=";
       };
       description = "jcode 预编译包来源（GitHub release，linux-x86_64）";
     };
@@ -25,7 +25,7 @@ in {
     environment.systemPackages = [
       (prebuilt.mkPrebuilt {
         pname = "jcode";
-        version = "1.0.1";
+        version = "1.1.2";
         src = cfg.src;
 
         nativeBuildInputs = [ pkgs.autoPatchelfHook ];

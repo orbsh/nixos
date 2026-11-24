@@ -71,6 +71,7 @@ export def build [
 export def sync [] {
     cd $ROOT
     toggle proxy http://127.0.0.1:7890
+    python scripts/upstream.py update --write
     sudo -E nix flake update
 }
 
