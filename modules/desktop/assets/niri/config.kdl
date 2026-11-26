@@ -89,8 +89,8 @@ hotkey-overlay {
 // 基础全局快捷键（Mod = Super，与 Hyprland 习惯对齐）
 // ---------------------------------------------------------------------------
 binds {
-    // 应用启动器：walker（常驻 gapplication service，D-Bus 唤起；D-Bus app id = dev.benz.walker）
-    Mod+Space  { spawn "gapplication" "launch" "dev.benz.walker"; }
+    // 应用启动器：walker（常驻 --gapplication-service，spawn 自身由 GApplication 单实例转发为唤起）
+    Mod+Space  { spawn "walker"; }
     // 窗口切换（walker 直达 MRU 窗口菜单 menus:windowsmru；Alt 按住+数字选择）
     Alt+grave  { spawn "walker" "-m" "menus:windowsmru"; }
     // herdr workspace 切换（walker 直达 menus:herdr，回车 focus）

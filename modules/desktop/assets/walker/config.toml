@@ -22,7 +22,7 @@ quick_activate = ["alt 1", "alt 2", "alt 3", "alt 4", "alt 5", "alt 6", "alt 7",
 ]
 
 # ── 菜单直达前缀：[ → 最近目录（cwdhist），] → herdr（agents+spaces 合并菜单）──
-# herdr 菜单同时走 Win+Space（niri Mod+Space 直达 menus:herdr）
+# herdr 菜单同时走 Alt+Space（niri Alt+Space 直达 menus:herdr）
 # 全角【走 cwdhist2 别名 provider（merge 按 provider 键控，一 provider 一 prefix）
 [[providers.prefixes]]
 prefix = "["
