@@ -20,7 +20,6 @@
       ./orbit/netbird.nix
       ./orbit/intranet-dns.nix
       ./wanxiang.nix
-      #./vivaldi.nix
       ./nushell.nix
       ./herdr.nix
       # ../../modules/legacy/dev/units/emacs.nix  # 默认禁用，需时取消注释
