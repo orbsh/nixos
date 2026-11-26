@@ -1,8 +1,12 @@
 { pkgs, lib, ... }:
 
 {
-  # ── 电源管理（power-profiles-daemon） ────────────────────
+  # ── 电源管理（power-profiles-daemon + upower） ──────────
   services.power-profiles-daemon.enable = true;
+
+  # UPower 提供 org.freedesktop.UPower，noctalia 电量控件只从这个 DBus 服务取数。
+  # 先前由 nixpkgs cosmic 模块的 services.upower.enable 带来，弃用 COSMIC 后必须自己声明。
+  services.upower.enable = true;
 
   # ── 合盖/睡眠行为（systemd-logind） ─────────────────────
   services.logind.settings.Login = {
