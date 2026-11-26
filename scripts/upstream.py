@@ -146,6 +146,15 @@ def unversioned_file(entry: dict) -> bool:
     return "{v}" not in (entry.get("file") or "")
 
 
+def versionless_mirror(entry: dict) -> bool:
+    """mirror 条目的上游地址里没有版本位（wechat 的腾讯直链）。
+
+    这类条目查不到"最新版本号"，能刷新的只有上游当前那个文件本身：update/bump
+    退化为「重新下载 + 重算 hash」，清单 current 保持 null（版本串无从得知）。
+    """
+    return entry.get("kind") == "mirror" and "{v}" not in (entry.get("upstream") or "")
+
+
 def download(entry: dict, version: str, force: bool) -> Path:
     target = dest_path({**entry, "current": version})
     if target is None:
@@ -488,16 +497,21 @@ def bump_entry(name: str, version: str, write: bool, force: bool) -> None:
         return
 
     if kind == "mirror":
-        if not version:
+        if not version and not versionless_mirror(entry):
             raise ToolError(f"{name} 清单没有 current，按需用 --to 指定版本")
-        # 版本变了（或 --force）先取新版文件；文件名不含 {v} 的条目同名覆盖，必须 force
-        if version != current or force:
+        # 版本变了（或 --force）先取新版文件；文件名不含 {v} 的条目同名覆盖，必须 force。
+        # 版本less 条目（上游 URL 里没有 {v}）无从比较版本，每次都重取上游当前文件。
+        if version != current or force or versionless_mirror(entry):
             if not entry.get("upstream"):
                 raise ToolError(f"{name} 没配 upstream，无法下载；手工放好文件后再 bump")
             if not write:
-                print(f"  将下载新版本 {version}（dry-run 不下载；hash 待新文件就位后再算）")
+                print(f"  将下载新版本 {version or '（上游当前文件）'}（dry-run 不下载；hash 待新文件就位后再算）")
                 return
-            download({**entry, "current": version}, version, version == current or force or unversioned_file(entry))
+            download(
+                {**entry, "current": version},
+                version,
+                versionless_mirror(entry) or version == current or force or unversioned_file(entry),
+            )
         path = dest_path({**entry, "current": version})
         if path is None or not path.exists():
             raise ToolError(f"本地文件不存在：{path}；先 python3 scripts/upstream.py fetch {name}")
@@ -519,7 +533,9 @@ def bump_entry(name: str, version: str, write: bool, force: bool) -> None:
             if entry.get("url-line"):
                 pairs.append((entry["url-line"], new_url, "url"))
             ok = apply_site(name, site, entry, pairs) and ok
-        if ok:
+        if ok and not version:
+            print("  版本less 条目：只改写 hash，清单 current 保持 null")
+        elif ok:
             set_manifest_current(name, version)
         else:
             print("  版本行未改写，清单 current 保持不动（避免台账与实际版本脱节）")
@@ -532,9 +548,9 @@ def cmd_bump(name: str | None, to: str | None, write: bool, force: bool) -> None
     if name:
         entry = get_entry(name)
         version = target_version(entry, to)
-        if not version:
+        if not version and not versionless_mirror(entry):
             raise ToolError("取不到目标版本，用 --to 指定")
-        print(f"== {name}（{entry.get('kind')}）{entry.get('current')} → {version} ==")
+        print(f"== {name}（{entry.get('kind')}）{entry.get('current')} → {version or '（上游当前文件）'} ==")
         bump_entry(name, version, write, force)
         return
 
@@ -557,9 +573,9 @@ def cmd_update(name: str | None, write: bool, force: bool) -> None:
     if name:
         entry = get_entry(name)
         version = target_version(entry, None)
-        if not version:
+        if not version and not versionless_mirror(entry):
             raise ToolError("取不到目标版本")
-        print(f"== {name}（{entry.get('kind')}）{entry.get('current')} → {version} ==")
+        print(f"== {name}（{entry.get('kind')}）{entry.get('current')} → {version or '（上游当前文件）'} ==")
         bump_entry(name, version or "", write, force)
         return
 

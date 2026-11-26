@@ -194,20 +194,12 @@ entries:
     url-line: 'url = "{u}"'
     hash-line: 'hash = "{h}"'
 
-  vivaldi:
-    kind: mirror
-    upstream: "https://downloads.vivaldi.com/stable/vivaldi-stable_{v}-1_amd64.deb"
-    dest: "~/pub/Assets/nixos"
-    file: "vivaldi-stable_{v}-1_amd64.deb"
-    hash: flat
-    current: "8.1.4087.61"              # 只有孤儿实例文件 hosts/workstations/vivaldi.nix 在用
-    site: hosts/workstations/vivaldi.nix
-    url-line: 'url = "{u}"'
-    hash-line: 'hash = "{h}"'
-
   wechat:
     kind: mirror
     upstream: "https://dldir1v6.qq.com/weixin/Universal/Linux/WeChatLinux_x86_64.AppImage"
+    # 上游是"安装器 AppImage"（AppRun + wechat-payload.tar + pkexec 安装），URL 里
+    # 没有版本位，版本号无从得知 → current 永远 null；update 退化为
+    # 「重下上游当前文件 + 重算 hash」，模块侧自己展开 payload 跑（见 wechat.nix）。
     dest: "~/pub/Assets/nixos"
     file: "WeChatLinux_x86_64.AppImage"
     hash: flat
