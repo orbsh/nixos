@@ -1,34 +1,24 @@
-{ pkgs, lib, user, ... }:
-
-let
-  userWallpaperDir = "/home/${user}/Pictures/wallpaper";
-  targetDir = "/var/lib/greetd-wallpapers";
-  targetFile = "${targetDir}/wallpaper.jpg";
-in
+# 登录管理器：greetd + tuigreet（TUI，直接跑在 VT 上，不依赖合成器）
+# 归属：mini 引入 = 桌面系统都有登录屏；qemu profile 额外设 initial_session 免密进 niri。
+# 为什么不用图形 greeter（cosmic-greeter/gtkgreet/regreet）：都要先起一个合成器才能显示，
+# 链路更长更脆；tuigreet 是"内核 VT → greetd → TUI 密码 → niri-session"最短路径。
+{ pkgs, user, ... }:
 {
-  # 1. 启用 COSMIC Greeter
-  services.displayManager.cosmic-greeter.enable = true;
-
-  # 2. 禁用 Keyring
-  services.gnome.gnome-keyring.enable = false;
-
-  # 3. 壁纸服务
-  systemd.services.cosmic-greeter-wallpaper-rotator = {
-    description = "Randomly pick a login wallpaper";
-    wantedBy = [ "cosmic-greeter.service" ];
-    before = [ "cosmic-greeter.service" ];
-    script = ''
-      mkdir -p ${targetDir}
-      img=$(${pkgs.fd}/bin/fd . ${userWallpaperDir} -d 1 -t f -e jpg -e jpeg -e png | shuf -n 1)
-      if [ -n "$img" ]; then
-        ${pkgs.imagemagick}/bin/magick convert "$img" -resize "1920x1080^" -gravity center -extent 1920x1080 jpg:${targetFile}
-      else
-        ${pkgs.imagemagick}/bin/magick convert -size 1920x1080 xc:"#1e1e28" ${targetFile}
-      fi
-      chmod 644 ${targetFile}
-    '';
-    serviceConfig = { Type = "oneshot"; RemainAfterExit = true; };
+  services.greetd = {
+    enable = true;
+    # TUI greeter 需要 StandardInput=tty，否则键盘输入到不了 tuigreet
+    useTextGreeter = true;
+    settings = {
+      terminal.vt = 1;
+      default_session = {
+        user = "greeter";
+        # --remember 的状态写在 /var/cache/tuigreet，nixpkgs 的 greetd 模块
+        # 已经用 tmpfiles 建好（greeter:greeter），不用自己加。
+        command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --asterisks"
+          + " --power-shutdown '${pkgs.systemd}/bin/systemctl poweroff'"
+          + " --power-reboot '${pkgs.systemd}/bin/systemctl reboot'"
+          + " --cmd ${pkgs.niri}/bin/niri-session";
+      };
+    };
   };
-
-  systemd.tmpfiles.rules = [ "d ${targetDir} 0755 root root -" ];
 }

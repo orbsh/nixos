@@ -1,5 +1,5 @@
 # Niri 桌面子系统单元
-# 归属：登录时于 greetd 选择 niri 会话启动；组件经 de-session 的 desktop-niri.target 拉起。
+# 归属：greetd + tuigreet 登录后启动 niri 会话；组件经 de-session 的 desktop-niri.target 拉起。
 # 纳入由 imports 决定（引本单元 = 装 niri），运行时有 dispatcher 按活跃 DE 拉起其 target。
 { config, pkgs, lib, user, ... }:
 

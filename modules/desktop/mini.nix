@@ -3,8 +3,8 @@
 { pkgs, user, ... }: {
   imports = [
     ./units/apps-core.nix
-    ./units/de-session            # 桌面子系统（cosmic/hyprland/quickshell/eww + DE→组件关联表）
-    ./units/greetd.nix            # 登录管理器（会话选择 + 记忆）
+    ./units/de-session            # 桌面子系统（niri + DE→组件关联表）
+    ./units/greetd.nix            # 登录管理器（greetd + tuigreet TUI）
     ./units/input-method.nix
     ./units/fonts.nix
     ./units/accessibility.nix

@@ -22,6 +22,10 @@
     zathura         # PDF 阅读
     foliate         # 电子书阅读
 
+    # 文件管理 / GUI 编辑器（临时应急；主编辑器 nvim）
+    kdePackages.dolphin
+    zed-editor
+
     # 工具
     yt-dlp        # 视频/音频下载器
     ddgr          # DuckDuckGo 命令行搜索

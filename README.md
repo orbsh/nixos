@@ -70,16 +70,16 @@ flake.nix 扫描 hosts/ 目录
 | `base`（便携） | = mini + 增量 | apps-extra, rime |
 | `full`（工作站） | = base + 增量 | apps-im, laptop, networkmanager, walker, wl-clipboard |
 
-**设计原则**：逐层 `import`（`base` imports `mini`，`full` imports `base`），每层只声明自己的增量，公共层在 mini 定义后继承。桌面子系统（`cosmic` / `niri` 及 DE→组件关联表）统一收敛于 `units/de-session/`；`hyprland` / `quickshell` / `eww` / `vicinae` 当前未引入，已移入 `legacy/`。
+**设计原则**：逐层 `import`（`base` imports `mini`，`full` imports `base`），每层只声明自己的增量，公共层在 mini 定义后继承。桌面子系统（`niri` 及 DE→组件关联表）统一收敛于 `units/de-session/`；`cosmic` 已移除，`hyprland` / `quickshell` / `eww` / `vicinae` 未引入，均在 `legacy/`。
 
-**DE 模型**：纳入由 imports 决定（引 de-session = 装桌面子系统），运行时由 dispatcher 检测活跃会话（cosmic/hyprland）拉起对应 target，组件（quickshell→hyprland、eww→cosmic）只挂自己 DE 的 target，绝不挂 graphical-session.target。切换 DE = 登录选会话，不 rebuild。
+**DE 模型**：纳入由 imports 决定（引 de-session = 装桌面子系统），运行时由 dispatcher 检测活跃会话拉起对应 target，组件（fcitx5/noctalia/swayidle→niri）只挂自己 DE 的 target，绝不挂 graphical-session.target。当前只注册 niri，切换 DE 需改 imports 并 rebuild。
 
 ### 桌面单元（units）
 
 | 单元 | 用途 |
 |------|------|
-| `de-session/` | **桌面子系统**：`default`（DE 层：dispatcher + DE→组件关联表）+ `cosmic` + `niri`（`hyprland` / `quickshell` / `eww` / `vicinae` 已移入 legacy） |
-| `greetd.nix` | greetd 登录管理器（会话选择 + 记忆） |
+| `de-session/` | **桌面子系统**：`default`（DE 层：dispatcher + DE→组件关联表）+ `niri`（`cosmic` 已移除；`hyprland` / `quickshell` / `eww` / `vicinae` 在 legacy） |
+| `greetd.nix` | greetd + tuigreet（TUI 登录屏，密码登录；不依赖合成器） |
 | `input-method.nix` | fcitx5 中文输入法 |
 | `fonts.nix` | 字体配置 |
 | `accessibility.nix` | 无障碍支持 |
@@ -125,7 +125,7 @@ hosts/workstations/default.nix          # 域名 workstations，节点表 { orbi
 team-alice / team-bob：仅 disko + 各自 hardware.nix（域级 profile 同样生效）
 ```
 
-**桌面子系统**：`desktop/{mini ⊂ base ⊂ full}`；DE 与组件统一收敛于 `modules/desktop/units/de-session/`（当前启用 `cosmic`、`niri`）。未启用的 `hyprland` / `quickshell` / `eww` / `vicinae` 在 `modules/legacy/`。
+**桌面子系统**：`desktop/{mini ⊂ base ⊂ full}`；DE 与组件统一收敛于 `modules/desktop/units/de-session/`（当前只启用 `niri`）。`cosmic` 已移除，`hyprland` / `quickshell` / `eww` / `vicinae` 在 `modules/legacy/`。
 
 ---
 
@@ -159,14 +159,14 @@ hosts/qemu/default.nix
   └── profiles/qemu.nix
         ├── disko.nixosModules.disko
         ├── modules/system/core.nix
-        ├── modules/desktop/mini.nix      (COSMIC + greetd + 输入法/字体/无障碍)
+        ├── modules/desktop/mini.nix      (niri + 输入法/字体/无障碍)
         ├── modules/dev/server.nix
         ├── modules/services/singbox.nix
         └── modules/services/ferron.nix
       ./disk.nix, ./hardware-configuration.nix（由 hosts/qemu/default.nix 引入）
 ```
 
-**特殊配置**：`services.spice-vdagentd`（剪贴板/分辨率自适应）；`greetd.settings.initial_session` 直接进 `cosmic-session`；用户初始密码为空（免密自动登录）。
+**特殊配置**：`services.spice-vdagentd`（剪贴板/分辨率自适应）；`greetd.settings.initial_session` 免密直接起 `niri-session`（跳过 tuigreet）。
 
 ---
 

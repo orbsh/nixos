@@ -6,13 +6,13 @@
 # 机制：
 #   - 每个 DE 一个 systemd user target（desktop-<de>.target），Wants 指向表中该 DE 的组件；
 #   - dispatcher 在任意图形会话启动，检测当前活跃 DE，只拉起该 DE 的 target。
-# 切换 DE 是登录时选会话（greetd 记住），不 rebuild。
+# 切换 DE 只改 imports（无登录管理器，不做会话选择），运行时由 dispatcher 检测。
 # 纪律：组件单元的 WantedBy 只能由本层 target 拉起，绝不挂 graphical-session.target（否则任何会话都会启动）。
 { config, lib, pkgs, user, ... }:
 
 let
-  # ── DE → 组件 关联表（集中维护：hyprland 启动哪些，cosmic 启动哪些） ──
-  # eww 已废弃（2026-08）：cosmic 用自带 shell，不再挂组件；系统监视挂件迁往 niri 的 Noctalia
+  # ── DE → 组件 关联表（集中维护：每个 DE 拉起哪些组件） ──
+  # 当前只注册 niri；hyprland 的组件已于 legacy 归档
   deComponents = {
     hyprland = [ "quickshell.service" "hyprshell.service" ];
     # fcitx5 属 niri 会话组件（input-method.nix 定义服务；Wayland IM 随会话拉起）
@@ -52,7 +52,6 @@ in
   imports = [
     ./niri.nix
     # ../../../legacy/desktop/units/de-session/vicinae.nix  # 禁用（2026-08-27）：改回以 walker 为主启动器；文件保留备查
-    ./cosmic.nix
     #../../../legacy/desktop/units/de-session/hyprland.nix
     #../../../legacy/desktop/units/de-session/quickshell.nix
     # ../../../legacy/desktop/units/de-session/eww.nix  # 已废弃（2026-08），不再引入；文件保留备查

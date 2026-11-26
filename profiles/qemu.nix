@@ -24,13 +24,13 @@
   services.spice-vdagentd.enable = true;
 
   # ── 自动登录（免密码）─────────────────────────────────
-  # 用户无密码 + greetd 自动进入 COSMIC
+  # 无图形 greeter：greetd 的 initial_session 免密直接起 niri（只在本 boot 第一次 greetd 启动时执行）
   users.users.${user} = {
     initialPassword = "";
   };
 
   services.greetd.settings.initial_session = {
-    command = "${pkgs.cosmic-session}/bin/cosmic-session";
+    command = "${pkgs.niri}/bin/niri-session";
     user = user;
   };
 

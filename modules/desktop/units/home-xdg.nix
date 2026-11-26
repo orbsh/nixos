@@ -55,6 +55,9 @@ in
         # PDF 文档
         "application/pdf"       = pdfReader;
 
+        # 目录
+        "inode/directory"       = "org.kde.dolphin.desktop";
+
         # 图像文件
         "image/png"             = imageViewers;
         "image/jpeg"            = imageViewers;
