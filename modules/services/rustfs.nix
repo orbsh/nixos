@@ -11,9 +11,9 @@ let
   # 原始定义：rustfs 官方 release 二进制的固定钉。
   # 下面 version / url / hash 三行由 scripts/upstream.yml 的 rustfs 条目自动改写（host 可覆盖）。
   pinned = {
-    version = "1.0.6";
-    url = "http://box.d/nixos/rustfs-1.0.6-linux-x86_64-musl.zip";
-    hash = "sha256-pNEJoJhXwEv10Rss7A+78Ih4Gbk5Ll1G19FT2uahOY8=";
+    version = "1.0.7";
+    url = "http://box.d/nixos/rustfs-1.0.7-linux-x86_64-musl.zip";
+    hash = "sha256-yQpAuozcFGjHECmk1l/dE0SXIBg9Oo4AvGGrCfzUSKU=";
   };
 in
 {
