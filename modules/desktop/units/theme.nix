@@ -16,6 +16,6 @@ in {
     '';
   };
 
-  # 注入给其它模块（NixOS 侧用参数 `theme`；HM 侧由 mini.nix 桥接一次）
+  # 注入给其它模块（NixOS 侧用参数 `theme`；HM 侧由 base.nix 桥接一次）
   config._module.args.theme = themes.${config.desktop.theme};
 }

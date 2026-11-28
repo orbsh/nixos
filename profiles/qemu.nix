@@ -9,8 +9,8 @@
     # ── 核心系统预设 (sys, base, nix, users, network, extra, container) ──
     ../modules/system/core.nix
 
-    # 桌面环境 (QEMU 最小预设：Hyprland + 基礎组件)
-    ../modules/desktop/mini.nix
+    # 桌面环境（基础预设：niri + 输入法/字体/无障碍）
+    ../modules/desktop/base.nix
 
     # 开发工具
     ../modules/dev/server.nix

@@ -10,7 +10,7 @@
 flake.nix              ← Flake 入口，自动发现 hosts/ 下的域
   └── hosts/<domain>/  ← 域定义（workstations/k8s-dev/portable/qemu/server...）
         └── profiles/<profile>.nix  ← 系统预设（workstation/server/portable/qemu）
-              └── modules/desktop/<preset>.nix  ← 桌面预设（mini/base/full）
+              └── modules/desktop/<preset>.nix  ← 桌面预设（base/standard/full）
                     └── modules/desktop/units/*.nix  ← 桌面组件单元
 ```
 
@@ -48,7 +48,7 @@ flake.nix 扫描 hosts/ 目录
 
 统一机制：`modules/<dir>/units/*.nix` = **原子单元**；`modules/<dir>/*.nix`（顶层）= **聚合器**（组合 units）。按聚合器间的组织关系分三种：
 
-**① 链式（层级式）—— 聚合器互相 import，层层叠加**：`desktop/`（`mini ⊂ base ⊂ full`）、`system/`（`core ⊂ extra`）。每层只声明增量，引最外层即得整链，公共层在根定义后由后层继承。
+**① 链式（层级式）—— 聚合器互相 import，层层叠加**：`desktop/`（`base ⊂ standard ⊂ full`）、`system/`（`core ⊂ extra`）。每层只声明增量，引最外层即得整链，公共层在根定义后由后层继承。
 
 **② 预聚合 flavor（选一）—— 并列、互不重叠、引一个**：`dev/`（fullstack / rescue / server，见 `profiles/*.nix`）。各 flavor 聚合器并列，共用 `dev/units/`，每套是一份完整选配，host 按其角色引其中一个，不引多个。（`dev/` 下的 backend / data-science / infrastructure 是占位聚合器——骨架保留、未接入任何 profile，仍在活跃树内。）
 
@@ -62,15 +62,15 @@ flake.nix 扫描 hosts/ 目录
 
 ## 🖥 桌面预设层级
 
-层级式：`mini ⊂ base ⊂ full`，每层只声明增量，逐层叠加。
+层级式：`base ⊂ standard ⊂ full`，每层只声明增量，逐层叠加。
 
 | 预设 | 相对 | 增量 |
 |------|------|------|
-| `mini`（QEMU） | 层级根 | apps-core, de-session（桌面子系统）, greetd, 输入法, 字体, 无障碍, rbw |
-| `base`（便携） | = mini + 增量 | apps-extra, rime |
-| `full`（工作站） | = base + 增量 | apps-im, laptop, networkmanager, mudra, wl-clipboard |
+| `base`（QEMU 虚拟机） | 层级根 | apps-core, de-session（桌面子系统）, greetd, 输入法, 字体, 无障碍, rbw |
+| `standard`（便携盘） | = base + 增量 | apps-extra, rime |
+| `full`（工作站） | = standard + 增量 | apps-im, laptop, networkmanager, mudra, wl-clipboard, udisks2 |
 
-**设计原则**：逐层 `import`（`base` imports `mini`，`full` imports `base`），每层只声明自己的增量，公共层在 mini 定义后继承。桌面子系统（`niri` 及 DE→组件关联表）统一收敛于 `units/de-session/`；`cosmic` 已移除，`hyprland` / `quickshell` / `eww` / `vicinae` 未引入，均在 `legacy/`。
+**设计原则**：逐层 `import`（`standard` imports `base`，`full` imports `standard`），每层只声明自己的增量，公共层在 base 定义后继承。桌面子系统（`niri` 及 DE→组件关联表）统一收敛于 `units/de-session/`；`cosmic` 已移除，`hyprland` / `quickshell` / `eww` / `vicinae` 未引入，均在 `legacy/`。
 
 **DE 模型**：纳入由 imports 决定（引 de-session = 装桌面子系统），运行时由 dispatcher 检测活跃会话拉起对应 target，组件（fcitx5/noctalia/swayidle→niri）只挂自己 DE 的 target，绝不挂 graphical-session.target。当前只注册 niri，切换 DE 需改 imports 并 rebuild。
 
@@ -105,7 +105,7 @@ hosts/workstations/default.nix          # 域名 workstations，节点表 { orbi
         ├── profiles/workstation.nix
         │     ├── modules/system/extra.nix        (core ⊂ extra：sys/kanata/base/nix/gc/users/network/container/nushell/hardware + HM home-*)
         │     ├── modules/dev/fullstack.nix       (python/rust/javascript/haskell/k8s/wasm/data-tools/net-tools/jcode)
-        │     ├── modules/desktop/full.nix        (base ⊂ full：mini + apps-extra + rime + apps-im/laptop/networkmanager/mudra)
+        │     ├── modules/desktop/full.nix        (standard ⊂ full：base + apps-extra + rime + apps-im/laptop/networkmanager/mudra)
         │     ├── modules/services/virt.nix       (libvirtd/virt-manager)
         │     ├── modules/services/hermes-system.nix
         │     ├── modules/services/harmonia.nix   (本地二进制缓存 :5100)
@@ -124,7 +124,7 @@ hosts/workstations/default.nix          # 域名 workstations，节点表 { orbi
 team-alice / team-bob：仅 disko + 各自 hardware.nix（域级 profile 同样生效）
 ```
 
-**桌面子系统**：`desktop/{mini ⊂ base ⊂ full}`；DE 与组件统一收敛于 `modules/desktop/units/de-session/`（当前只启用 `niri`）。`cosmic` 已移除，`hyprland` / `quickshell` / `eww` / `vicinae` 在 `modules/legacy/`。
+**桌面子系统**：`desktop/{base ⊂ standard ⊂ full}`；DE 与组件统一收敛于 `modules/desktop/units/de-session/`（当前只启用 `niri`）。`cosmic` 已移除，`hyprland` / `quickshell` / `eww` / `vicinae` 在 `modules/legacy/`。
 
 ---
 
@@ -135,7 +135,7 @@ hosts/portable/default.nix
   ├── profiles/portable.nix
   │     ├── modules/system/core.nix        (核心系统 + Home Manager)
   │     ├── modules/dev/rescue.nix
-  │     ├── modules/desktop/base.nix       (mini + apps-extra + rime-pinyin/rime-wubi)
+  │     ├── modules/desktop/standard.nix   (base + apps-extra + rime-pinyin/rime-wubi)
   │     ├── modules/services/singbox.nix
   │     └── modules/services/ferron.nix
   ├── ./disk.nix, ./hardware-configuration.nix
@@ -144,9 +144,9 @@ hosts/portable/default.nix
 
 **与 workstation 的区别**：
 - 无 `dev/fullstack.nix`（无开发工具链），改引 `dev/rescue.nix`
-- 用 `base.nix` 而非 `full.nix`（无 apps-im / laptop / networkmanager / mudra）
+- 用 `standard.nix` 而非 `full.nix`（无 apps-im / laptop / networkmanager / mudra）
 - 移动盘：`boot.loader.efi.canTouchEfiVariables = false`（避免写到宿主机 EFI）
-- 启用 `udisks2`（可移动设备自动挂载）与 `getty.autologinUser`
+- 启用 `getty.autologinUser`；`udisks2` 由 `desktop/full.nix` 声明，portable 走 `standard.nix` 故在本 profile 单独开
 - nushell `developMode = false` → 经 flake input 部署（详见 [ADR-003](docs/adr/003-nushell-version-develop-mode.md)）
 
 ---
@@ -158,7 +158,7 @@ hosts/qemu/default.nix
   └── profiles/qemu.nix
         ├── disko.nixosModules.disko
         ├── modules/system/core.nix
-        ├── modules/desktop/mini.nix      (niri + 输入法/字体/无障碍)
+        ├── modules/desktop/base.nix      (niri + 输入法/字体/无障碍)
         ├── modules/dev/server.nix
         ├── modules/services/singbox.nix
         └── modules/services/ferron.nix
@@ -316,9 +316,9 @@ nixos/
 │   │   ├── assets/               # 共享资源（zellij 配置、证书等）
 │   │   └── units/                # 系统单元 + HM 单元（home-*.nix）
 │   ├── desktop/                  # 桌面预设
-│   │   ├── mini.nix              # 最小桌面（QEMU）
-│   │   ├── base.nix              # 基础桌面（portable）
-│   │   ├── full.nix              # 完整桌面（base + apps-im/laptop/networkmanager/mudra 增量）
+│   │   ├── base.nix              # 基础桌面（层级根：QEMU）
+│   │   ├── standard.nix          # 标准桌面（base + apps-extra + rime）
+│   │   ├── full.nix              # 完整桌面（standard + apps-im/laptop/networkmanager/mudra 增量）
 │   │   └── units/                # 桌面组件单元 + HM 单元（home-terminals, home-xdg）
 │   ├── dev/                      # 开发工具模块
 │   │   ├── server.nix            # 服务器开发工具

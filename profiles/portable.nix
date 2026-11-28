@@ -4,7 +4,7 @@
 
     ../modules/dev/rescue.nix
 
-    ../modules/desktop/base.nix
+    ../modules/desktop/standard.nix
 
     # ../modules/services/virt.nix
     ../modules/services/singbox.nix   # sing-box 代理组件（替代 ladder/mihomo，引入即起效）

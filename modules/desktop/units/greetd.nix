@@ -1,5 +1,5 @@
 # 登录管理器：greetd + tuigreet（TUI，直接跑在 VT 上，不依赖合成器）
-# 归属：mini 引入 = 桌面系统都有登录屏；qemu profile 额外设 initial_session 免密进 niri。
+# 归属：base 引入 = 桌面系统都有登录屏；qemu profile 额外设 initial_session 免密进 niri。
 # 为什么不用图形 greeter（cosmic-greeter/gtkgreet/regreet）：都要先起一个合成器才能显示，
 # 链路更长更脆；tuigreet 是"内核 VT → greetd → TUI 密码 → niri-session"最短路径。
 { pkgs, user, ... }:
