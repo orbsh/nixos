@@ -13,6 +13,12 @@
     ./units/mudra.nix
   ];
 
+  # ── 可移动设备 ───────────────────────────────────────────
+  # udisks2 提供 org.freedesktop.UDisks2：文件管理器（Dolphin 等）经它挂载 U 盘/移动硬盘，
+  # 授权走 modules/system/units/sys.nix 已启用的 polkit。udisks2 只做按需挂载，
+  # 插入不会自动挂到 /run/media（要自动挂需再加 udiskie）。
+  services.udisks2.enable = true;
+
   # ── 通用桌面工具 ─────────────────────────────────────────
   environment.systemPackages = with pkgs; [
     wl-clipboard
