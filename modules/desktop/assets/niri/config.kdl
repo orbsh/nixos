@@ -86,9 +86,9 @@ hotkey-overlay {
 binds {
     // 应用启动器：Noctalia 内置 launcher（IPC 开关）
     Mod+Space  { spawn-sh "noctalia msg panel-toggle launcher"; }
-    // 窗口切换：Noctalia 内置 Windows provider（/win 前缀直达）
-    Alt+grave  { spawn-sh "noctalia msg panel-open launcher /win"; }
-    // herdr agent/workspace 切换：dmenu provider（/h 直达），回车 focus
+    // 窗口切换：/mr = MRU 列表（当前窗口排最后并标 *），回车 focus
+    Alt+grave  { spawn-sh "noctalia msg panel-open launcher /mr"; }
+    // herdr agent/workspace 切换：/h 直达，回车 focus
     Alt+Space  { spawn-sh "noctalia msg panel-open launcher /h"; }
     // mudra web 控制台（只显示 mudra page；替代原 cwdhist 直达）
     Mod+Q  { spawn "mudra" "ui"; }

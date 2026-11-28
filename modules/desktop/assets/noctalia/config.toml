@@ -27,14 +27,21 @@ enabled   = true
 fill_mode = "crop"
 directory = "~/Pictures/wallpaper"
 
-# 去掉浮动面板（含 launcher）的描边；shadow 还原
 [shell.panel]
-borders = false
-shadow  = true
+# 1.5px：1px 在圆角弧线处会被抗锯齿吃成断续的毛边，1.5 起弧线才连贯
+borders      = true
+border_width = 2.0
+shadow       = true
+
+# 结果排序：关掉 usage 加权。开着时它会重排 prefixed provider 的结果，
+# herdr / 最近目录这类「按 MRU 或按计数排好序」的 provider 顺序会被打乱。
+# 代价：应用搜索结果不再按使用频率加权，纯按匹配度。
+[shell.launcher]
+sort_by_usage = false
 
 # launcher 的 preview pane 也被 card_borders 画 outline —— 一并去掉（全局影响控制中心/设置的卡片边）
 [shell]
-card_borders = false
+card_borders = true
 
 # ── 面板内按键（Noctalia 自己的浮层，含启动器）──
 # 方向移动默认是 Up/Down/Left/Right，改成 Alt+hjkl 走 vim 手位。
@@ -59,10 +66,20 @@ enabled = [ "local/cwd" ]
 # exec 拿到的 {selection} 是「标题<TAB>描述」原样行，脚本自己回查出 value 再跳转
 [shell.launcher.dmenu.entry.herdr]
 command = "python3 ~/.config/noctalia/herdr.py list"
-exec    = "python3 ~/.config/noctalia/herdr.py focus {selection}"
+exec    = "~/.config/noctalia/launcher-focus herdr '{selection}'"
 prefix  = "h"
 label   = "herdr"
 glyph   = "users"
+global  = false
+
+# 窗口 MRU（niri 每个窗口自带 focus_timestamp，倒序即 Alt+Tab 顺序）。
+# 内置 /win 只按合成器上报顺序 + 模糊匹配，没有 MRU；这条补上。
+[shell.launcher.dmenu.entry.winmru]
+command = "python3 ~/.config/noctalia/winmru.py list"
+exec    = "~/.config/noctalia/launcher-focus winmru '{selection}'"
+prefix  = "mr"
+label   = "windows-mru"
+glyph   = "app-window"
 global  = false
 
 # ── 会话动作（状态栏 Session 面板 / 启动器 /session / 控制中心 / 锁屏按钮共用同一份列表）──

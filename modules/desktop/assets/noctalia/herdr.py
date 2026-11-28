@@ -32,8 +32,29 @@ MRU_DB = os.path.join(os.environ.get("XDG_CACHE_HOME",
 _STATUS_RANK = {"blocked": 0, "done": 1, "working": 2}
 
 
+def _which(name):
+    """定位外部命令。
+
+    launcher 的 exec 走 `/bin/sh -lc`，登录 shell 的 PATH 不一定含 home-manager
+    的 profile（herdr/niri 都在 /etc/profiles/per-user/<user>/bin），所以 which 落空时
+    再按常见 profile 路径找一遍 —— 否则 list 正常、focus 静默失败。
+    """
+    found = shutil.which(name)
+    if found:
+        return found
+    # 登录 shell 的 PATH 里 home-manager 的 profile 可能带空的 $USER（/etc/profiles/per-user//bin），
+    # 所以这里直接按目录 glob，不依赖 USER 变量。
+    cands = sorted(glob.glob(f"/etc/profiles/per-user/*/bin/{name}"))
+    cands += [f"/run/current-system/sw/bin/{name}",
+              os.path.expanduser(f"~/.nix-profile/bin/{name}")]
+    for c in cands:
+        if os.path.exists(c):
+            return c
+    return None
+
+
 def _run_herdr(*args):
-    herdr = shutil.which("herdr")
+    herdr = _which("herdr")
     if not herdr:
         return None
     out = subprocess.run([herdr, *args], capture_output=True, text=True)
@@ -51,12 +72,18 @@ def git_status(path):
     符号：↓ 落后 upstream、↑ 领先 upstream、+ 暂存新增、- 暂存删除、
     ~ 暂存修改；N 为计数。
     """
-    r = subprocess.run(["git", "-C", path, "status", "--porcelain=v1", "-b"],
-                       capture_output=True, text=True, timeout=5)
-    if r.returncode != 0:
+    git = _which("git")
+    if not git:
         return ""
-    b = subprocess.run(["git", "-C", path, "branch", "--show-current"],
-                       capture_output=True, text=True, timeout=5)
+    try:
+        r = subprocess.run([git, "-C", path, "status", "--porcelain=v1", "-b"],
+                           capture_output=True, text=True, timeout=5)
+        if r.returncode != 0:
+            return ""
+        b = subprocess.run([git, "-C", path, "branch", "--show-current"],
+                           capture_output=True, text=True, timeout=5)
+    except (OSError, subprocess.SubprocessError):
+        return ""
     branch = b.stdout.strip()
     counts = {"↓": 0, "↑": 0, "+": 0, "-": 0, "~": 0}
     first = True
@@ -129,7 +156,7 @@ def _rows():
     rows = []
     for a in agents:
         cwd_short = (a.get("cwd") or "?").rstrip("/").split("/")[-1]
-        mark = "* " if a.get("focused") else ""
+        mark = "* " if a.get("focused") else "  "
         a_type = a.get("agent")
         text = f"{mark}{cwd_short}" + (f" <{a_type}>" if a_type else "")
         sub = " -- ".join(s for s in [a.get("agent_status") or "unknown",
@@ -144,36 +171,97 @@ def _rows():
                 continue
             status = ws.get("agent_status") or "unknown"
             sub = " -- ".join(s for s in [status, git_status(_ws_cwd(ws, panes))] if s)
-            mark = "* " if ws.get("focused") else ""
+            mark = "* " if ws.get("focused") else "  "
             rows.append((f"{mark}{ws['label']}", sub,
                          f"workspace:{ws['workspace_id']}", status))
     mru = _mru_order()
-    rows.sort(key=lambda r: (0 if r[3] in ("done", "blocked") else 1,
-                             _STATUS_RANK.get(r[3], 3),
-                             r[0].startswith("* "),
-                             mru.get(r[2], len(mru))))
+    # 排序：当前项（* 开头）永远排最后——它已经在屏幕上，跳到它等于没动作；
+    # 其余按 MRU（最近跳过的在前），没用过的按状态分组垫底（blocked/done 在前）。
+    # agent 行的 MRU 取「pane 自身」与「所属 workspace」两者里更新的一次 —— 直接跳
+    # workspace 时记的是 workspace:<ws>，不这样取会看不见排序变化。
+    rows.sort(key=lambda r: (r[0].startswith("* "),
+                             _mru_index(mru, r[2]),
+                             _STATUS_RANK.get(r[3], 3)))
     return rows
+
+
+def _mru_index(mru, value):
+    """value 的 MRU 序号；agent:<ws>:<pane> 同时看 workspace:<ws>，取更靠前的。"""
+    idx = mru.get(value)
+    if value.startswith("agent:"):
+        ws = "workspace:" + value.split(":")[1]
+        other = mru.get(ws)
+        if other is not None and (idx is None or other < idx):
+            idx = other
+    return idx if idx is not None else len(mru)
+
+
+def _q(text):
+    """exec 里 {selection} 被单引号包住（Noctalia 5.6 的替换是纯文本，不加引号），
+    标题里的 ' 会把引号闭合，换成同形的 ’（U+2019）保持可读。"""
+    return text.replace("'", "\u2019")
 
 
 def do_list():
     for text, sub, _value, _status in _rows():
-        print(f"{text}\t{sub}")
+        print(f"{_q(text)}\t{_q(sub)}")
 
 
 def _line_of(row):
     return f"{row[0]}\t{row[1]}"
 
 
+LOG = os.path.join(os.path.dirname(MRU_DB), "focus.log")
+
+
+def _log(msg):
+    """调试用：启动器 exec 传进来的原文不可见，落一份到 ~/.cache/herdr-menu/focus.log。"""
+    try:
+        os.makedirs(os.path.dirname(LOG), exist_ok=True)
+        with open(LOG, "a") as f:
+            f.write(f"{time.strftime('%F %T')} {msg}\n")
+    except OSError:
+        pass
+
+
+def _normalize(line):
+    """选中行 → 只留标题部分：去掉 TAB 后的描述、去掉 focused 星标、去空白。
+
+    轮次之间星标会变（本次选中项下次就是 "* " 开头），所以兜底匹配必须在归一化后做。
+    """
+    text = line.split("\t")[0].strip()
+    if text.startswith("* "):
+        text = text[2:]
+    return text.strip()
+
+
 def do_focus(selection):
     selection = selection.rstrip("\n")
     rows = _rows()
+    _log(f"selection={selection!r} path={os.environ.get('PATH', '')} herdr={_which('herdr')}")
+    cands = [(r[2], _normalize(r[0])) for r in rows]
+    # 1) 原样命中（描述列未被动过时最准）
     value = next((r[2] for r in rows if _line_of(r) == selection), None)
-    if value is None:  # 描述列可能被启动器裁掉时退回按标题匹配
-        value = next((r[2] for r in rows if r[0] == selection.strip()), None)
+    # 2) 只比标题（星标/描述差异都不影响）
+    if value is None:
+        want = _normalize(selection)
+        value = next((v for v, t in cands if t == want), None)
+        # 3) 再退一步：只看目录短名（去掉 <agent> 段），唯一命中才认
+        if value is None:
+            short = want.split(" <")[0]
+            hits = [v for v, t in cands if t.split(" <")[0] == short]
+            if len(hits) == 1:
+                value = hits[0]
+    _log(f"resolved={value} rows={[t for _v, t in cands]}")
     if value is None:
         return
-    if _focus(value):
-        mru_touch(value)
+    ok = _focus(value)
+    _log(f"focus ok={ok}")
+
+
+def do_goto(value):
+    """按 value（agent:<pane_id> / workspace:<ws_id>）直接跳转，给 Luau provider 用。"""
+    _focus(value)
 
 
 def _focus_ghostty_window():
@@ -187,7 +275,8 @@ def _focus_ghostty_window():
         if not socks:
             return
         env["NIRI_SOCKET"] = socks[0]
-    r = subprocess.run(["niri", "msg", "--json", "windows"],
+    niri = _which("niri") or "niri"
+    r = subprocess.run([niri, "msg", "--json", "windows"],
                        capture_output=True, text=True, env=env)
     if r.returncode != 0:
         return
@@ -197,7 +286,7 @@ def _focus_ghostty_window():
         return
     for w in wins:
         if w.get("app_id") == GHOSTTY_APP_ID:
-            subprocess.run(["niri", "msg", "action", "focus-window", "--id", str(w["id"])],
+            subprocess.run([niri, "msg", "action", "focus-window", "--id", str(w["id"])],
                            capture_output=True, env=env)
             return
 
@@ -207,7 +296,7 @@ def _focus(value):
     if kind not in ("agent", "workspace") or not target:
         return False
     _focus_ghostty_window()
-    herdr = shutil.which("herdr")
+    herdr = _which("herdr")
     if not herdr:
         return False
     # herdr 0.9 multi-client：agent.focus 只更新焦点/seen，画面跟随 workspace.focus 事件，
@@ -216,8 +305,15 @@ def _focus(value):
         ws_id = target.split(":")[0]
         subprocess.run([herdr, "agent", "focus", target], capture_output=True)
         r = subprocess.run([herdr, "workspace", "focus", ws_id], capture_output=True)
-    else:
-        r = subprocess.run([herdr, "workspace", "focus", target], capture_output=True)
+        if r.returncode == 0:
+            # 跳 agent 也等于跳到它的 workspace：两条 MRU 都记，否则 workspace 行
+            # 与 agent 行的排序会对不上。
+            mru_touch(f"agent:{target}")
+            mru_touch(f"workspace:{ws_id}")
+        return r.returncode == 0
+    r = subprocess.run([herdr, "workspace", "focus", target], capture_output=True)
+    if r.returncode == 0:
+        mru_touch(f"workspace:{target}")
     return r.returncode == 0
 
 
@@ -245,5 +341,7 @@ if __name__ == "__main__":
         do_list()
     elif cmd == "focus" and len(sys.argv) > 2:
         do_focus(sys.argv[2])
+    elif cmd == "goto" and len(sys.argv) > 2:
+        do_goto(sys.argv[2])
     else:
-        sys.exit("usage: herdr.py list | herdr.py focus \"<raw_line>\"")
+        sys.exit('usage: herdr.py list | focus "<raw_line>" | goto <agent:|workspace:id>')

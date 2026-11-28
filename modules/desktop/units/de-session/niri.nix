@@ -107,6 +107,29 @@ in
       source = ../../assets/noctalia/herdr.py;
     };
 
+    # launcher exec 的包装。两件事必须在这里兜住：
+    #   1) exec 走 `/bin/sh -lc`，登录 shell 的 PATH 里没有 home-manager 的 profile
+    #      （$USER 在那种环境里可能是空的，路径变成 /etc/profiles/per-user//bin），
+    #      裸 `python3` 会静默失败 —— 所以解释器用构建期确定的绝对路径。
+    #   2) 脚本位置按 XDG_CONFIG_HOME 解析，不把 home 目录硬编码进包装。
+    xdg.configFile."noctalia/launcher-focus" = {
+      executable = true;
+      text = ''
+        #!/bin/sh
+        # 用法：launcher-focus <herdr|winmru> <selection...>
+        cfg="''${XDG_CONFIG_HOME:-$HOME/.config}/noctalia"
+        helper=$1
+        shift
+        # 选中行一般是单引号包住的一整行；若引号没生效被拆成多个词，交给脚本自己拼回去
+        exec ${pkgs.python3}/bin/python3 "$cfg/$helper.py" focus "$@"
+      '';
+    };
+
+    # 窗口 MRU provider 脚本（启动器 /mr 前缀：按 niri focus_timestamp 排窗口，原 walker menus:windowsmru）
+    xdg.configFile."noctalia/winmru.py" = {
+      source = ../../assets/noctalia/winmru.py;
+    };
+
     # 本地 Luau 插件（/q 最近目录：目录 → 打开方式两级菜单）
     # 插件必须落在 $XDG_DATA_HOME/noctalia/plugins/<author>/<plugin>/，再在 config.toml 的
     # [plugins] enabled 里列插件 id 才会加载。catalog.toml 是插件目录索引（path 源也读它）。
