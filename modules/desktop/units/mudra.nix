@@ -41,7 +41,7 @@
   # mudrad run 的环境装配（与手动前台跑同一形状）：
   # - daemon 有 env 闸门（WAYLAND/DISPLAY/XDG_RUNTIME_DIR/DBUS 缺一即硬拒），
   #   缺 WAYLAND 时 spawn 的 chromium 全 zombie——systemd user 环境不保证齐全，
-  #   按本仓 walker.nix 模式扫 wayland socket 兜底。
+  #   按下面 mudrad-start 里的方式扫 wayland socket 兜底。
   # - 资源路径：daemon 默认拼 MUDRA_HOME（~/.local/share/mudra）子路径，部署形态
   #   下扩展与面板产物都在配置目录侧，须显式指过去。
   mudradStart = pkgs.writeShellScript "mudrad-start" ''

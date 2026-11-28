@@ -1,0 +1,13 @@
+# 本地插件目录的索引（Noctalia 用 catalog.toml 列出可用的插件，path 源也读它）
+# 结构对齐官方仓库：每个子目录一个插件，子目录名 = 插件 id 斜杠后的部分。
+
+[[plugin]]
+id = "local/cwd"
+name = "Recent directories"
+version = "1.0.0"
+author = "local"
+license = "MIT"
+icon = "folder"
+description = "最近目录：选中后二级菜单里选 herdr / neovide / 文件管理器打开。"
+plugin_api = 3
+tags = [ "launcher", "cwd" ]

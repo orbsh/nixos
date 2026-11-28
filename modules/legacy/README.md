@@ -24,6 +24,9 @@
 | `desktop/units/de-session/quickshell.nix` | de-session | 禁用 | 同上（Hyprland 侧组件） |
 | `desktop/units/de-session/vicinae.nix` | de-session | 禁用（2026-08-27） | 改回以 walker 为主启动器 |
 | `desktop/units/de-session/eww.nix` | de-session | 已废弃（2026-08） | cosmic 用自带 shell，监视挂件迁往 Noctalia |
+| `desktop/units/walker.nix` | desktop/units | 已退役（2026-11-28） | 启动器改用 Noctalia 内置 launcher（Mod+Space 通用、Alt+grave `/win`、Alt+Space `/h`）；walker + elephant 的包与两个 user service 一并停用 |
+| `desktop/assets/walker/` | desktop/assets | 已退役（2026-11-28） | 随 walker.nix 迁入：config.toml + default 主题 |
+| `desktop/assets/elephant/` | desktop/assets | 已退役（2026-11-28） | 随 walker.nix 迁入：cwdhist / windowsmru / herdr 的 lua 菜单与 python 数据脚本；herdr 已改写为 Noctalia dmenu provider（`assets/noctalia/herdr.py`） |
 | `desktop/units/feishu.nix` | desktop/units | 未引入 | apps-im 中已注释 |
 | `desktop/units/nyxt.nix` | desktop/units | 无引用 | 从未接入任何聚合器 |
 | `desktop/units/qutebrowser.nix` | desktop/units | 已弃用（2026-11-12） | nixpkgs 标 qutebrowser-3.7.0 为 insecure（eMudhra 中间证书事件，QtWebEngine 不检查吊销）；浏览器改用 vivaldi |

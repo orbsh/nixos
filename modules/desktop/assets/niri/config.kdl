@@ -84,12 +84,12 @@ hotkey-overlay {
 // 基础全局快捷键（Mod = Super，与 Hyprland 习惯对齐）
 // ---------------------------------------------------------------------------
 binds {
-    // 应用启动器：walker（常驻 --gapplication-service，spawn 自身由 GApplication 单实例转发为唤起）
-    Mod+Space  { spawn "walker"; }
-    // 窗口切换（walker 直达 MRU 窗口菜单 menus:windowsmru；Alt 按住+数字选择）
-    Alt+grave  { spawn "walker" "-m" "menus:windowsmru"; }
-    // herdr workspace 切换（walker 直达 menus:herdr，回车 focus）
-    Alt+Space  { spawn "walker" "-m" "menus:herdr"; }
+    // 应用启动器：Noctalia 内置 launcher（IPC 开关）
+    Mod+Space  { spawn-sh "noctalia msg panel-toggle launcher"; }
+    // 窗口切换：Noctalia 内置 Windows provider（/win 前缀直达）
+    Alt+grave  { spawn-sh "noctalia msg panel-open launcher /win"; }
+    // herdr agent/workspace 切换：dmenu provider（/h 直达），回车 focus
+    Alt+Space  { spawn-sh "noctalia msg panel-open launcher /h"; }
     // mudra web 控制台（只显示 mudra page；替代原 cwdhist 直达）
     Mod+Q  { spawn "mudra" "ui"; }
 

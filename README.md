@@ -68,7 +68,7 @@ flake.nix 扫描 hosts/ 目录
 |------|------|------|
 | `mini`（QEMU） | 层级根 | apps-core, de-session（桌面子系统）, greetd, 输入法, 字体, 无障碍, rbw |
 | `base`（便携） | = mini + 增量 | apps-extra, rime |
-| `full`（工作站） | = base + 增量 | apps-im, laptop, networkmanager, walker, wl-clipboard |
+| `full`（工作站） | = base + 增量 | apps-im, laptop, networkmanager, mudra, wl-clipboard |
 
 **设计原则**：逐层 `import`（`base` imports `mini`，`full` imports `base`），每层只声明自己的增量，公共层在 mini 定义后继承。桌面子系统（`niri` 及 DE→组件关联表）统一收敛于 `units/de-session/`；`cosmic` 已移除，`hyprland` / `quickshell` / `eww` / `vicinae` 未引入，均在 `legacy/`。
 
@@ -89,7 +89,6 @@ flake.nix 扫描 hosts/ 目录
 | `laptop.nix` | 笔记本电源管理 |
 | `networkmanager.nix` | 网络管理 |
 | `rime.nix` | Rime 输入法（NixOS 级模块） |
-| `walker.nix` | walker 启动器（备选，不常用） |
 | `home-terminals.nix` | 终端配置（ghostty + alacritty + zellij） |
 | `home-xdg.nix` | XDG 配置（mimeApps + userDirs + BROWSER） |
 
@@ -106,7 +105,7 @@ hosts/workstations/default.nix          # 域名 workstations，节点表 { orbi
         ├── profiles/workstation.nix
         │     ├── modules/system/extra.nix        (core ⊂ extra：sys/kanata/base/nix/gc/users/network/container/nushell/hardware + HM home-*)
         │     ├── modules/dev/fullstack.nix       (python/rust/javascript/haskell/k8s/wasm/data-tools/net-tools/jcode)
-        │     ├── modules/desktop/full.nix        (base ⊂ full：mini + apps-extra + rime + apps-im/laptop/networkmanager/walker/mudra)
+        │     ├── modules/desktop/full.nix        (base ⊂ full：mini + apps-extra + rime + apps-im/laptop/networkmanager/mudra)
         │     ├── modules/services/virt.nix       (libvirtd/virt-manager)
         │     ├── modules/services/hermes-system.nix
         │     ├── modules/services/harmonia.nix   (本地二进制缓存 :5100)
@@ -145,7 +144,7 @@ hosts/portable/default.nix
 
 **与 workstation 的区别**：
 - 无 `dev/fullstack.nix`（无开发工具链），改引 `dev/rescue.nix`
-- 用 `base.nix` 而非 `full.nix`（无 apps-im / laptop / networkmanager / walker / mudra）
+- 用 `base.nix` 而非 `full.nix`（无 apps-im / laptop / networkmanager / mudra）
 - 移动盘：`boot.loader.efi.canTouchEfiVariables = false`（避免写到宿主机 EFI）
 - 启用 `udisks2`（可移动设备自动挂载）与 `getty.autologinUser`
 - nushell `developMode = false` → 经 flake input 部署（详见 [ADR-003](docs/adr/003-nushell-version-develop-mode.md)）
@@ -319,7 +318,7 @@ nixos/
 │   ├── desktop/                  # 桌面预设
 │   │   ├── mini.nix              # 最小桌面（QEMU）
 │   │   ├── base.nix              # 基础桌面（portable）
-│   │   ├── full.nix              # 完整桌面（base + apps-im/laptop/networkmanager/walker 增量）
+│   │   ├── full.nix              # 完整桌面（base + apps-im/laptop/networkmanager/mudra 增量）
 │   │   └── units/                # 桌面组件单元 + HM 单元（home-terminals, home-xdg）
 │   ├── dev/                      # 开发工具模块
 │   │   ├── server.nix            # 服务器开发工具

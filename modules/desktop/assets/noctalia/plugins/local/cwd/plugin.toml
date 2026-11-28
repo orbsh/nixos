@@ -1,0 +1,24 @@
+# 「最近目录」launcher provider（原 walker 的 menus:cwdhist，多动作版）
+#
+# 一级结果 = 目录（数据来自 nushell 的 cwd_history.sqlite，经 ~/.config/noctalia/cwdhist.py 读）；
+# 二级结果 = 该目录的三种打开方式。walker 时代这三种是靠 Enter / ctrl+n / ctrl+f 三个绑定区分的，
+# Noctalia 的 LauncherResult 只有单一激活入口（onActivate(id)），所以改成 query 下钻：
+# 激活目录不直接开，而是把子查询 act:<path> 交回本 provider，列出三种方式，再选。
+id = "local/cwd"
+name = "Recent directories"
+version = "1.0.0"
+plugin_api = 3
+author = "local"
+license = "MIT"
+icon = "folder"
+description = "最近目录：选中后二级菜单里选 herdr / neovide / 文件管理器打开。"
+tags = [ "launcher", "cwd" ]
+dependencies = [ "python3", "herdr" ]
+
+[[launcher_provider]]
+id = "cwd"
+entry = "cwd.luau"
+prefix = "q"
+glyph = "folder"
+include_in_global_search = false
+debounce_ms = 150

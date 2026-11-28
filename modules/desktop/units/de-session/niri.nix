@@ -102,6 +102,24 @@ in
       source = ../../assets/noctalia/cwdhist.py;
     };
 
+    # herdr provider 脚本（启动器 /h 前缀：agent/workspace 切换；原 walker menus:herdr）
+    xdg.configFile."noctalia/herdr.py" = {
+      source = ../../assets/noctalia/herdr.py;
+    };
+
+    # 本地 Luau 插件（/q 最近目录：目录 → 打开方式两级菜单）
+    # 插件必须落在 $XDG_DATA_HOME/noctalia/plugins/<author>/<plugin>/，再在 config.toml 的
+    # [plugins] enabled 里列插件 id 才会加载。catalog.toml 是插件目录索引（path 源也读它）。
+    xdg.dataFile."noctalia/plugins/catalog.toml" = {
+      source = ../../assets/noctalia/plugins/catalog.toml;
+    };
+    xdg.dataFile."noctalia/plugins/local/cwd/plugin.toml" = {
+      source = ../../assets/noctalia/plugins/local/cwd/plugin.toml;
+    };
+    xdg.dataFile."noctalia/plugins/local/cwd/cwd.luau" = {
+      source = ../../assets/noctalia/plugins/local/cwd/cwd.luau;
+    };
+
     systemd.user.services.noctalia = {
       Unit = {
         Description = "Noctalia desktop shell (niri session)";

@@ -36,13 +36,33 @@ shadow  = true
 [shell]
 card_borders = false
 
-# cwdhist provider（迁移自 pop-launcher/cwdhist）：/cwd 前缀触发，查 sqlite → neovide 打开
-[shell.launcher.dmenu.entry.cwd]
-command = "python3 ~/.config/noctalia/cwdhist.py list"
-exec    = "python3 ~/.config/noctalia/cwdhist.py open \"{selection}\""
-prefix  = "q"
-label   = "cwd"
-glyph   = "folder"
+# ── 面板内按键（Noctalia 自己的浮层，含启动器）──
+# 方向移动默认是 Up/Down/Left/Right，改成 Alt+hjkl 走 vim 手位。
+# 不能绑单字母：启动器搜索框是文本输入框，会先吃掉按键；super 组合被配置加载器直接拒绝。
+[keybinds]
+up    = [ "Alt+k" ]
+down  = [ "Alt+j" ]
+left  = [ "Alt+h" ]
+right = [ "Alt+l" ]
+
+# ── 插件 ──
+# 本地插件放 assets/noctalia/plugins/，部署到 $XDG_DATA_HOME/noctalia/plugins/（见 niri.nix）。
+# 必须显式启用；这里写插件 id（author/plugin），不是条目 id。
+[plugins]
+enabled = [ "local/cwd" ]
+
+# 最近目录：改用 Luau launcher provider（plugins/local/cwd），因为它要两级菜单
+# （选目录 → 选打开方式：herdr / neovide / 文件管理器），dmenu 单动作做不到。
+# provider 声明在 assets/noctalia/plugins/local/cwd/plugin.toml，prefix = "q"。
+
+# herdr agent/workspace 切换（原 walker 的 menus:herdr；Alt+Space 直达 /h）
+# exec 拿到的 {selection} 是「标题<TAB>描述」原样行，脚本自己回查出 value 再跳转
+[shell.launcher.dmenu.entry.herdr]
+command = "python3 ~/.config/noctalia/herdr.py list"
+exec    = "python3 ~/.config/noctalia/herdr.py focus {selection}"
+prefix  = "h"
+label   = "herdr"
+glyph   = "users"
 global  = false
 
 # ── 会话动作（状态栏 Session 面板 / 启动器 /session / 控制中心 / 锁屏按钮共用同一份列表）──

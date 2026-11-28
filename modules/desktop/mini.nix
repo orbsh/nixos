@@ -1,5 +1,5 @@
 # 最小桌面预设：QEMU 虚拟机（层级根）
-# base/full 在此基础层层叠加：base = mini + apps-extra + rime；full = base + apps-im + laptop + networkmanager + walker
+# base/full 在此基础层层叠加：base = mini + apps-extra + rime；full = base + apps-im + laptop + networkmanager + mudra
 { pkgs, user, theme, ... }: {
   imports = [
     ./units/theme.nix             # 主题选择（desktop.theme → _module.args.theme）
