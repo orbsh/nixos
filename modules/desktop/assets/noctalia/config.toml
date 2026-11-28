@@ -1,10 +1,11 @@
 # Noctalia v5 配置（~/.config/noctalia/config.toml，目录下 *.toml 合并）
-# 状态栏：顶部 + 指针自动隐藏（指针离开后收起，触屏幕上缘再拉出）+ 悬浮于窗口之上（不占排他区）
+# 状态栏：底部 + 指针自动隐藏（指针离开后收起，触屏幕下缘再拉出）+ 悬浮于窗口之上（不占排他区）
 # 注：曾用 smart_auto_hide（空工作区显示、有窗口隐藏），在有窗口的工作区按 Mod4+I 会显示后立刻收回，故改指针自动隐藏。
-# 另：底部 auto-hide 曾有 hover 竞争（贴边触发→立即缩回→需再上移才显示），故长期用顶部。
+# 另：早期在底部开着 auto_hide 会遇到 hover 竞争（贴边触发→立即缩回→需再上移才显示），于是长期放顶部；
+# 现在改回底部，若该竞争再现，退路是关掉 auto_hide（常显）或加大 auto_hide_delay_ms。
 [bar.default]
-position      = "top"
-auto_hide            = true   # 指针离开状态栏后收起；指针触屏幕上缘再拉出
+position      = "bottom"
+auto_hide            = true   # 指针离开状态栏后收起；指针触屏幕下缘再拉出
 auto_hide_delay_ms   = 500    # 离开后等 0.5s 再收，从栏上移向窗口时不抖
 smart_auto_hide      = false  # 与 auto_hide 互斥且优先级更高；关掉"空工作区才显示"，否则 Mod4+I 会立刻收回
 show_on_workspace_switch = false
