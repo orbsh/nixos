@@ -37,12 +37,8 @@ let
 
   section = name: body: "[Colors:${name}]\n${body}\n";
 
-  colorScheme = lib.concatStrings [
-    "[General]\n"
-    "ColorScheme=${theme.kde.scheme}\n"
-    "Name=${theme.label}\n"
-    "\n"
-
+  # 所有 Colors:* 段（供 .colors 文件与 kdeglobals 共用）
+  colorSections = lib.concatStrings [
     (section "Window" (colorSet palette.bg palette.bgAlt palette.fg palette.fgInactive))
     (section "View" (colorSet palette.bg palette.bgAlt palette.fg palette.fgInactive))
     (section "Button" (colorSet palette.bgButton palette.bgButtonAlt palette.fg palette.fgInactive))
@@ -60,6 +56,14 @@ let
     "inactiveBlend=${palette.bgAlt}\n"
     "inactiveForeground=${palette.fgInactive}\n"
     "frame=${palette.bgButton}\n"
+  ];
+
+  colorScheme = lib.concatStrings [
+    "[General]\n"
+    "ColorScheme=${theme.kde.scheme}\n"
+    "Name=${theme.label}\n"
+    "\n"
+    colorSections
   ];
 
   qtPluginPrefix = pkgs.qt6.qtbase.qtPluginPrefix;
@@ -91,6 +95,12 @@ in {
 
     # force：现存 ~/.config/kdeglobals 是 KDE 应用自写的普通文件，HM 需要接管。
     # 接管后该文件是 store 只读链接——本机没有 systemsettings，没有反写路径。
+    #
+    # 颜色段必须同时写进 kdeglobals：plasma-integration 的平台主题是从
+    # kdeglobals 的 [Colors:*] 组里取色的（插件里的组名字符串就是
+    # org.kde.kdeglobals.* 与 Colors:View），.colors 文件只喂 KColorScheme——于是只有工具栏/侧栏
+    # 这些自己查 KColorScheme 的部件变色，Dolphin 文件列表区（走 QPalette::Base）
+    # 仍是纯白。两处都写才不会出现"半边跟随"。
     xdg.configFile."kdeglobals" = {
       force = true;
       text = ''
@@ -102,7 +112,8 @@ in {
 
         [Icons]
         Theme=breeze
-      '';
+
+        ${colorSections}'';
     };
   };
 }
