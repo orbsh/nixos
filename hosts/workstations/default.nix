@@ -11,6 +11,7 @@
   "orbit" = {
     user = "master";
     hostname = "workstation";
+    #desktop.theme = "flexoki-light";
     desktop.theme = "gruvbox-light";
     imports = [
       inputs.disko.nixosModules.disko
