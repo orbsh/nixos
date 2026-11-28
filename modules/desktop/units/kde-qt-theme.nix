@@ -74,11 +74,11 @@ let
 
   qtPluginPrefix = pkgs.qt6.qtbase.qtPluginPrefix;
 in {
-  # ── 系统级：Qt 平台主题 + Kvantum 插件 + gruvbox 皮肤 ──
+  # ── 系统级：Qt 平台主题 + Kvantum 插件 ──
+  # 只要 lib/qt-6/plugins（NixOS 的 system-path 会链 /lib）；皮肤目录是另一回事，见下方 HM 段
   environment.systemPackages = [
     pkgs.kdePackages.plasma-integration
     pkgs.kdePackages.qtstyleplugin-kvantum
-    (pkgs.gruvbox-kvantum.override { variant = "Gruvbox_Light_Brown"; })
   ];
 
   # 不用 qt.enable：它会连带装 kdePackages.systemsettings + kio（整套 Plasma 设置面板，
@@ -95,8 +95,15 @@ in {
     ];
   };
 
-  # ── 用户级：配色方案 + kdeglobals + Kvantum 皮肤选择 ──
+  # ── 用户级：配色方案 + kdeglobals + Kvantum 皮肤 ──
   home-manager.users.${user} = {
+    # Kvantum 皮肤必须走 HM（~/.nix-profile/share）：NixOS 的 system-path 默认 pathsToLink 不含 /share，
+    # 放 environment.systemPackages 时 share/Kvantum 不会进 /run/current-system/sw，Kvantum 找不到
+    # Gruvbox_Light_Brown 就落回自带暗色皮肤（症状：Dolphin 整个窗口变暗）。
+    home.packages = [
+      (pkgs.gruvbox-kvantum.override { variant = "Gruvbox_Light_Brown"; })
+    ];
+
     xdg.dataFile."color-schemes/GruvboxLight.colors".text = colorScheme;
 
     # force：现存 ~/.config/kdeglobals 是 KDE 应用自写的普通文件，HM 需要接管。
