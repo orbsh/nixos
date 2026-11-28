@@ -1,4 +1,4 @@
-{ pkgs, lib, ... }: {
+{ pkgs, lib, theme, ... }: {
 
   # ── 桌面终端工具 ──────────────────────────────────────────────
   home.packages = with pkgs; [
@@ -20,7 +20,7 @@
   programs.ghostty = {
     enable = true;
     settings = {
-      theme                 = "Gruvbox Light";
+      theme                 = theme.ghostty; # 内置主题名，见 assets/themes.nix
       font-family           = "Lilex";
       font-style            = "Regular";
       font-size             = 12;
@@ -56,6 +56,9 @@
     enable = true;
     settings = {
       env.TERM = "alacritty";
+      # 色表来自 assets/themes.nix（Alacritty 没有主题机制，只能直接给色）；
+      # 取同主题的深色版：终端单独留一块暗底，和浅色桌面区分开
+      colors = theme.alacritty.dark;
       font = {
         size = 10.5;
         normal.family = "Lilex";

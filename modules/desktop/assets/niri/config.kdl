@@ -12,7 +12,11 @@ input {
 // 让客户端放弃自带标题栏（CSD）→ niri 才能把边框画在窗口外圈（而非被窗口盖住）
 prefer-no-csd
 
-// 禁用 border，改用 focus-ring 作为焦点指示（暖桃 #f8b791，取自原渐变的亮端）
+// 焦点环颜色不写在本文件：由 units/theme.nix 选主题、niri.nix 生成 ~/.config/niri/theme.kdl
+// （config.desktop.theme 决定），这里只管几何（gaps / 粗细 / 圆角）。
+include "theme.kdl"
+
+// 禁用 border，改用 focus-ring 作为焦点指示
 layout {
     empty-workspace-above-first
 
@@ -20,22 +24,11 @@ layout {
     focus-ring {
         // off
         width 3
-        // 备选色（留档）：暖桃 #f8b791，原渐变的亮端
-        // active-color "#f8b791"
-        // 现用：橄榄
-        active-color "#98971a"
-        // inactive：别的显示器上仍带焦点的窗口（单屏不显示）
-        inactive-color "#75524a"
-        urgent-color "#c0392b"
     }
     border {
         off
         width 3
-        // 备选色（留档）：暖桃 #f8b791
-        // active-color "#f8b791"
-        active-color "#98971a"
         inactive-color "#00000000"
-        urgent-color "#c0392b"
     }
 }
 

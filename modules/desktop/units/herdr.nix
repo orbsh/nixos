@@ -1,5 +1,16 @@
 # herdr 终端复用（独立单元，引入即开启）
-{ pkgs, lib, ... }: {
+{ pkgs, lib, theme, ... }:
+let
+  # herdr 的主题段由 assets/themes.nix 生成：基底主题名 + 可选 token 覆盖。
+  # 单独拼好再插进 heredoc，避免在缩进字符串里嵌多段 '' 逻辑。
+  themeSection = lib.concatStrings (
+    [ "[theme]\n" "name = \"${theme.herdr.base}\"\n" ]
+    ++ lib.optional (theme.herdr.custom != { }) (
+      "\n[theme.custom.light]\n"
+      + lib.concatStrings (lib.mapAttrsToList (k: v: "${k} = \"${v}\"\n") theme.herdr.custom)
+    )
+  );
+in {
   home.packages = with pkgs; [
     herdr
   ];
@@ -9,8 +20,10 @@
     # 关闭首次启动的 onboarding 设置弹窗（config 是只读 symlink，界面里保存不了）
     onboarding = false
 
-    [theme]
-    name = "gruvbox-light"
+    # 主题跟随 desktop.theme（数据在 assets/themes.nix）：
+    # 基底主题名 + token 覆盖；gruvbox-light 时覆盖为空（用原生内置）。
+    # pane 的终端底色由 Ghostty 的主题决定，这里只管 herdr 自己画的侧栏/选中/强调色。
+    ${themeSection}
 
     [keys]
     # 前缀键：Alt+s（保留作备份，高频动作走免 prefix 直接 chord）

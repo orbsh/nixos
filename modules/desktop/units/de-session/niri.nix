@@ -1,7 +1,7 @@
 # Niri 桌面子系统单元
 # 归属：greetd + tuigreet 登录后启动 niri 会话；组件经 de-session 的 desktop-niri.target 拉起。
 # 纳入由 imports 决定（引本单元 = 装 niri），运行时有 dispatcher 按活跃 DE 拉起其 target。
-{ config, pkgs, lib, user, ... }:
+{ config, pkgs, lib, user, theme, ... }:
 
 let
   # 桌面 shell（Noctalia）启动脚本：补 WAYLAND_DISPLAY，回退扫 socket（同 quickshell 模式）
@@ -71,6 +71,24 @@ in
     xdg.configFile."niri/config.kdl" = {
       source = ../../assets/niri/config.kdl;
       force = true;   # 覆盖可能遗留的本地 config
+    };
+
+    # 焦点环颜色（config.kdl 里 include 进来）：由 desktop.theme 决定，见 assets/themes.nix
+    xdg.configFile."niri/theme.kdl" = {
+      force = true;
+      text = ''
+        layout {
+            focus-ring {
+                active-color "${theme.niri.focus}"
+                inactive-color "${theme.niri.inactive}"
+                urgent-color "${theme.niri.urgent}"
+            }
+            border {
+                active-color "${theme.niri.focus}"
+                urgent-color "${theme.niri.urgent}"
+            }
+        }
+      '';
     };
 
     # Noctalia v5 配置（`assets/noctalia/config.toml` 独立文件）
